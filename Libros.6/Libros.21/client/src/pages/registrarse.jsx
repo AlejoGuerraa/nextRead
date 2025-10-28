@@ -7,7 +7,6 @@ import { Modal } from '../components/modal';
 import { ModalGustos } from '../components/modalGustos';
 
 // Componente Tarjeta de Característica
-// NOTA: Usamos 'title' y 'description' como props para mantener la coherencia con CSS.
 const FeatureCard = ({ icon, title, description }) => (
   <div className="feature-card">
     <div className="feature-icon-text">{icon}</div>
@@ -16,14 +15,12 @@ const FeatureCard = ({ icon, title, description }) => (
   </div>
 );
 
-
 function Registrarse() {
   const [modal, setModal] = useState(false);
   const [showGustos, setShowGustos] = useState(false);
   const [step, setStep] = useState(1);
   const navigate = useNavigate();
 
-  // Estado para manejar los errores de validación
   const [errors, setErrors] = useState({});
 
   const [form, setForm] = useState({
@@ -43,37 +40,27 @@ function Registrarse() {
 
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
-    // Limpiar errores al escribir
     if (errors[e.target.name]) {
       setErrors(prevErrors => ({ ...prevErrors, [e.target.name]: null }));
     }
   };
 
-
-  /* --- FUNCIONES DE VALIDACIÓN POR PASO --- */
-
+  /* --- VALIDACIONES --- */
   const validateStep1 = () => {
     const newErrors = {};
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     const passwordRegex = /^(?=.*[A-Z])(?=.*\d).{8,}$/;
 
-    if (!form.correo) {
-      newErrors.correo = 'El correo es obligatorio.';
-    } else if (!emailRegex.test(form.correo)) {
-      newErrors.correo = 'Formato de correo inválido.';
-    }
+    if (!form.correo) newErrors.correo = 'El correo es obligatorio.';
+    else if (!emailRegex.test(form.correo)) newErrors.correo = 'Formato de correo inválido.';
 
-    if (!form.contrasena) {
-      newErrors.contrasena = 'La contraseña es obligatoria.';
-    } else if (!passwordRegex.test(form.contrasena)) {
+    if (!form.contrasena) newErrors.contrasena = 'La contraseña es obligatoria.';
+    else if (!passwordRegex.test(form.contrasena))
       newErrors.contrasena = 'Debe tener 8+ caracteres, 1 mayúscula y 1 número.';
-    }
 
-    if (form.contrasena !== form.repeatPassword) {
+    if (!form.repeatPassword) newErrors.repeatPassword = 'Debe repetir la contraseña.';
+    else if (form.contrasena !== form.repeatPassword)
       newErrors.repeatPassword = 'Las contraseñas no coinciden.';
-    } else if (!form.repeatPassword) {
-      newErrors.repeatPassword = 'Debe repetir la contraseña.';
-    }
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -81,7 +68,6 @@ function Registrarse() {
 
   const validateStep2 = () => {
     const newErrors = {};
-
     if (!form.nombre) newErrors.nombre = 'El nombre es obligatorio.';
     if (!form.apellido) newErrors.apellido = 'El apellido es obligatorio.';
     if (!form.usuario) newErrors.usuario = 'El nombre de usuario es obligatorio.';
@@ -91,30 +77,25 @@ function Registrarse() {
     return Object.keys(newErrors).length === 0;
   };
 
-
-
   /* --- FUNCIONES DE NAVEGACIÓN --- */
-
   const nextStep = () => {
     let isValid = true;
 
-    if (step === 1) {
-      isValid = validateStep1();
-    } else if (step === 2) {
-      isValid = validateStep2();
-    }
+    if (step === 1) isValid = validateStep1();
+    else if (step === 2) isValid = validateStep2();
 
-    if (isValid) {
-      setStep((s) => Math.min(3, s + 1));
-    }
+    if (isValid) setStep((s) => Math.min(3, s + 1));
   };
 
+  // ✅ AGREGADO: función faltante prevStep
+  const prevStep = () => {
+    setStep((s) => Math.max(1, s - 1));
+  };
 
-
-  // Función que se ejecuta cuando ModalGustos finaliza (Llamada a la API)
+  /* --- FINALIZAR REGISTRO / MODAL DE GUSTOS --- */
   const handleFinishGustos = async (libros, generos, autores) => {
     try {
-      const response = await axios.post('http://localhost:3000/nextread/register', {
+      const response = await axios.post('http://localhost:3000/nextRead/register', {
         nombre: form.nombre,
         apellido: form.apellido,
         correo: form.correo,
@@ -131,10 +112,9 @@ function Registrarse() {
 
       const userData = response.data;
       localStorage.setItem('user', JSON.stringify(userData));
-
-      navigate('/logueado'); // NAVEGACIÓN EXITOSA
+      navigate('/logueado');
     } catch (error) {
-      alert('Error al registrar usuario. Revisa la consola (F12) para más detalles del servidor.');
+      alert('Error al registrar usuario. Revisa la consola (F12) para más detalles.');
       console.error('Error de API en registro:', error.response?.data || error);
     }
   };
@@ -147,7 +127,6 @@ function Registrarse() {
       </header>
 
       <div className="contenedor-imagen-loguearse">
-
         <div className="texto-superpuesto">
           <h3 className="slogan-text">Descubrí tu próxima gran lectura</h3>
 
@@ -158,12 +137,11 @@ function Registrarse() {
           <Modal openModal={modal} closeModal={() => setModal(false)}>
             <div className="register-content">
 
-              {/* === PASO 1: CORREO Y CONTRASEÑA === */}
+              {/* === PASO 1 === */}
               {step === 1 && (
                 <div className="step">
                   <h2>Forma parte de NextRead</h2>
 
-                  {/* CAMPO CORREO */}
                   <input
                     type="email"
                     name="correo"
@@ -172,13 +150,8 @@ function Registrarse() {
                     onChange={handleChange}
                     className={errors.correo ? 'input-error' : ''}
                   />
+                  {errors.correo && <p className="error-message">{errors.correo}</p>}
 
-                  <div className="error-placeholder">
-                    {errors.correo && <p className="error-message">{errors.correo}</p>}
-                  </div>
-
-
-                  {/* CAMPO CONTRASEÑA */}
                   <input
                     type="password"
                     name="contrasena"
@@ -187,13 +160,8 @@ function Registrarse() {
                     onChange={handleChange}
                     className={errors.contrasena ? 'input-error' : ''}
                   />
+                  {errors.contrasena && <p className="error-message">{errors.contrasena}</p>}
 
-                  <div className="error-placeholder">
-                    {errors.contrasena && <p className="error-message">{errors.contrasena}</p>}
-                  </div>
-
-
-                  {/* CAMPO REPETIR CONTRASEÑA */}
                   <input
                     type="password"
                     name="repeatPassword"
@@ -202,42 +170,15 @@ function Registrarse() {
                     onChange={handleChange}
                     className={errors.repeatPassword ? 'input-error' : ''}
                   />
+                  {errors.repeatPassword && <p className="error-message">{errors.repeatPassword}</p>}
 
-                  <div className="error-placeholder">
-                    {errors.repeatPassword && <p className="error-message">{errors.repeatPassword}</p>}
-                  </div>
-
-
-                  <div className="checkboxes">
-                    <label className="checkbox-item">
-                      <input type="checkbox" />
-                      <span>Acepto los <a href="#" className="link">términos y condiciones</a></span>
-                    </label>
-                    <label className="checkbox-item">
-                      <input type="checkbox" />
-                      <span>Acepto las <a href="#" className="link">otras políticas</a></span>
-                    </label>
-                  </div>
-
-                  <div className="error-placeholder" style={{ minHeight: '15px', marginTop: '-10px' }}>
-                    {errors.checkboxes && <p className="error-message error-checkbox">{errors.checkboxes}</p>}
-                  </div>
-
-                  
                   <button className="btn-modal next-btn" onClick={nextStep}>Siguiente ➜</button>
+
                   <button
                     className="login-redirect"
                     onClick={() => {
                       setModal(false);
                       navigate('/loguearse');
-                    }}
-                    style={{
-                      marginTop: '5px',
-                      backgroundColor: 'transparent',
-                      color: '#0a6fb4',
-                      border: 'none',
-                      cursor: 'pointer',
-                      textDecoration: 'underline'
                     }}
                   >
                     ¿Ya tenés cuenta? Iniciá sesión
@@ -245,10 +186,11 @@ function Registrarse() {
                 </div>
               )}
 
-              {/* === PASO 2: DATOS PERSONALES === */}
+              {/* === PASO 2 === */}
               {step === 2 && (
                 <div className="step">
                   <h2>Crea tu usuario</h2>
+
                   <input
                     name="nombre"
                     placeholder="Nombre"
@@ -256,10 +198,7 @@ function Registrarse() {
                     onChange={handleChange}
                     className={errors.nombre ? 'input-error' : ''}
                   />
-                  <div className="error-placeholder">
-                    {errors.nombre && <p className="error-message">{errors.nombre}</p>}
-                  </div>
-
+                  {errors.nombre && <p className="error-message">{errors.nombre}</p>}
 
                   <input
                     name="apellido"
@@ -268,11 +207,7 @@ function Registrarse() {
                     onChange={handleChange}
                     className={errors.apellido ? 'input-error' : ''}
                   />
-
-                  <div className="error-placeholder">
-                    {errors.apellido && <p className="error-message">{errors.apellido}</p>}
-                  </div>
-
+                  {errors.apellido && <p className="error-message">{errors.apellido}</p>}
 
                   <input
                     name="usuario"
@@ -281,10 +216,7 @@ function Registrarse() {
                     onChange={handleChange}
                     className={errors.usuario ? 'input-error' : ''}
                   />
-                  <div className="error-placeholder">
-                    {errors.usuario && <p className="error-message">{errors.usuario}</p>}
-                  </div>
-
+                  {errors.usuario && <p className="error-message">{errors.usuario}</p>}
 
                   <input
                     type="date"
@@ -293,10 +225,7 @@ function Registrarse() {
                     onChange={handleChange}
                     className={errors.nacimiento ? 'input-error' : ''}
                   />
-                  <div className="error-placeholder">
-                    {errors.nacimiento && <p className="error-message">{errors.nacimiento}</p>}
-                  </div>
-
+                  {errors.nacimiento && <p className="error-message">{errors.nacimiento}</p>}
 
                   <div className="buttons">
                     <button className="btn-modal" onClick={prevStep}>← Atrás</button>
@@ -305,7 +234,7 @@ function Registrarse() {
                 </div>
               )}
 
-              {/* === PASO 3: PERFIL Y DESCRIPCIÓN === */}
+              {/* === PASO 3 === */}
               {step === 3 && (
                 <div className="step">
                   <h2>Personaliza tu perfil</h2>
@@ -340,13 +269,16 @@ function Registrarse() {
 
                   <div className="buttons">
                     <button className="btn-modal" onClick={prevStep}>← Atrás</button>
-                    <button className="btn-modal" onClick={handleSubmit}>Finalizar ✔</button>
+
+                    {/* ✅ CAMBIO: antes era handleSubmit, ahora abre el modal de gustos */}
+                    <button className="btn-modal" onClick={() => setShowGustos(true)}>
+                      Finalizar ✔
+                    </button>
                   </div>
-
-
                 </div>
               )}
 
+              {/* Indicador de pasos */}
               <div className="step-indicator">
                 <span className={step === 1 ? 'active' : ''}></span>
                 <span className={step === 2 ? 'active' : ''}></span>
@@ -363,7 +295,7 @@ function Registrarse() {
         </div>
       </div>
 
-      {/* --- SECCIÓN DE CUADRADOS (REUTILIZADA) --- */}
+      {/* --- SECCIÓN DE CUADRADOS --- */}
       <div className="main-features-section">
         <FeatureCard
           icon="🔍"
@@ -381,13 +313,10 @@ function Registrarse() {
           description="Registra tu progreso, puntuá, escribí reseñas y recomendá tus libros favoritos."
         />
       </div>
-      {/* --------------------------- */}
 
-      {/* --- FOOTER SIMPLE --- */}
       <footer className="footer-simple-registro">
         <p>&copy; {new Date().getFullYear()} NextRead. Todos los derechos reservados.</p>
       </footer>
-      {/* --------------------------- */}
     </>
   );
 }
