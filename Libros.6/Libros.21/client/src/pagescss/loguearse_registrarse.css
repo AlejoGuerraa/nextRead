@@ -10,6 +10,8 @@ body {
 h1 {
   margin: 0;
   color: rgb(249, 245, 245);
+  font-size: 23px;
+  font-weight: 800;
 }
 
 h2 {
@@ -35,10 +37,10 @@ h2 {
 header {
   background-color: #1A374D;
   /* Color azul fuerte, mejor que el gris */
-  padding: 2px 20px;
+  padding: 4px 20px;
   display: flex;
   align-items: center;
-  gap: 20px;
+  gap: 14px;
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
 }
 
@@ -408,3 +410,20 @@ button:hover,
     }
 }
 
+/* ------------------------------------------------------------------- */
+/* 7. FOOTER SIMPLE */
+/* ------------------------------------------------------------------- */
+
+.footer-RL {
+    background-color: #1A374D; /* Color que coincide con el header */
+    color: #f0f4f8;
+    text-align: center;
+    padding: 15px 0;
+    font-size: 0.85rem;
+    width: 100%;
+    box-shadow: 0 -2px 5px rgba(0, 0, 0, 0.1);
+}
+
+.footer-RL p {
+    margin: 0;
+}

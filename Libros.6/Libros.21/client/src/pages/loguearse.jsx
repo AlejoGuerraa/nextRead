@@ -138,6 +138,12 @@ function Loguearse() {
         />
       </div>
 
+      {/* --- FOOTER SIMPLE --- */}
+      <footer className="footer-RL">
+        <p>&copy; {new Date().getFullYear()} NextRead. Todos los derechos reservados.</p>
+      </footer>
+      {/* --------------------------- */}
+
 
     </>
   );
