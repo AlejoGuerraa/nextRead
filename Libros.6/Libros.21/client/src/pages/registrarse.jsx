@@ -6,6 +6,20 @@ import icono from '../assets/libroIcono.png';
 import { Modal } from '../components/modal';
 import { ModalGustos } from '../components/modalGustos';
 
+const FeatureCard = ({icon, titulo, descripcion }) => (
+  <div className = "feature-card">
+    <div className = "feature-icon-text">
+      {icon}
+    </div>
+    <h4 className = "feature-titulo">
+      {titulo}
+    </h4>
+    <p className = "feature-descripcion">
+      {descripcion}
+    </p>
+  </div>
+);
+
 
 function Registrarse() {
   const [modal, setModal] = useState(false);
@@ -205,6 +219,28 @@ function Registrarse() {
           />
         </div>
       </div>
+
+      {/*Sección cuadrados debajo de la imagen*/}
+      <div className = "main-features-section">
+        <FeatureCard
+          icon = "🔍" //emoji para icono de busqueda
+          titulo = "Exploración de Catálogo"
+          descripcion ="Explorá un catálogo inmenso de libros y filtrá por género favorito."
+        />
+        <FeatureCard
+          icon="👥" //emoji para icono de usuarios
+          titulo="Conectá con lectores apasionantes"
+          descripcion="Descubrí perfiles, seguí a otros usuarios, compartí opiniones y sé parte de clubes lectura."
+        />
+        <FeatureCard
+          icon="📚" //emoji para icono de libros
+          titulo="Diario de Lecturas Personales"
+          descripcion="Llevá un diario de tus lecturas, puntuá, escribí reseñas y recomendá tus libros favoritas."
+        />
+      </div>
+
+
+
     </>
   );
 }
