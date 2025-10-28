@@ -136,6 +136,8 @@ header {
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
   position: relative;
   text-align: center;
+  
+  
 }
 
 dialog::backdrop {
@@ -301,6 +303,7 @@ button:hover,
   display: flex;
   gap: 6px;
   margin-top: 10px;
+  margin-bottom: 5px;
 }
 
 .step-indicator span {
@@ -426,4 +429,17 @@ button:hover,
 
 .footer-RL p {
     margin: 0;
+}
+
+/* --- ESTILOS DE VALIDACIÓN DE FORMULARIO (para inputs con error) --- */
+.input-error {
+  border: 2px solid #ff4d4f !important; /* Borde rojo */
+}
+
+.error-message {
+  color: #ff4d4f; /* Texto rojo */
+  font-size: 0.8rem;
+  margin: 0px 0 9px; /* Margen para separarlo del input y el siguiente elemento */
+  width: 100%;
+  text-align: left;
 }

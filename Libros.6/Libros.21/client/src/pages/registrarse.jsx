@@ -6,17 +6,13 @@ import icono from '../assets/libroIcono.png';
 import { Modal } from '../components/modal';
 import { ModalGustos } from '../components/modalGustos';
 
-const FeatureCard = ({icon, titulo, descripcion }) => (
-  <div className = "feature-card">
-    <div className = "feature-icon-text">
-      {icon}
-    </div>
-    <h4 className = "feature-titulo">
-      {titulo}
-    </h4>
-    <p className = "feature-descripcion">
-      {descripcion}
-    </p>
+// Componente Tarjeta de Característica
+// NOTA: Usamos 'title' y 'description' como props para mantener la coherencia con CSS.
+const FeatureCard = ({ icon, title, description }) => (
+  <div className="feature-card">
+    <div className="feature-icon-text">{icon}</div>
+    <h4 className="feature-title">{title}</h4>
+    <p className="feature-description">{description}</p>
   </div>
 );
 
@@ -27,6 +23,8 @@ function Registrarse() {
   const [step, setStep] = useState(1);
   const navigate = useNavigate();
 
+  // Estado para manejar los errores de validación
+  const [errors, setErrors] = useState({});
 
   const [form, setForm] = useState({
     correo: '',
@@ -43,33 +41,80 @@ function Registrarse() {
   const [showAvatarPicker, setShowAvatarPicker] = useState(false);
   const avatarOptions = ['🧸ྀི', '♡', '₍^. .^₎⟆', '≽^-⩊-^≼', 'ᓚ₍⑅^..^₎♡', '🐔'];
 
-  const handleChange = (e) => setForm(
-    { ...form, [e.target.name]: e.target.value }
-  );
-  const nextStep = () => setStep((s) => Math.min(3, s + 1));
-  const prevStep = () => setStep((s) => Math.max(1, s - 1));
-
-  // Solo abre el modal de gustos después del registro local
-  const handleSubmit = () => {
-    if (!form.correo || !form.contrasena || !form.repeatPassword 
-      || !form.nombre || !form.apellido || !form.usuario || !form.nacimiento || 
-      !form.descripcion 
-    ) {
-      alert('Por favor complete todos los campos.');
-      return;
+  const handleChange = (e) => {
+    setForm({ ...form, [e.target.name]: e.target.value });
+    // Limpiar errores al escribir
+    if (errors[e.target.name]) {
+      setErrors(prevErrors => ({ ...prevErrors, [e.target.name]: null }));
     }
-    if (form.contrasena !== form.repeatPassword) {
-      alert("Las contraseñas no coinciden");
-      return;
-    }
-    setModal(false);
-    setShowGustos(true);
   };
 
-  // Función que se ejecuta cuando ModalGustos finaliza
+
+  /* --- FUNCIONES DE VALIDACIÓN POR PASO --- */
+
+  const validateStep1 = () => {
+    const newErrors = {};
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    const passwordRegex = /^(?=.*[A-Z])(?=.*\d).{8,}$/;
+
+    if (!form.correo) {
+      newErrors.correo = 'El correo es obligatorio.';
+    } else if (!emailRegex.test(form.correo)) {
+      newErrors.correo = 'Formato de correo inválido.';
+    }
+
+    if (!form.contrasena) {
+      newErrors.contrasena = 'La contraseña es obligatoria.';
+    } else if (!passwordRegex.test(form.contrasena)) {
+      newErrors.contrasena = 'Debe tener 8+ caracteres, 1 mayúscula y 1 número.';
+    }
+
+    if (form.contrasena !== form.repeatPassword) {
+      newErrors.repeatPassword = 'Las contraseñas no coinciden.';
+    } else if (!form.repeatPassword) {
+      newErrors.repeatPassword = 'Debe repetir la contraseña.';
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
+  const validateStep2 = () => {
+    const newErrors = {};
+
+    if (!form.nombre) newErrors.nombre = 'El nombre es obligatorio.';
+    if (!form.apellido) newErrors.apellido = 'El apellido es obligatorio.';
+    if (!form.usuario) newErrors.usuario = 'El nombre de usuario es obligatorio.';
+    if (!form.nacimiento) newErrors.nacimiento = 'La fecha de nacimiento es obligatoria.';
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
+
+
+  /* --- FUNCIONES DE NAVEGACIÓN --- */
+
+  const nextStep = () => {
+    let isValid = true;
+
+    if (step === 1) {
+      isValid = validateStep1();
+    } else if (step === 2) {
+      isValid = validateStep2();
+    }
+
+    if (isValid) {
+      setStep((s) => Math.min(3, s + 1));
+    }
+  };
+
+
+
+  // Función que se ejecuta cuando ModalGustos finaliza (Llamada a la API)
   const handleFinishGustos = async (libros, generos, autores) => {
     try {
-      const response = await axios.post('http://localhost:3000/nextread/register', { //guardamos la respuesta
+      const response = await axios.post('http://localhost:3000/nextread/register', {
         nombre: form.nombre,
         apellido: form.apellido,
         correo: form.correo,
@@ -85,11 +130,12 @@ function Registrarse() {
       });
 
       const userData = response.data;
-      localStorage.setItem('user', JSON.stringify(userData)); //guardamos en LocalStorage
+      localStorage.setItem('user', JSON.stringify(userData));
 
-      navigate('/logueado');
+      navigate('/logueado'); // NAVEGACIÓN EXITOSA
     } catch (error) {
-      alert('Error al registrar usuario: ' + (error.response?.data?.error || error.message));
+      alert('Error al registrar usuario. Revisa la consola (F12) para más detalles del servidor.');
+      console.error('Error de API en registro:', error.response?.data || error);
     }
   };
 
@@ -111,12 +157,56 @@ function Registrarse() {
 
           <Modal openModal={modal} closeModal={() => setModal(false)}>
             <div className="register-content">
+
+              {/* === PASO 1: CORREO Y CONTRASEÑA === */}
               {step === 1 && (
                 <div className="step">
                   <h2>Forma parte de NextRead</h2>
-                  <input type="email" name="correo" placeholder="Email" value={form.correo} onChange={handleChange} />
-                  <input type="password" name="contrasena" placeholder="Contraseña" value={form.contrasena} onChange={handleChange} />
-                  <input type="password" name="repeatPassword" placeholder="Repetir contraseña" value={form.repeatPassword} onChange={handleChange} />
+
+                  {/* CAMPO CORREO */}
+                  <input
+                    type="email"
+                    name="correo"
+                    placeholder="Email"
+                    value={form.correo}
+                    onChange={handleChange}
+                    className={errors.correo ? 'input-error' : ''}
+                  />
+
+                  <div className="error-placeholder">
+                    {errors.correo && <p className="error-message">{errors.correo}</p>}
+                  </div>
+
+
+                  {/* CAMPO CONTRASEÑA */}
+                  <input
+                    type="password"
+                    name="contrasena"
+                    placeholder="Contraseña"
+                    value={form.contrasena}
+                    onChange={handleChange}
+                    className={errors.contrasena ? 'input-error' : ''}
+                  />
+
+                  <div className="error-placeholder">
+                    {errors.contrasena && <p className="error-message">{errors.contrasena}</p>}
+                  </div>
+
+
+                  {/* CAMPO REPETIR CONTRASEÑA */}
+                  <input
+                    type="password"
+                    name="repeatPassword"
+                    placeholder="Repetir contraseña"
+                    value={form.repeatPassword}
+                    onChange={handleChange}
+                    className={errors.repeatPassword ? 'input-error' : ''}
+                  />
+
+                  <div className="error-placeholder">
+                    {errors.repeatPassword && <p className="error-message">{errors.repeatPassword}</p>}
+                  </div>
+
 
                   <div className="checkboxes">
                     <label className="checkbox-item">
@@ -129,8 +219,13 @@ function Registrarse() {
                     </label>
                   </div>
 
+                  <div className="error-placeholder" style={{ minHeight: '15px', marginTop: '-10px' }}>
+                    {errors.checkboxes && <p className="error-message error-checkbox">{errors.checkboxes}</p>}
+                  </div>
+
+                  
                   <button className="btn-modal next-btn" onClick={nextStep}>Siguiente ➜</button>
-                                    <button
+                  <button
                     className="login-redirect"
                     onClick={() => {
                       setModal(false);
@@ -150,13 +245,58 @@ function Registrarse() {
                 </div>
               )}
 
+              {/* === PASO 2: DATOS PERSONALES === */}
               {step === 2 && (
                 <div className="step">
                   <h2>Crea tu usuario</h2>
-                  <input name="nombre" placeholder="Nombre" value={form.nombre} onChange={handleChange} />
-                  <input name="apellido" placeholder="Apellido" value={form.apellido} onChange={handleChange} />
-                  <input name="usuario" placeholder="UserName" value={form.usuario} onChange={handleChange} />
-                  <input type="date" name="nacimiento" value={form.nacimiento} onChange={handleChange} />
+                  <input
+                    name="nombre"
+                    placeholder="Nombre"
+                    value={form.nombre}
+                    onChange={handleChange}
+                    className={errors.nombre ? 'input-error' : ''}
+                  />
+                  <div className="error-placeholder">
+                    {errors.nombre && <p className="error-message">{errors.nombre}</p>}
+                  </div>
+
+
+                  <input
+                    name="apellido"
+                    placeholder="Apellido"
+                    value={form.apellido}
+                    onChange={handleChange}
+                    className={errors.apellido ? 'input-error' : ''}
+                  />
+
+                  <div className="error-placeholder">
+                    {errors.apellido && <p className="error-message">{errors.apellido}</p>}
+                  </div>
+
+
+                  <input
+                    name="usuario"
+                    placeholder="UserName"
+                    value={form.usuario}
+                    onChange={handleChange}
+                    className={errors.usuario ? 'input-error' : ''}
+                  />
+                  <div className="error-placeholder">
+                    {errors.usuario && <p className="error-message">{errors.usuario}</p>}
+                  </div>
+
+
+                  <input
+                    type="date"
+                    name="nacimiento"
+                    value={form.nacimiento}
+                    onChange={handleChange}
+                    className={errors.nacimiento ? 'input-error' : ''}
+                  />
+                  <div className="error-placeholder">
+                    {errors.nacimiento && <p className="error-message">{errors.nacimiento}</p>}
+                  </div>
+
 
                   <div className="buttons">
                     <button className="btn-modal" onClick={prevStep}>← Atrás</button>
@@ -165,6 +305,7 @@ function Registrarse() {
                 </div>
               )}
 
+              {/* === PASO 3: PERFIL Y DESCRIPCIÓN === */}
               {step === 3 && (
                 <div className="step">
                   <h2>Personaliza tu perfil</h2>
@@ -193,7 +334,9 @@ function Registrarse() {
                     placeholder="Contanos sobre vos..."
                     value={form.descripcion}
                     onChange={handleChange}
+                    className={errors.descripcion ? 'input-error' : ''}
                   />
+                  {errors.descripcion && <p className="error-message">{errors.descripcion}</p>}
 
                   <div className="buttons">
                     <button className="btn-modal" onClick={prevStep}>← Atrás</button>
@@ -220,32 +363,31 @@ function Registrarse() {
         </div>
       </div>
 
-      {/*Sección cuadrados debajo de la imagen*/}
-      <div className = "main-features-section">
+      {/* --- SECCIÓN DE CUADRADOS (REUTILIZADA) --- */}
+      <div className="main-features-section">
         <FeatureCard
-          icon = "🔍" //emoji para icono de busqueda
-          titulo = "Exploración de Catálogo"
-          descripcion ="Explorá un catálogo inmenso de libros y filtrá por género favorito."
+          icon="🔍"
+          title="Exploración de Catálogo"
+          description="Explorá un catálogo inmenso de libros y filtrá por género, o listados personalizados."
         />
         <FeatureCard
-          icon="👥" //emoji para icono de usuarios
-          titulo="Conectá con lectores apasionantes"
-          descripcion="Descubrí perfiles, seguí a otros usuarios, compartí opiniones y sé parte de clubes lectura."
+          icon="👥"
+          title="Conectá con lectores apasionantes"
+          description="Descubrí perfiles, seguí a otros usuarios, compartí opiniones y sé parte de clubes de lectura."
         />
         <FeatureCard
-          icon="📚" //emoji para icono de libros
-          titulo="Diario de Lecturas Personales"
-          descripcion="Llevá un diario de tus lecturas, puntuá, escribí reseñas y recomendá tus libros favoritas."
+          icon="📚"
+          title="Diario de Lecturas Personal"
+          description="Registra tu progreso, puntuá, escribí reseñas y recomendá tus libros favoritos."
         />
       </div>
+      {/* --------------------------- */}
 
       {/* --- FOOTER SIMPLE --- */}
-      <footer className="footer-RL">
+      <footer className="footer-simple-registro">
         <p>&copy; {new Date().getFullYear()} NextRead. Todos los derechos reservados.</p>
       </footer>
       {/* --------------------------- */}
-
-
     </>
   );
 }
