@@ -257,8 +257,8 @@ export default function Acceso() {
               <h2>Vuelve con nosotros ¡Logueate!</h2>
 
               <div className="single-step">
-                <input type="email" name="correo" placeholder="Email (*)" value={loginForm.correo} onChange={handleLoginChange} />
-                <input type="password" name="contrasena" placeholder="Contraseña (*)" value={loginForm.contrasena} onChange={handleLoginChange} />
+                <input type="email" name="correo" placeholder="Email" value={loginForm.correo} onChange={handleLoginChange} />
+                <input type="password" name="contrasena" placeholder="Contraseña" value={loginForm.contrasena} onChange={handleLoginChange} />
               </div>
 
               {loginError && <p style={{ color: 'red', margin: '10px 0' }}>{loginError}</p>}

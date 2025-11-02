@@ -212,12 +212,23 @@ header {
 /* ------------------------------------------------------------------- */
 
 
-
+.close-button {
+    position: absolute; 
+    top: 15px; 
+    right: 15px;
+    background: none; 
+    border: none;
+    cursor: pointer;
+    font-size: 1.5rem;
+    font-weight: 300;
+    color: #333; 
+    padding: 5px 10px; 
+    border-radius: 6px; 
+    transition: background 0.25s ease, color 0.25s ease, transform 0.1s ease; 
+}
 
 .close-button:hover {
-
   color: #000;
-
 }
 
 .register-content {
@@ -311,7 +322,7 @@ header {
 
   align-items: center;
 
-  gap: 19px;
+  gap: 12px;
 
   width: 100%;
 
@@ -326,9 +337,6 @@ input, textarea {
   width: 80%;
 
   padding: 10px;
-
-  /* Padding unificado */
-
   border-radius: 6px;
 
   border: 1px solid #ccc;
@@ -798,10 +806,12 @@ button:hover,
 
   font-size: 0.8rem;
 
-  margin: 0px 0 9px;
+  margin: 0;
 
-  width: 100%;
+  width: 300px;
 
   text-align: left;
+
+  margin-bottom: 2px;
 
 }
