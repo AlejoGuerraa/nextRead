@@ -254,7 +254,7 @@ export default function Acceso() {
           {/* Modal de login */}
           <Modal openModal={loginOpen} closeModal={() => setLoginOpen(false)}>
             <div className="login-content">
-              <h2>Vuelve con nosotros, logueate!</h2>
+              <h2>Vuelve con nosotros ¡Logueate!</h2>
 
               <div className="single-step">
                 <input type="email" name="correo" placeholder="Email (*)" value={loginForm.correo} onChange={handleLoginChange} />
