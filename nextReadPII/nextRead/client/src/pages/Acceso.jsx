@@ -1,4 +1,3 @@
-// src/pages/Acceso.jsx
 import React, { useEffect, useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import axios from 'axios';
@@ -48,7 +47,7 @@ export default function Acceso() {
   const avatarOptions = ['🧸ྀི', '♡', '₍^. .^₎⟆', '≽^-⩊-^≼', 'ᓚ₍⑅^..^₎♡', '🐔'];
   const [showGustos, setShowGustos] = useState(false);
 
-  /* Abrir modal según query param ?modal=login|register */
+  /* Abrir modal segun query param ?modal=login|register */
   useEffect(() => {
     const modalParam = params.get('modal');
     if (modalParam === 'login') setLoginOpen(true);
@@ -164,7 +163,7 @@ export default function Acceso() {
         <div className="texto-superpuesto">
           <h3 className="slogan-text">Descubrí tu próxima gran lectura</h3>
 
-          {/* Único botón visible para registro */}
+          {/* unico boton visible para registro */}
           <button className="btn-registro-pagina" onClick={() => setRegisterOpen(true)}>Comenzar</button>
 
           {/* ---------- MODAL DE REGISTRO ---------- */}
@@ -284,7 +283,7 @@ export default function Acceso() {
         <FeatureCard icon="📚" title="Diario de Lecturas Personal" description="Registra tu progreso, puntuá, escribí reseñas y recomendá tus libros favoritos." />
       </div>
 
-      <footer className="footer-simple-registro">
+      <footer className="footer-acceso">
         <p>&copy; {new Date().getFullYear()} NextRead. Todos los derechos reservados.</p>
       </footer>
     </>

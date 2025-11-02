@@ -1,0 +1,36 @@
+/* src/pagescss/modal.css */
+
+.modal-dialog {
+  /* Estilos principales del modal */
+  border: none;
+  border-radius: 16px;
+  padding: 30px;
+  background: white; /* Usa 'white' en lugar de '#f2f4f8' para que coincida con la imagen más pulida */
+  width: 500px;
+  max-width: 90%;
+  box-shadow: 0 6px 20px rgba(0,0,0,0.3);
+  position: relative;
+  text-align: center; /* Centra el contenido si no hay otro layout */
+}
+
+/* Estilo para el fondo oscuro (backdrop) */
+dialog::backdrop {
+  background: rgba(0, 0, 0, 0.6);
+}
+
+.close-button {
+  /* Estilos del botón 'X' */
+  position: absolute;
+  top: 10px;
+  right: 15px;
+  background: none;
+  border: none;
+  font-size: 22px;
+  cursor: pointer;
+  color: #444; /* Un color oscuro para que contraste */
+  transition: color 0.2s;
+}
+
+.close-button:hover {
+  color: #000;
+}
