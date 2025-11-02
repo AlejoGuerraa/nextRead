@@ -253,7 +253,7 @@ export default function Acceso() {
 
           {/* Modal de login */}
           <Modal openModal={loginOpen} closeModal={() => setLoginOpen(false)}>
-            <div className="register-content">
+            <div className="login-content">
               <h2>Vuelve con nosotros, logueate!</h2>
 
               <div className="single-step">
