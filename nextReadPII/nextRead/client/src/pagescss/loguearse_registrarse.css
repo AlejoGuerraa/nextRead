@@ -246,7 +246,7 @@ header {
 
 .register-content h2 {
 
-  font-family: "Georgia", serif;
+  font-family: "Inter", sans-serif;
 
   font-weight: bold;
 
@@ -288,7 +288,7 @@ header {
 
 .login-content h2 {
 
-  font-family: "Georgia", serif;
+  font-family: "Inter", sans-serif;
 
   font-weight: bold;
 
@@ -436,14 +436,30 @@ textarea {
 
 /* ------------------------------------------------------------------- */
 
+.redirect-link {
+    background: none; 
+    border: none;
+    padding: 0; 
+    margin-top: 5px;
+    
+    /* Estilo de Link: */
+    color: #0a6fb4;
+    text-decoration: none;
+    font-weight: 500;
+    font-size: 0.95rem;
+    cursor: pointer;
+    transition: color 0.2s;
+}
+
+.redirect-link:hover {
+    color: #084e82;
+    text-decoration: underline;
+}
 
 
 .buttons {
-
   display: flex;
-
   gap: 10px;
-
   margin-top: 15px;
 
 }
@@ -453,54 +469,37 @@ textarea {
 /* Estilo base para botones (modal y formularios) */
 
 button,
-
 .btn-modal {
 
   background-color: #f0c14b;
-
   color: #000000;
-
   border: none;
-
   padding: 8px 14px;
-
   border-radius: 6px;
-
   cursor: pointer;
-
   font-weight: 600;
-
   transition: background 0.2s;
-
   margin-top: 2px;
 
 }
 
 button:hover,
-
 .btn-modal:hover {
-
   background-color: #084e82;
-
 }
 
 
 /* Boton de accion principal (siguiente/finalizar) */
 
 .next-btn.btn-modal {
-
   background-color: #f0c14b;
-
   color: #333;
-
 }
 
 
 
 .next-btn.btn-modal:hover {
-
   background-color: #e0b13b;
-
 }
 
 

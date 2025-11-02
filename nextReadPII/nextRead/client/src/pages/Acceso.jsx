@@ -184,11 +184,11 @@ export default function Acceso() {
 
                   <button className="btn-modal next-btn" onClick={nextRegisterStep}>Siguiente ➜</button>
 
-                  <button className="login-redirect"
+                  <span className="redirect-link"
                     onClick={() => { setRegisterOpen(false); setLoginOpen(true); setRegisterStep(1); }}
                   >
-                    ¿Ya tenés cuenta? Iniciá sesión
-                  </button>
+                    ¿Ya tenés cuenta? Inicia sesión
+                  </span>
                 </div>
               )}
 
@@ -265,12 +265,12 @@ export default function Acceso() {
 
               <button onClick={handleLoginSubmit}>Iniciar Sesión</button>
 
-              <button
-                className="register-redirect"
+              <span
+                className="redirect-link"
                 onClick={() => { setLoginOpen(false); setRegisterOpen(true); setRegisterStep(1); }}
               >
-                ¿No tienes cuenta? Regístrate
-              </button>
+                ¿No tenés cuenta? Regístrate
+              </span>
             </div>
           </Modal>
         </div>
