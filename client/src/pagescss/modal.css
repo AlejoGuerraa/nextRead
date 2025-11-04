@@ -1,0 +1,71 @@
+.modal-dialog {
+  border: none;
+  border-radius: 16px;
+  padding: 30px;
+  background: white;
+  width: 440px;
+  max-width: 90%;
+  box-shadow: 0 6px 20px rgba(0,0,0,0.3);
+  position: fixed;
+  text-align: center;
+}
+
+.modal-dialog:has(.login-content){
+    width: 420px;
+    max-width: 90%;
+}
+
+dialog::backdrop {
+  background: rgba(0, 0, 0, 0.6);
+}
+
+.close-button {
+  position: absolute;
+  top: 10px;
+  right: 15px;
+  background: none;
+  border: none;
+  font-size: 22px;
+  cursor: pointer;
+  color: #444;
+  transition: color 0.2s;
+}
+
+.close-button:hover {
+  color: #000;
+}
+
+/*Transicion*/
+
+@keyframes fadeInModal {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Animacion para el fondo oscuro (el backdrop) */
+@keyframes fadeInBackdrop {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+
+/* Aplica el fade-in al contenido principal del modal */
+.modal-dialog[open] {
+  animation: fadeInModal 0.4s ease-out forwards;
+}
+
+/* Aplica el fade-in al fondo oscuro */
+.modal-dialog[open]::backdrop {
+  animation: fadeInBackdrop 0.4s ease-out forwards;
+  background-color: rgba(0, 0, 0, 0.7); 
+}
