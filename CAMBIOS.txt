@@ -1,0 +1,27 @@
+Los cambios que se realizaron del documento original están listados en este documento extra (parte de sofi)
+
+DE PARTE DEL BACKEND:
+
+- Se agregó la tabla 'Autor.js' y se modiifcó el archivo 'indexModel.js' para establerer coneciones entre libro y autor.
+  Además, se modificó un poco la tabla 'Libro.js'.
+
+- Cuando se registra un usuario, se filtran los ID de los libros y autores recomendados, respecto a su estado existente en la base de datos.
+  Ante esto, siempre se va a llamar a lo que se envie desde el frontend hacia el backend para combinar los datos.
+
+- Se agregaron algunos endpoints, como 'getTrendingBooks' para la pagina invitado (seguro lo voy a modificar), 'buscar' (hecho por agus, falta implementar en el backend),
+  'editarPerfil' (modificacion de alejo en el backend implementada en el codigo), endpoints para agregar autores y libros, y un endpoint que devuelve
+  los 10 primeros libros (por ahi lo modifico)
+
+- Cambios en index.js
+
+DE PARTE DEL FRONTEND:
+
+- Se implementaron los códigos de caro y alejo, por lo que hay una página de acceso y para editar perfil. Las conexiones entre los perfiles no están del todo
+  bien modificadas, asi que lo voy a ver. Falta la parte del modal de gustos de caro
+
+- Ahora en la página de logueado se puede observar la portada de los libros que se unen con la base de datos.
+
+- En invitado tengo que modificar algunas cosas también para conectar la parte de libros "trending" para mostrar la foto, titulo y autor.
+
+- En el main.jsx modifique las rutas por las que pusieron alejo y caro. Tambien agregue los documentos css que agregaron, asi que por mi parte no agregue nada nuevo de eso.
+  Falta acceder a los detalles del libro.
