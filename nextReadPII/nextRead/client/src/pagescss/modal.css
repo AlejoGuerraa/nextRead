@@ -1,3 +1,4 @@
+/* === Estilos generales (ya los tenés bien) === */
 .modal-dialog {
   border: none;
   border-radius: 16px;
@@ -5,16 +6,40 @@
   background: white;
   width: 440px;
   max-width: 90%;
-  box-shadow: 0 6px 20px rgba(0,0,0,0.3);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
   position: fixed;
   text-align: center;
 }
 
-.modal-dialog:has(.login-content){
-    width: 420px;
-    max-width: 90%;
+/* Para el modal de login */
+.modal-dialog:has(.login-content) {
+  width: 420px;
+  max-width: 90%;
 }
 
+/* === SOLO para el modal de gustos === */
+.modal-dialog.modal-gustos {
+  width: 90vw !important;
+  max-width: 1100px !important;
+  height: auto !important;
+  max-height: 90vh !important;
+  overflow: hidden !important;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 !important; /* quitamos padding extra del dialog */
+}
+
+.modal-dialog.modal-gustos > * {
+  flex: 1;
+}
+
+/* Fondo del modal de gustos */
+.modal-dialog.modal-gustos::backdrop {
+  background: rgba(0, 0, 0, 0.5);
+}
+
+/* === Fondo y animaciones === */
 dialog::backdrop {
   background: rgba(0, 0, 0, 0.6);
 }
@@ -35,8 +60,7 @@ dialog::backdrop {
   color: #000;
 }
 
-/*Transicion*/
-
+/* Transiciones */
 @keyframes fadeInModal {
   from {
     opacity: 0;
@@ -48,7 +72,6 @@ dialog::backdrop {
   }
 }
 
-/* Animacion para el fondo oscuro (el backdrop) */
 @keyframes fadeInBackdrop {
   from {
     opacity: 0;
@@ -58,14 +81,12 @@ dialog::backdrop {
   }
 }
 
-
-/* Aplica el fade-in al contenido principal del modal */
+/* Aplica animaciones */
 .modal-dialog[open] {
   animation: fadeInModal 0.4s ease-out forwards;
 }
 
-/* Aplica el fade-in al fondo oscuro */
 .modal-dialog[open]::backdrop {
   animation: fadeInBackdrop 0.4s ease-out forwards;
-  background-color: rgba(0, 0, 0, 0.7); 
+  background-color: rgba(0, 0, 0, 0.7);
 }

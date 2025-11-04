@@ -1,7 +1,7 @@
 import React, { useEffect, useRef } from 'react';
 import '../pagescss/modal.css'; 
 
-export function Modal({ openModal, closeModal, children }) {
+export function Modal({ openModal, closeModal, children, extraClass}) {
   const ref = useRef(null);
   
   useEffect(() => {
@@ -15,7 +15,7 @@ export function Modal({ openModal, closeModal, children }) {
   }, [openModal]);
 
   return (
-    <dialog ref={ref} onCancel={closeModal} className="modal-dialog">
+    <dialog ref={ref} onCancel={closeModal} className={`modal-dialog ${extraClass || ""}`}>
       {children} 
       <button onClick={closeModal} aria-label="Cerrar modal" className="close-button">
         ✕
