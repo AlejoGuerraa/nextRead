@@ -1,6 +1,9 @@
 const User = require("../models/Usuario");
-const Autor = require("../models/Autor")
+const Autor = require("../models/Autor");
 const Libro = require("../models/Libro");
+const Icono = require("../models/Icono");
+const Banner = require("../models/Banner");
+
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 
@@ -44,6 +47,16 @@ const register = async (req, res) => {
   const correoadsd = await User.findOne({ where: { correo } });
   if (correoadsd) return res.status(400).json({ error: "El correo ya está registrado" });
 
+  // 1️⃣ Buscar o crear el ícono
+  const [iconoObj] = await Icono.findOrCreate({
+    where: { simbolo: icono }
+  });
+
+  // 2️⃣ Buscar o crear el banner
+  const [bannerObj] = await Banner.findOrCreate({
+    where: { url: banner }
+  });
+
   const librosRecIds = await Promise.all(
     libros_rec.map(async titulo => {
       let libro = await Libro.findOne({ where: { titulo } });
@@ -66,8 +79,8 @@ const register = async (req, res) => {
     usuario,
     contrasena: hashedPassw,
     fecha_nacimiento,
-    icono,
-    banner,
+    idIcono: iconoObj.id,
+    idBanner: bannerObj.id,
     descripcion,
     libros_rec: librosRecIds.filter(Boolean),
     autores_rec: autoresRecIds.filter(Boolean),
@@ -369,6 +382,40 @@ const cargarLibrosAutores = async (req, res) => {
   }
 };
 
+// Funcionalidades de libros
+
+const agregarLibroALista = async (req, res) => {
+  try {
+    const { tipo, idLibro } = req.params; // tipo = favoritos / enLectura / paraLeer
+    const userId = req.user.id; // Esto lo tomaremos del token
+
+    const usuario = await User.findByPk(userId);
+    if (!usuario) return res.status(404).json({ error: "Usuario no encontrado" });
+
+    // Parsear la lista existente o crear una vacía
+    let lista = usuario[`libros_${tipo}`] || [];
+
+    // Si no es array, inicializar
+    if (!Array.isArray(lista)) lista = [];
+
+    // Evitar duplicados
+    if (lista.includes(Number(idLibro))) {
+      return res.status(400).json({ message: "El libro ya está en la lista" });
+    }
+
+    // Agregar el libro y guardar
+    lista.push(Number(idLibro));
+    usuario[`libros_${tipo}`] = lista;
+    await usuario.save();
+
+    res.json({ message: `Libro agregado a ${tipo}`, lista });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Error al agregar el libro a la lista" });
+  }
+};
+
+
 const getPrimerosLibros = async (req, res) => {
   try {
     const libros = await Libro.findAll({
@@ -399,5 +446,6 @@ module.exports = {
   buscar,
   cargarLibrosAutores,
   crearAutores,
+  agregarLibroALista,
   getPrimerosLibros
 };

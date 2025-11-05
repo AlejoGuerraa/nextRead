@@ -1,25 +1,43 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef } from "react";
 import '../pagescss/modal.css'; 
 
-export function Modal({ openModal, closeModal, children }) {
-  const ref = useRef(null);
-  
+export function Modal({ openModal, closeModal, children, extraClass = "" }) {
+  const dialogRef = useRef(null);
+
   useEffect(() => {
-    if (!ref.current) return;
-    
+    const dialog = dialogRef.current;
+    if (!dialog) return;
+
+    // Abre o cierra el modal de forma nativa
     if (openModal) {
-      ref.current.showModal(); 
+      if (!dialog.open) dialog.showModal();
     } else {
-      ref.current.close();
+      if (dialog.open) dialog.close();
     }
+
+    // Limpieza al desmontar
+    return () => {
+      if (dialog.open) dialog.close();
+    };
   }, [openModal]);
 
+  // Manejador del boton "X"
+  const handleClose = () => {
+    if (dialogRef.current?.open) dialogRef.current.close();
+    closeModal();
+  };
+
   return (
-    <dialog ref={ref} onCancel={closeModal} className="modal-dialog">
-      {children} 
-      <button onClick={closeModal} aria-label="Cerrar modal" className="close-button">
+    <dialog
+      ref={dialogRef}
+      className={`modal-dialog ${extraClass}`}
+      onCancel={handleClose}
+    >
+      <button className="close-button" onClick={handleClose}>
         ✕
       </button>
+
+      {children}
     </dialog>
   );
 }

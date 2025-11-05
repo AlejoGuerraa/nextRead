@@ -235,7 +235,18 @@ export default function Acceso() {
 
                   <div className="buttons">
                     <button className="btn-modal" onClick={prevRegisterStep}>← Atrás</button>
-                    <button className="btn-modal" onClick={() => setShowGustos(true)}>Finalizar ✔</button>
+                    {/* <button className="btn-modal" onClick={() => setShowGustos(true)}>Finalizar ✔</button> */}
+                    <button
+                      className="btn-modal"
+                      onClick={() => {
+                        setRegisterOpen(false); // Cierra el modal de registro
+                        setTimeout(() => setShowGustos(true)); // Abre el de gustos
+                      }}
+                    >
+                      Finalizar ✔
+                    </button>
+
+
                   </div>
                 </div>
               )}
@@ -261,7 +272,7 @@ export default function Acceso() {
                 <input type="password" name="contrasena" placeholder="Contraseña" value={loginForm.contrasena} onChange={handleLoginChange} />
               </div>
 
-              {loginError && <p style={{ color: 'red', margin: '10px 0' }}>{loginError}</p>}
+              {loginError && <p style={{ color: 'red', margin: '10px 0', fontSize: '0.90rem' }}>{loginError}</p>}
 
               <button onClick={handleLoginSubmit}>Iniciar Sesión</button>
 

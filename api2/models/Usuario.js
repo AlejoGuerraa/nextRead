@@ -55,15 +55,14 @@ const Usuario = sequelize.define('User', {
     defaultValue: 1
   },
 
-  icono: {
-    type: DataTypes.STRING(255),
-    allowNull: false
+  idIcono: {
+    type: DataTypes.INTEGER,
+    allowNull: true
   },
 
-  banner: {
-    type: DataTypes.STRING(255),
-    allowNull: false,
-    defaultValue: "banner.jpg"
+  idBanner: {
+    type: DataTypes.INTEGER,
+    allowNull: true
   },
 
   fecha_ingreso: {

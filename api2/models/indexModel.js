@@ -9,6 +9,8 @@ const Amigo = require('./Amigo');
 const Logro = require('./Logro');
 const Usuario_Logro = require('./Usuario_Logro');
 const Autor = require('./Autor');
+const Icono = require('./Icono');
+const Banner = require('./Banner');
 
 // 📘 Usuario ↔ Libro (por medio de Reseñas)
 Usuario.belongsToMany(Libro, {
@@ -83,8 +85,17 @@ Logro.belongsToMany(Usuario, {
     as: 'Usuarios'
 });
 
-Libro.belongsTo(Autor, { foreignKey: 'idAutor' });
+// Autor con Libro (uno a muchos)
+Libro.belongsTo(Autor,{ foreignKey: 'idAutor' });
 Autor.hasMany(Libro, { foreignKey: 'idAutor' });
 
+// Icono con Usuario - Banner con Usuario
 
-module.exports = { Usuario, Libro, Resena, Amigo, Logro, Usuario_Logro, Autor };
+Usuario.belongsTo(Icono, { foreignKey: 'idIcono', as: 'icono' });
+Usuario.belongsTo(Banner, { foreignKey: 'idBanner', as: 'banner' });
+
+Icono.hasMany(Usuario, { foreignKey: 'idIcono', as: 'usuarios' });
+Banner.hasMany(Usuario, { foreignKey: 'idBanner', as: 'usuarios' });
+
+
+module.exports = { Usuario, Libro, Resena, Amigo, Logro, Usuario_Logro, Autor, Icono, Banner };

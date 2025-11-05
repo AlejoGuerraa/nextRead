@@ -10,6 +10,7 @@ const {
     buscar,
     cargarLibrosAutores,
     crearAutores,
+    agregarLibroALista,
     getPrimerosLibros
 } = require('./controller/peticionesUsuario');
 
@@ -25,6 +26,8 @@ require('./models/Resena');
 require('./models/Usuario_Logro');
 require('./models/Amigo');
 require('./models/indexModel');
+require('./models/Banner');
+require('./models/Icono');
 
 const server = express();
 server.use(express.json());
@@ -36,13 +39,16 @@ server.use((req, res, next) => {
     next();
 });
 
-
+// --------------- Endpoints para registrar usuarios ---------------
 server.get('/nextread/allUsers', getAllUsers);
 server.post('/nextread/register', register);
 server.post('/nextread/login', login);
+
+// --------------- Endpoints para libros y autores ---------------
 server.get('/nextread/libros', getAllBooks);
 server.get('/nextread/autores', getAuthors)
 server.get('/nextread/libro/:id', getBookById);
+server.post('/nextread/usuario/:tipo/:idLibro', isAuth, agregarLibroALista);
 server.get('/nextread/trending', getTrendingBooks);
 server.get('/nextread/buscar', buscar);
 server.post('/nextread/agregarAutoresPrueba', crearAutores)

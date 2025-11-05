@@ -1,0 +1,17 @@
+const { DataTypes } = require('sequelize');
+const sequelize = require('../config/db');
+
+const Icono = sequelize.define('Icono', {
+  id: {
+    type: DataTypes.INTEGER,
+    autoIncrement: true,
+    primaryKey: true
+  },
+  
+  simbolo: {
+    type: DataTypes.STRING(10), // guarda el emoji o texto corto
+    allowNull: false
+  },
+});
+
+module.exports = Icono;

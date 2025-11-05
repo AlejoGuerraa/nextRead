@@ -3,7 +3,7 @@ Los cambios que se realizaron del documento original están listados en este doc
 DE PARTE DEL BACKEND:
 
 - Se agregó la tabla 'Autor.js' y se modiifcó el archivo 'indexModel.js' para establerer coneciones entre libro y autor.
-  Además, se modificó un poco la tabla 'Libro.js'.
+  Además, se modificó un poco la tabla 'Libro.js'. (05/11: Se agregaron dos tablas Icono y Banner)
 
 - Cuando se registra un usuario, se filtran los ID de los libros y autores recomendados, respecto a su estado existente en la base de datos.
   Ante esto, siempre se va a llamar a lo que se envie desde el frontend hacia el backend para combinar los datos.
