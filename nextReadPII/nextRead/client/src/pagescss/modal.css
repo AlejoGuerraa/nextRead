@@ -1,4 +1,3 @@
-/* === Estilos generales (ya los tenés bien) === */
 .modal-dialog {
   border: none;
   border-radius: 16px;
@@ -7,9 +6,16 @@
   width: 440px;
   max-width: 90%;
   box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
-  position: fixed;
   text-align: center;
 }
+
+/* Para mantenerlo centrado correctamente (solo visual, no funcional) */
+dialog[open] {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
 
 /* Para el modal de login */
 .modal-dialog:has(.login-content) {
@@ -24,11 +30,10 @@
   height: auto !important;
   max-height: 90vh !important;
   overflow: hidden !important;
-  display: flex;
-  align-items: center;
   justify-content: center;
-  padding: 0 !important; /* quitamos padding extra del dialog */
+  padding: 0 !important;
 }
+
 
 .modal-dialog.modal-gustos > * {
   flex: 1;

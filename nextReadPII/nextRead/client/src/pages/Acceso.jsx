@@ -235,7 +235,18 @@ export default function Acceso() {
 
                   <div className="buttons">
                     <button className="btn-modal" onClick={prevRegisterStep}>← Atrás</button>
-                    <button className="btn-modal" onClick={() => setShowGustos(true)}>Finalizar ✔</button>
+                    {/* <button className="btn-modal" onClick={() => setShowGustos(true)}>Finalizar ✔</button> */}
+                    <button
+                      className="btn-modal"
+                      onClick={() => {
+                        setRegisterOpen(false); // Cierra el modal de registro
+                        setTimeout(() => setShowGustos(true)); // Abre el de gustos
+                      }}
+                    >
+                      Finalizar ✔
+                    </button>
+
+
                   </div>
                 </div>
               )}
@@ -289,5 +300,3 @@ export default function Acceso() {
     </>
   );
 }
-
-
