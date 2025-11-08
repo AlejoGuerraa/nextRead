@@ -166,7 +166,7 @@ export default function Acceso() {
 
       <div className="contenedor-imagen-acceso">
         <div className="texto-superpuesto">
-          <h3 className="slogan-text">Descubrí tu próxima <br /> gran lectura</h3>
+          <h3 className="slogan-text">Descubrí tu próxima <br /> Gran Lectura</h3>
 
           <button className="btn-registro-pagina" onClick={() => setRegisterOpen(true)}>Comenzar</button>
 
