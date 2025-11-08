@@ -352,7 +352,7 @@ const Invitado = () => {
                                 ¡Necesitas una cuenta!
                             </p>
                             <a
-                                href="/registrarse"
+                                href="/acceso"
                                 style={popoverLinkStyle}
                                 onClick={() => {
                                     sessionStorage.setItem('justReturnedFromRegistration', 'true');
