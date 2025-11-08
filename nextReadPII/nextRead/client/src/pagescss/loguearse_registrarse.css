@@ -67,7 +67,7 @@ header {
 
 /* Contenedor de la imagen de bienvenida (para Invitado/Home) */
 
-.contenedor-imagen-loguearse {
+.contenedor-imagen-acceso {
 
   width: 100%;
 
@@ -79,7 +79,7 @@ header {
 
   background-color: #252525;
 
-  background-image: url('../assets/ImagenChica.jpg');
+  background-image: url('../assets/ImagenChicaNextRead.jpg');
 
   background-size: cover;
 
