@@ -87,11 +87,11 @@ const dotStyle = (isActive) => ({
     border: "1px solid #fff",
 });
 
-const ARROW_MARGIN = "30px"; // Nuevo margen
+const ARROW_MARGIN = "30px";
 const arrowStyle = (direction, isDisabled) => ({
     position: "absolute",
     top: "50%",
-    [direction]: ARROW_MARGIN, // Usamos el nuevo margen
+    [direction]: ARROW_MARGIN,
     transform: "translateY(-50%)",
     backgroundColor: isDisabled ? "rgba(0, 0, 0, 0.2)" : "rgba(0, 0, 0, 0.5)",
     color: "white",
@@ -154,7 +154,7 @@ const Invitado = () => {
         { title: "Don Quijote", author: "M. de Cervantes", rating: 4.6 },
     ];
 
-    // Lógica del Carrusel
+    // Logica del Carrusel
     const listRef = useRef(null);
     const [currentIndex, setCurrentIndex] = useState(0);
     const SLIDE_WIDTH = 1000; // Ancho de cada slide (de liStyle)
@@ -162,7 +162,6 @@ const Invitado = () => {
     useEffect(() => {
         const listNode = listRef.current;
         if (listNode) {
-            // Aplicar la transformación para mover el UL por el ancho de un slide
             listNode.style.transform = `translateX(-${currentIndex * SLIDE_WIDTH}px)`;
         }
     }, [currentIndex]);
@@ -186,7 +185,7 @@ const Invitado = () => {
     };
 
 
-    // Lógica de Restricción/Popover (sin cambios)
+    // logica de Restriccion/Popover
     const handleRestrictedClick = (e) => {
         e.preventDefault();
         setShowRestriction(false);
@@ -244,7 +243,7 @@ const Invitado = () => {
                     color: "#fff",
                 }}
             >
-                {/* Izquierda (Logo y Búsqueda) */}
+                {/* Izquierda (Logo y Busqueda) */}
                 <div style={{ display: "flex", alignItems: "center", gap: "15px" }}>
                     <div
                         style={{
@@ -299,7 +298,7 @@ const Invitado = () => {
                         position: 'relative',
                     }}
                 >
-                    {/* Íconos de Notificaciones, Amigos, Perfil (con handleRestrictedClick) */}
+                    {/* iconos de Notificaciones, Amigos, Perfil (con handleRestrictedClick) */}
                     <div
                         style={iconStyle}
                         onClick={handleRestrictedClick}
@@ -358,7 +357,7 @@ const Invitado = () => {
                                     sessionStorage.setItem('justReturnedFromRegistration', 'true');
                                 }}
                             >
-                                Regístrate aquí
+                                Accede aquí
                             </a>
                         </div>
                     )}
@@ -367,7 +366,7 @@ const Invitado = () => {
 
             <main style={{ padding: "30px 30px", maxWidth: "1200px", margin: "0 auto", backgroundColor: "#fff" }}>
                 
-                {/* Carrusel/Slider (Ahora es más grande) */}
+                {/* Carrusel/Slider*/}
                 <div className="slider-container" style={sliderContainerStyle}>
                     <div
                         className="leftArrow"
@@ -407,7 +406,7 @@ const Invitado = () => {
                     </div>
                 </div>
 
-                {/* Sección de Tendencias / Novedades */}
+                {/* Seccion de Tendencias / Novedades */}
                 <section style={{ marginTop: "40px" }}>
                     <h3
                         style={{
@@ -420,7 +419,7 @@ const Invitado = () => {
                         Tendencias y Novedades
                     </h3>
 
-                    {/* Dropdown (sin cambios en estilo) */}
+                    {/* Dropdown*/}
                     <div
                         style={{
                             display: "flex",
@@ -450,7 +449,7 @@ const Invitado = () => {
                         </select>
                     </div>
 
-                    {/* Carril de tarjetas de libros (sin cambios en estilos de fondo y margen) */}
+                    {/* Carril de tarjetas de libros*/}
                     <div
                         style={{
                             display: "flex",
@@ -563,7 +562,6 @@ const Invitado = () => {
                 </section>
             </main>
 
-            {/* Estilos para ocultar scrollbar */}
             <style>
                 {`
             .hide-scrollbar::-webkit-scrollbar {
@@ -571,7 +569,6 @@ const Invitado = () => {
                 
             }
             
-            /* Estilos para el dropdown (opciones) */
             select option:checked, select option:hover {
                 background-color: #0a6fb4 !important; /* Color de tu app */
                 color: #fff !important; 
