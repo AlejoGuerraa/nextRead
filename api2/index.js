@@ -5,13 +5,15 @@ const {
     login, 
     getAllBooks,
     getAuthors,
-    getBookById,
+    getLibroById,
     getTrendingBooks,
     buscar,
     cargarLibrosAutores,
     crearAutores,
     agregarLibroALista,
-    getPrimerosLibros
+    getPrimerosLibros,
+    getTendencias,
+    guardarPuntuacion
 } = require('./controller/peticionesUsuario');
 
 const isAuth = require('./middlewares/isAuth');
@@ -47,13 +49,15 @@ server.post('/nextread/login', login);
 // --------------- Endpoints para libros y autores ---------------
 server.get('/nextread/libros', getAllBooks);
 server.get('/nextread/autores', getAuthors)
-server.get('/nextread/libro/:id', getBookById);
+server.get('/nextread/libro/:id', getLibroById);
 server.post('/nextread/usuario/:tipo/:idLibro', isAuth, agregarLibroALista);
 server.get('/nextread/trending', getTrendingBooks);
 server.get('/nextread/buscar', buscar);
 server.post('/nextread/agregarAutoresPrueba', crearAutores)
 server.post('/nextread/agregarLibrosPrueba', cargarLibrosAutores)
 server.get('/nextread/primeros', getPrimerosLibros);
+server.get('/nextread/getTendencias', getTendencias);
+server.post("/nextread/resena/:idLibro", isAuth, guardarPuntuacion);
 
 
 

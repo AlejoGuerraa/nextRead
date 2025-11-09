@@ -191,9 +191,9 @@ export function ModalGustos({ open, close, onFinish }) {
           background-color: #e6eef6;
           border-radius: 10px;
           padding: 30px;
-          width: 100%; /* ocupa todo el ancho del modal */
-          max-width: 1000px;
-          height: auto;
+          width: 650px;
+          max-width: 1080px;
+          height: 650px;
           max-height: 90vh;
           display: flex;
           flex-direction: column;
@@ -228,12 +228,12 @@ export function ModalGustos({ open, close, onFinish }) {
           color: #1a2a42;
         }
 
-        /* --- Grilla adaptable --- */
+
         .gustos-grid {
           display: grid;
           grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-          gap: 15px;
-          margin-bottom: 20px;
+          gap: 17px;
+          margin-bottom: 15px;
           width: 100%;
           flex: 1;
           overflow-y: auto;
@@ -340,7 +340,7 @@ export function ModalGustos({ open, close, onFinish }) {
           left: 8px;
         }
 
-        /* Navegación */
+        /* Navegacion */
         .buttons-nav {
           display: flex;
           justify-content: space-between;

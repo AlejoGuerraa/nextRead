@@ -7,10 +7,13 @@ import { Modal } from '../components/modal';
 import { ModalGustos } from '../components/modalGustos';
 import '../pagescss/loguearse_registrarse.css';
 
-/* Reutilizo FeatureCard */
+import CatalogoIcon from '../assets/1LogoAcceso.png';
+import ComunidadIcon from '../assets/2LogoAcceso.png';
+import DiarioIcon from '../assets/3LogoAcceso.png';
+
 const FeatureCard = ({ icon, title, description }) => (
   <div className="feature-card">
-    <div className="feature-icon-text">{icon}</div>
+    <img src={icon} alt="" className='feature-icon' />
     <h4 className="feature-title">{title}</h4>
     <p className="feature-description">{description}</p>
   </div>
@@ -47,7 +50,6 @@ export default function Acceso() {
   const avatarOptions = ['🧸ྀི', '♡', '₍^. .^₎⟆', '≽^-⩊-^≼', 'ᓚ₍⑅^..^₎♡', '🐔'];
   const [showGustos, setShowGustos] = useState(false);
 
-  /* Abrir modal segun query param ?modal=login|register */
   useEffect(() => {
     const modalParam = params.get('modal');
     if (modalParam === 'login') setLoginOpen(true);
@@ -140,7 +142,10 @@ export default function Acceso() {
         autores_rec: autores
       });
 
-      const userData = response.data;
+      const userData = {
+        ...response.data,
+        correo: registerForm.correo
+      }; 
       localStorage.setItem('user', JSON.stringify(userData));
       setShowGustos(false);
       setRegisterOpen(false);
@@ -159,11 +164,10 @@ export default function Acceso() {
         <h1>NextRead</h1>
       </header>
 
-      <div className="contenedor-imagen-loguearse">
+      <div className="contenedor-imagen-acceso">
         <div className="texto-superpuesto">
-          <h3 className="slogan-text">Descubrí tu próxima gran lectura</h3>
+          <h3 className="slogan-text">Descubrí tu próxima <br /> Gran Lectura</h3>
 
-          {/* unico boton visible para registro */}
           <button className="btn-registro-pagina" onClick={() => setRegisterOpen(true)}>Comenzar</button>
 
           {/* ---------- MODAL DE REGISTRO ---------- */}
@@ -289,9 +293,20 @@ export default function Acceso() {
 
       {/* TARJETAS ABAJO */}
       <div className="main-features-section">
-        <FeatureCard icon="🔍" title="Exploración de Catálogo" description="Explorá un catálogo inmenso de libros y filtrá por género, o listados personalizados." />
-        <FeatureCard icon="👥" title="Conectá con lectores apasionantes" description="Descubrí perfiles, seguí a otros usuarios, compartí opiniones y sé parte de clubes de lectura." />
-        <FeatureCard icon="📚" title="Diario de Lecturas Personal" description="Registra tu progreso, puntuá, escribí reseñas y recomendá tus libros favoritos." />
+        <FeatureCard
+          icon={CatalogoIcon}
+          title="Exploración de Catálogo"
+          description="Explorá un catálogo inmenso de libros y filtrá por género, o listados personalizados." />
+
+        <FeatureCard
+          icon={ComunidadIcon}
+          title="Conectá con lectores apasionantes"
+          description="Descubrí perfiles, seguí a otros usuarios, compartí opiniones y sé parte de clubes de lectura." />
+
+        <FeatureCard
+          icon={DiarioIcon}
+          title="Diario de Lecturas Personal"
+          description="Registra tu progreso, puntuá, escribí reseñas y recomendá tus libros favoritos." />
       </div>
 
       <footer className="footer-acceso">

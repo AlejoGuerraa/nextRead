@@ -26,8 +26,8 @@ const Perfil = () => {
   if (!user || !user.correo) {
     return (
       <div className="guest-page center">
-        <p>No hay datos de usuario válidos. Por favor, <a href="/loguearse">inicia sesión</a>.</p>
-        <button className="btn-primary" onClick={() => navigate("/loguearse")}>Ir a Loguearse</button>
+        <p>No hay datos de usuario válidos. Por favor, <a href="/acceso">inicia sesión</a>.</p>
+        <button className="btn-primary" onClick={() => navigate("/acceso")}>Ir a Loguearse</button>
       </div>
     );
   }
@@ -63,7 +63,7 @@ const Perfil = () => {
 
   const handleLogout = () => {
     localStorage.removeItem("user");
-    navigate("/loguearse");
+    navigate("/acceso");
   };
 
   const placeholderBook = { title: "Sin libro", author: "-", rating: 0 };

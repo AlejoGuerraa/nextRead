@@ -3,6 +3,7 @@ const Autor = require("../models/Autor");
 const Libro = require("../models/Libro");
 const Icono = require("../models/Icono");
 const Banner = require("../models/Banner");
+const Resena = require("../models/Resena");
 
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
@@ -124,40 +125,197 @@ const getAllBooks = async (_req, res) => {
 };
 
 const getAuthors = async (_req, res) => {
-    try {
-        const autores = await Autor.findAll();
-        res.json(autores)
-    }
-    catch (error) {
-        res.status(500).json({ error: "Error al obtener los autores" })
-    }
+  try {
+    const autores = await Autor.findAll();
+    res.json(autores)
+  }
+  catch (error) {
+    res.status(500).json({ error: "Error al obtener los autores" })
+  }
 }
 
 const getBookById = async (req, res) => {
-  try {
-    const libro = await Libro.findByPk(req.params.id);
-    if (!libro) return res.status(404).json({ error: "Libro no encontrado" });
+    try {
+        const libro = await Libro.findByPk(req.params.id);
+        if (!libro) return res.status(404).json({ error: "Libro no encontrado" });
 
-    res.json(libro);
-  } catch (error) {
-    res.status(500).json({ error: "Error al buscar libro" });
-  }
+        res.json(libro);
+    } catch (error) {
+        res.status(500).json({ error: "Error al buscar libro" });
+    }
+};
+
+const buscar = async (req, res) => {
+    try {
+        const search = req.query.search || "";
+
+        // =======================================================
+        // 1. CONSULTA PRINCIPAL: Obtener los 4 libros por TÍTULO
+        // =======================================================
+        const libros = await Libro.findAll({
+            where: {
+                titulo: { [Op.like]: `%${search}%` }, // Solo busca en el título
+            },
+            limit: 4,
+            // Incluimos el Autor para tener el objeto completo en el resultado de 'libros'
+            include: [
+                {
+                    model: Autor,
+                    as: "Autor",
+                    attributes: ["id", "nombre", "url_cara"], // Selecciona solo los campos necesarios del Autor
+                    required: false, // LEFT JOIN, para que el libro se muestre aunque no tenga autor
+                },
+            ],
+        });
+
+        // =======================================================
+        // 2. CONSULTA ADICIONAL: Buscar al Autor con mayor coincidencia
+        // =======================================================
+        let autorMasRelevante = null;
+
+        if (search.length > 0) {
+            // Buscamos un autor que coincida con la palabra de búsqueda
+            // Aquí no podemos usar 'LIKE' para buscar la "mayor coincidencia" (a menos que uses PostgreSQL con Fuzziness)
+            // La forma más estándar es buscar la coincidencia exacta o la más aproximada.
+
+            // Estrategia: Buscar al primer autor que contenga la palabra en su nombre
+            const autorSugerido = await Autor.findOne({
+                where: {
+                    nombre: { [Op.like]: `%${search}%` },
+                },
+                attributes: ["id", "nombre", "url_cara"],
+            });
+
+            autorMasRelevante = autorSugerido;
+        }
+
+        // =======================================================
+        // 3. RESPUESTA
+        // =======================================================
+        if (libros.length > 0 || autorMasRelevante) {
+            res.json({
+                resultados: libros, // Los 4 libros encontrados (con su autor incluido)
+                autor: autorMasRelevante, // El autor más relevante encontrado con la palabra de búsqueda
+            });
+        } else {
+            res.json({
+                resultados: [],
+                autor: null,
+                message: "No se encontraron resultados",
+            });
+        }
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: "Error al buscar libros" });
+    }
+};
+
+
+const getTendencias = async (req, res) => {
+    try {
+        const { genero } = req.query; // Ej: "Terror", "Romance", "Clásicos"
+
+        let whereClause = {}; // Objeto para construir la consulta dinámicamente
+
+        // 1. Lógica de filtrado por Género
+        // Si se proporciona un género y no es el valor por defecto "Género..."
+        if (genero && genero !== 'Género...') {
+            // Usamos Op.like para buscar dentro del campo JSON 'generos'.
+            // Esto asume que tus géneros están guardados como un array de strings: ["Terror", "Misterio"]
+            // La consulta buscará la cadena de texto, ej: %"Terror"%
+            whereClause.generos = {
+                [Op.like]: `%\"${genero}\"%`,
+            };
+        }
+        // Si no se proporciona 'genero' o es "Género...", whereClause queda vacío
+        // y traerá libros de todos los géneros.
+
+        // 2. Consulta principal
+        const libros = await Libro.findAll({
+            where: whereClause,
+            limit: 6, // Máximo 6 libros como pediste
+            order: [
+                ['ranking', 'DESC'] // Ordenamos por ranking para que sean "Tendencias"
+            ],
+            include: [
+                {
+                    model: Autor,
+                    as: 'Autor', // El 'as' debe coincidir con tu definición de relación
+                    attributes: ['id', 'nombre', 'url_cara'], // Solo los campos necesarios
+                    required: false, // LEFT JOIN, para traer libros aunque no tengan autor
+                },
+            ],
+        });
+
+        res.json(libros);
+
+    } catch (error) {
+        console.error('Error al obtener tendencias:', error);
+        res.status(500).json({ message: 'Error al obtener las tendencias' });
+    }
+};
+
+// ===================================================================
+// ✅ NUEVO ENDPOINT: Obtener detalle de Libro por ID (con Autor)
+// ===================================================================
+const getLibroById = async (req, res) => {
+    const { id } = req.params;
+
+    try {
+        const libro = await Libro.findByPk(id, {
+            // 💡 Incluimos el modelo Autor usando el alias 'Autor'
+            include: [{
+                model: Autor,
+                as: 'Autor',
+                attributes: ['id', 'nombre', 'url_cara']
+            }],
+            // Mapeamos 'url_portada' a 'portada' para que coincida con el frontend
+            attributes: {
+                exclude: ['id_autor'], // Excluimos el ID interno de la respuesta
+                include: [['url_portada', 'portada']] // Añadimos 'portada' como alias de 'url_portada'
+            }
+        });
+
+        if (!libro) {
+            return res.status(404).json({ message: `Libro con ID ${id} no encontrado.` });
+        }
+
+        // El frontend recibirá: { id: 1, titulo: '...', Autor: { id: 1, nombre: '...' } }
+        res.json(libro);
+
+    } catch (error) {
+        console.error("Error al obtener el libro por ID:", error);
+        res.status(500).json({ message: 'Error interno del servidor al consultar el libro.' });
+    }
 };
 
 const getTrendingBooks = async (req, res) => {
   try {
     const libros = await Libro.findAll({
-      order: [['ranking', 'DESC']], // Ordenar por rating descendente
-      limit: 6                     // Limitar a 6 resultados
+      order: [['ranking', 'DESC']],
+      limit: 6
     });
 
-    res.json(libros);
+    // Aseguramos que generos y tags sean arrays reales
+    const librosParseados = libros.map(libro => {
+      const data = libro.toJSON();
+      return {
+        ...data,
+        generos: Array.isArray(data.generos)
+          ? data.generos
+          : JSON.parse(data.generos || '[]'),
+        tags: Array.isArray(data.tags)
+          ? data.tags
+          : JSON.parse(data.tags || '[]')
+      };
+    });
 
+    res.json(librosParseados);
   } catch (error) {
-    console.error('Error al obtener libros trending:', error);
-    res.status(500).json({ error: 'Error al obtener libros' });
+    console.error(error);
+    res.status(500).json({ error: "Error al obtener libros" });
   }
-}
+};
 
 const editarPerfil = async (req, res) => {
   try {
@@ -192,71 +350,6 @@ const editarPerfil = async (req, res) => {
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: "Error al actualizar perfil" });
-  }
-};
-
-const buscar = async (req, res) => {
-  try {
-    const search = req.query.search || "";
-
-    // =======================================================
-    // 1. CONSULTA PRINCIPAL: Obtener los 4 libros por TÍTULO
-    // =======================================================
-    const libros = await Libro.findAll({
-      where: {
-        titulo: { [Op.like]: `%${search}%` }, // Solo busca en el título
-      },
-      limit: 4,
-      // Incluimos el Autor para tener el objeto completo en el resultado de 'libros'
-      include: [
-        {
-          model: Autor,
-          as: "Autor",
-          attributes: ["id", "nombre", "url_cara"], // Selecciona solo los campos necesarios del Autor
-          required: false, // LEFT JOIN, para que el libro se muestre aunque no tenga autor
-        },
-      ],
-    });
-
-    // =======================================================
-    // 2. CONSULTA ADICIONAL: Buscar al Autor con mayor coincidencia
-    // =======================================================
-    let autorMasRelevante = null;
-
-    if (search.length > 0) {
-      // Buscamos un autor que coincida con la palabra de búsqueda
-      // Aquí no podemos usar 'LIKE' para buscar la "mayor coincidencia" (a menos que uses PostgreSQL con Fuzziness)
-      // La forma más estándar es buscar la coincidencia exacta o la más aproximada.
-
-      // Estrategia: Buscar al primer autor que contenga la palabra en su nombre
-      const autorSugerido = await Autor.findOne({
-        where: {
-          nombre: { [Op.like]: `%${search}%` },
-        },
-        attributes: ["id", "nombre", "url_cara"],
-      });
-
-      autorMasRelevante = autorSugerido;
-    }
-
-    // =======================================================
-    // 3. RESPUESTA
-    // =======================================================
-    if (libros.length > 0 || autorMasRelevante) {
-      res.json({
-        resultados: libros, // Los 4 libros encontrados (con su autor incluido)
-        autor: autorMasRelevante, // El autor más relevante encontrado con la palabra de búsqueda
-      });
-    } else {
-      res.json({
-        resultados: [],
-        autor: null,
-        message: "No se encontraron resultados",
-      });
-    }
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: "Error al buscar libros" });
   }
 };
 
@@ -387,31 +480,103 @@ const cargarLibrosAutores = async (req, res) => {
 const agregarLibroALista = async (req, res) => {
   try {
     const { tipo, idLibro } = req.params; // tipo = favoritos / enLectura / paraLeer
-    const userId = req.user.id; // Esto lo tomaremos del token
+    const userId = req.user.id;
+
+    // 🔹 Mapa entre el tipo recibido y la columna real en la BD
+    const mapaTipos = {
+      favoritos: "libros_favoritos",
+      enLectura: "libros_en_lectura",
+      paraLeer: "libros_para_leer",
+      lista: "listas"
+    };
+
+    const campo = mapaTipos[tipo];
+    if (!campo) return res.status(400).json({ error: "Tipo de lista inválido" });
 
     const usuario = await User.findByPk(userId);
     if (!usuario) return res.status(404).json({ error: "Usuario no encontrado" });
 
-    // Parsear la lista existente o crear una vacía
-    let lista = usuario[`libros_${tipo}`] || [];
-
-    // Si no es array, inicializar
+    // 🔹 Obtener el JSON actual y asegurar que sea un array
+    let lista = usuario[campo];
+    if (typeof lista === "string") {
+      try {
+        lista = JSON.parse(lista);
+      } catch {
+        lista = [];
+      }
+    }
     if (!Array.isArray(lista)) lista = [];
 
-    // Evitar duplicados
-    if (lista.includes(Number(idLibro))) {
+    // 🔹 Normalizar a formato [{ idLibro: X }]
+    lista = lista.map(item =>
+      typeof item === "number" ? { idLibro: item } : item
+    );
+
+    // 🔹 Verificar si ya existe
+    const yaExiste = lista.some(item => item.idLibro === Number(idLibro));
+    if (yaExiste) {
       return res.status(400).json({ message: "El libro ya está en la lista" });
     }
 
-    // Agregar el libro y guardar
-    lista.push(Number(idLibro));
-    usuario[`libros_${tipo}`] = lista;
+    // 🔹 Agregar nuevo libro normalizado
+    lista.push({ idLibro: Number(idLibro) });
+
+    // 🔹 Guardar el JSON actualizado
+    usuario[campo] = lista;
     await usuario.save();
 
-    res.json({ message: `Libro agregado a ${tipo}`, lista });
+    return res.json({
+      message: `Libro agregado a ${tipo}`,
+      lista
+    });
+
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: "Error al agregar el libro a la lista" });
+  }
+};
+
+const guardarPuntuacion = async (req, res) => {
+  try {
+    const userId = req.user.id; // viene del token
+    const { idLibro } = req.params;
+    const { puntuacion, comentario } = req.body;
+
+    if (!puntuacion || puntuacion < 1 || puntuacion > 5) {
+      return res.status(400).json({ error: "La puntuación debe ser entre 1 y 5 estrellas." });
+    }
+
+    // Verificar que el libro exista
+    const libro = await Libro.findByPk(idLibro);
+    if (!libro) return res.status(404).json({ error: "Libro no encontrado." });
+
+    // Verificar si el usuario ya reseñó este libro (actualizar en lugar de duplicar)
+    let resena = await Resena.findOne({
+      where: { usuario_id: userId, libro_id: idLibro }
+    });
+
+    if (resena) {
+      // Si ya existe, actualiza la puntuación y el comentario
+      resena.puntuacion = puntuacion;
+      if (comentario) resena.comentario = comentario;
+      await resena.save();
+    } else {
+      // Si no existe, crea una nueva reseña
+      resena = await Resena.create({
+        usuario_id: userId,
+        libro_id: idLibro,
+        puntuacion,
+        comentario: comentario || ""
+      });
+    }
+
+    res.json({
+      message: "⭐ Puntuación guardada correctamente",
+      resena
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Error al guardar la puntuación." });
   }
 };
 
@@ -440,12 +605,14 @@ module.exports = {
   login,
   getAllBooks,
   getAuthors,
-  getBookById,
+  getLibroById,
   getTrendingBooks,
   editarPerfil,
   buscar,
   cargarLibrosAutores,
   crearAutores,
   agregarLibroALista,
-  getPrimerosLibros
+  getPrimerosLibros,
+  getTendencias,
+  guardarPuntuacion
 };

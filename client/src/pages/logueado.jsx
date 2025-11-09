@@ -20,7 +20,7 @@ const Logueado = () => {
 
   useEffect(() => {
     const storedUser = localStorage.getItem("user");
-    if (!storedUser) navigate("/login");
+    if (!storedUser) navigate("/acceso");
     else setUser(JSON.parse(storedUser));
   }, [navigate]);
 

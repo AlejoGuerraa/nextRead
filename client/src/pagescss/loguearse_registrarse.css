@@ -67,7 +67,7 @@ header {
 
 /* Contenedor de la imagen de bienvenida (para Invitado/Home) */
 
-.contenedor-imagen-loguearse {
+.contenedor-imagen-acceso {
 
   width: 100%;
 
@@ -79,7 +79,7 @@ header {
 
   background-color: #252525;
 
-  background-image: url('../assets/ImagenChica.jpg');
+  background-image: url('../assets/ImagenChicaNextRead.jpg');
 
   background-size: cover;
 
@@ -684,22 +684,18 @@ button:hover,
 
     transform: translateY(-5px);
 
-    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15); /* Sombra más pronunciada al pasar el mouse */
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
 
 }
 
-.feature-icon-text {
+.feature-icon {
 
-    font-size: 38px;
-
-    color: #0a6fb4;
-
-    margin-bottom: 8px;
+    width: 88px;
+    height: 88px;
 
     display: inline-block;
 
 }
-
 
 
 .feature-title {
@@ -831,7 +827,6 @@ button:hover,
     box-sizing: border-box;
     justify-content: space-evenly;
     
-    /* Fondo azulado */
     background-color: #f0f7ff; 
     border-radius: 10px; 
 }
