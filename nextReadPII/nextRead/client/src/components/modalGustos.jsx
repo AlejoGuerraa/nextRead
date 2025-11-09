@@ -1,192 +1,89 @@
 import React, { useState } from "react";
 import { Modal } from "../components/modal";
 
-export function ModalGustos({ open, close, onFinish }) {
-  const [step, setStep] = useState(1);
-  const [seleccion, setSeleccion] = useState({ libros: [], generos: [], autores: [] });
+const DEFAULT_BANNER_URL = "default-banner-url.jpg"; 
 
-  // --- Datos de Ejemplo ---
-  const librosEjemplo = [
-    { titulo: "1984", img: "/libros/1984.jpg", tipo: "libro" },
-    { titulo: "Orgullo y prejuicio", img: "/libros/orgullo.jpg", tipo: "libro" },
-    { titulo: "Harry Potter", img: "/libros/hp.jpg", tipo: "libro" },
-    { titulo: "El señor de los anillos", img: "/libros/lotr.jpg", tipo: "libro" },
-    { titulo: "Cien años de soledad", img: "/libros/cien.jpg", tipo: "libro" },
-    { titulo: "El principito", img: "/libros/principito.jpg", tipo: "libro" },
-    { titulo: "It", img: "/libros/it.jpg", tipo: "libro" },
-    { titulo: "Los juegos del hambre", img: "/libros/hambre.jpg", tipo: "libro" },
-    { titulo: "Don Quijote", img: "/libros/quijote.jpg", tipo: "libro" },
+export function ModalGustos({ open, close, onFinish, onBack }) { 
+  const bannerOptions = [
+    { name: "Bosque Magico", url: "", color: "#6e8b79" },
+    { name: "Cielo Estrellado", url: "", color: "#36454F" },
+    { name: "Biblioteca Antigua", url: "", color: "#927057" },
+    { name: "Cafe y Lectura", url: "", color: "#C68E17" },
+    { name: "Minimalista Azul", url: "", color: "#406882" },
   ];
 
-  const generosEjemplo = [
-    { nombre: "Fantasía", icono: "🦄" },
-    { nombre: "Ciencia ficción", icono: "🚀" },
-    { nombre: "Romance", icono: "💖" },
-    { nombre: "Misterio", icono: "🕵️" },
-    { nombre: "Terror", icono: "👻" },
-    { nombre: "Aventura", icono: "🗺️" },
-    { nombre: "Novela Negra", icono: "🔪" },
-  ];
-
-  const autoresEjemplo = [
-    { nombre: "Stephen King", color: "#a2d2ff" },
-    { nombre: "Jane Austen", color: "#cdb4db" },
-    { nombre: "J. K. Rowling", color: "#ffe066" },
-    { nombre: "Gabriel García Márquez", color: "#ffc8dd" },
-    { nombre: "Tolkien", color: "#bde0fe" },
-    { nombre: "Agatha Christie", color: "#ffafcc" },
-    { nombre: "Miguel de Cervantes", color: "#f7a9a8" },
-  ];
-
-  // --- Funciones de Selección y Navegación ---
-  const MAX_LIBROS = 5;
-  const MAX_GENEROS = 3;
-  const MAX_AUTORES = 3;
-
-  const toggleSeleccion = (tipo, valor, max) => {
-    setSeleccion((prev) => {
-      const actual = prev[tipo];
-      const existe = actual.includes(valor);
-
-      if (existe) {
-        return { ...prev, [tipo]: actual.filter((v) => v !== valor) };
-      } else if (actual.length < max) {
-        return { ...prev, [tipo]: [...actual, valor] };
-      } else {
-        alert(`Solo puedes seleccionar ${max} ${tipo}.`);
-        return prev;
-      }
-    });
-  };
-
-  const nextStep = () => {
-    let isValid = true;
-    if (step === 1 && seleccion.libros.length !== MAX_LIBROS) {
-      alert(`Debes seleccionar ${MAX_LIBROS} libros.`);
-      isValid = false;
-    }
-    if (step === 2 && seleccion.generos.length !== MAX_GENEROS) {
-      alert(`Debes seleccionar ${MAX_GENEROS} géneros.`);
-      isValid = false;
-    }
-
-    if (isValid) setStep((s) => Math.min(s + 1, 3));
-  };
-
-  const prevStep = () => { setStep((s) => Math.max(s - 1, 1)); };
+  const [selectedBanner, setSelectedBanner] = useState(null);
 
   const finalizar = () => {
-    if (seleccion.autores.length !== MAX_AUTORES) {
-      alert(`Debes seleccionar ${MAX_AUTORES} autores.`);
-      return;
-    }
-    onFinish(seleccion.libros, seleccion.generos, seleccion.autores);
+    const finalBannerUrl = selectedBanner ? selectedBanner.url : DEFAULT_BANNER_URL;
+    onFinish(finalBannerUrl);
     close();
   };
-
-  // --- Función auxiliar para renderizar el ítem ---
-  const renderItem = (item, tipo, max, isSelected, clickHandler) => {
-    const isBook = tipo === 'libros';
-    const isGenre = tipo === 'generos';
-    const classType = isBook ? 'grid-item libro' : isGenre ? 'grid-item genero' : 'grid-item autor';
-
-    const value = isBook ? item.titulo : item.nombre;
-
-    const style = isGenre ? { backgroundColor: '#f2f7ff' } : isBook ? { backgroundColor: '#fff' } : { backgroundColor: item.color || '#fff' };
-
-    return (
-      <div
-        key={value}
-        className={`${classType} ${isSelected ? "activo" : ""}`}
-        style={style}
-        onClick={clickHandler}
-      >
-        {isSelected && <div className="check-mark">✔️</div>}
-
-        {isBook && <img src={item.img} alt={value} />}
-        {isGenre && <div className="genre-icon">{item.icono || '📚'}</div>}
-
-        <p className="item-title">{value}</p>
-
-        {isGenre && <div className="genre-text">Género</div>}
-        {tipo === 'autores' && <div className="autor-tag">Autor</div>}
-      </div>
-    );
-  };
-
-  const currentMax = step === 1 ? MAX_LIBROS : step === 2 ? MAX_GENEROS : MAX_AUTORES;
-  const currentCount = step === 1 ? seleccion.libros.length : step === 2 ? seleccion.generos.length : seleccion.autores.length;
-  const currentTitle = step === 1 ? 'libros' : step === 2 ? 'géneros' : 'autores';
 
   return (
     <Modal openModal={open} closeModal={close} extraClass="modal-gustos">
       <div className="gustos-wrapper">
-        <h1 className="main-title">Dejanos conocerte</h1>
-        <h2 className="step-title">Seleccioná {currentMax} {currentTitle}</h2>
+        <h1 className="main-title">Último Paso: </h1>
+        <h2 className="step-title">Selecciona un banner para tu perfil</h2>
         <p className="selection-count">
-          Llevas <strong>{currentCount}</strong> / {currentMax} seleccionados
+          Si no elegís uno, usaremos un banner predeterminado.
         </p>
 
-        <div className="gustos-grid">
-          {step === 1 && librosEjemplo.map((libro) => {
-            const isSelected = seleccion.libros.includes(libro.titulo);
-            return renderItem(
-              libro,
-              "libros",
-              MAX_LIBROS,
-              isSelected,
-              () => toggleSeleccion("libros", libro.titulo, MAX_LIBROS)
-            );
-          })}
+        <div className="gustos-grid banner-grid">
+          {bannerOptions.map((banner) => {
+            const isSelected = selectedBanner && selectedBanner.name === banner.name;
 
-          {step === 2 && generosEjemplo.map((genero) => {
-            const isSelected = seleccion.generos.includes(genero.nombre);
-            return renderItem(
-              genero,
-              "generos",
-              MAX_GENEROS,
-              isSelected,
-              () => toggleSeleccion("generos", genero.nombre, MAX_GENEROS)
-            );
-          })}
+            const handleBannerClick = () => {
+              if (isSelected) {
+                // Deseleccionar
+                setSelectedBanner(null);
+              } else {
+                // Seleccionar
+                setSelectedBanner(banner);
+              }
+            };
 
-          {step === 3 && autoresEjemplo.map((autor) => {
-            const isSelected = seleccion.autores.includes(autor.nombre);
-            return renderItem(
-              autor,
-              "autores",
-              MAX_AUTORES,
-              isSelected,
-              () => toggleSeleccion("autores", autor.nombre, MAX_AUTORES)
+            return (
+              <div
+                key={banner.name}
+                className={`grid-item banner-item ${isSelected ? "activo" : ""}`}
+                style={banner.url.startsWith('#') ? { backgroundColor: banner.url } : { backgroundImage: `url(${banner.url})`, backgroundSize: 'cover', backgroundPosition: 'center' }}
+                onClick={handleBannerClick}
+              >
+                {isSelected && <div className="check-mark">✔️</div>}
+
+                <div
+                  className="banner-preview"
+                  style={banner.url.startsWith('#') ? { backgroundColor: banner.url } : { backgroundImage: `url(${banner.url})` }}
+                >
+                </div>
+
+                <p className="item-title">{banner.name}</p>
+              </div>
             );
           })}
         </div>
 
         <div className="buttons-nav">
-          {step > 1 && (
-            <button className="btn back" onClick={prevStep}>← Atrás</button>
-          )}
-
-          {step < 3 ? (
-            <button className={`btn blue ${currentCount !== currentMax ? 'disabled' : ''}`} onClick={nextStep} disabled={currentCount !== currentMax}>
-              Siguiente →
-            </button>
-          ) : (
-            <button className={`btn blue ${currentCount !== MAX_AUTORES ? 'disabled' : ''}`} onClick={finalizar} disabled={currentCount !== MAX_AUTORES}>
-              Finalizar ✔
-            </button>
-          )}
+          <button className="btn-back" onClick={onBack}>
+            ← Atrás
+          </button>
+          
+          <button
+            className="btn-finish"
+            onClick={finalizar}
+          >
+            Finalizar Registro ✔
+          </button>
         </div>
 
-        <div className="dots">
-          <span className={step === 1 ? "active" : ""}></span>
-          <span className={step === 2 ? "active" : ""}></span>
-          <span className={step === 3 ? "active" : ""}></span>
-        </div>
+        <div className="dots" style={{ visibility: 'hidden' }}><span className="active"></span></div>
       </div>
 
-      {/* --- ESTILOS CSS MÁS ANCHOS --- */}
+
       <style>{`
+        /* ... Estilos que no cambian (gustos-wrapper, main-title, step-title, selection-count, gustos-grid, grid-item, etc.) ... */
+
         .gustos-wrapper {
           background-color: #e6eef6;
           border-radius: 10px;
@@ -201,7 +98,6 @@ export function ModalGustos({ open, close, onFinish }) {
           text-align: center;
           overflow: hidden;
         }
-
 
         .main-title {
           font-family: 'Codec Pro', sans-serif;
@@ -228,7 +124,6 @@ export function ModalGustos({ open, close, onFinish }) {
           color: #1a2a42;
         }
 
-
         .gustos-grid {
           display: grid;
           grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
@@ -242,7 +137,6 @@ export function ModalGustos({ open, close, onFinish }) {
           border-radius: 8px;
           scroll-behavior: smooth;
         }
-
 
         .grid-item {
           display: flex;
@@ -258,11 +152,6 @@ export function ModalGustos({ open, close, onFinish }) {
           position: relative;
           min-height: 140px;
           border: 1px solid #e0e0e0;
-        }
-
-        .grid-item:hover {
-          box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-          transform: translateY(-2px);
         }
 
         .grid-item.activo {
@@ -281,75 +170,39 @@ export function ModalGustos({ open, close, onFinish }) {
           padding: 3px;
         }
 
-        /* Libros */
-        .grid-item.libro img {
-          width: 70px;
-          height: 100px;
-          object-fit: cover;
-          border-radius: 4px;
-          margin-bottom: 8px;
+        /* Estilos específicos para los banners */
+        .grid-item.banner-item {
+          min-height: 180px;
+          justify-content: space-around;
         }
-
-        .grid-item.libro .item-title {
-          font-size: 13px;
+        
+        .banner-preview {
+          width: 100%;
+          height: 120px;
+          border-radius: 6px;
+          margin-bottom: 2px;
+          background-size: cover;
+          background-position: center;
+          background-color: #f0f0f0; 
+        }
+        
+        .item-title {
           font-weight: 600;
+          font-size: 14px;
           color: #333;
-          line-height: 1.3;
-          margin: 0;
+          margin-top: -1px;
         }
-
-        /* Géneros */
-        .grid-item.genero .genre-icon {
-          font-size: 28px;
-          margin-bottom: 6px;
-        }
-
-        .grid-item.genero .item-title {
-          font-weight: 700;
-          font-size: 14px;
-          margin: 0;
-        }
-
-        .genre-text {
-          font-size: 11px;
-          color: #666;
-          margin-top: 3px;
-        }
-
-        /* Autores */
-        .grid-item.autor {
-          color: #1a2a42;
-          padding-top: 25px;
-        }
-
-        .grid-item.autor .item-title {
-          font-weight: 600;
-          font-size: 14px;
-          margin: 0;
-          line-height: 1.3;
-        }
-
-        .autor-tag {
-          font-size: 11px;
-          color: #fff;
-          background-color: rgba(0,0,0,0.2);
-          padding: 3px 8px;
-          border-radius: 4px;
-          position: absolute;
-          top: 8px;
-          left: 8px;
-        }
-
-        /* Navegacion */
+        
+        /* Navegacion: Separa los botones 'Atrás' y 'Finalizar' */
         .buttons-nav {
           display: flex;
-          justify-content: space-between;
+          justify-content: space-between; 
           width: 80%;
           max-width: 500px;
           margin-top: 10px;
         }
 
-        .btn {
+        .btn-back, .btn-finish {
           padding: 10px 25px;
           border: none;
           border-radius: 6px;
@@ -359,44 +212,24 @@ export function ModalGustos({ open, close, onFinish }) {
           font-size: 16px;
         }
 
-        .btn.back {
-          background: #adb5bd;
-          color: white;
-        }
-
-        .btn.blue {
-          background: #88c9f2;
-          color: #1a2a42;
-        }
-
-        .btn.disabled {
-          opacity: 0.5;
-          cursor: not-allowed;
-        }
-
-        .btn:hover:not(.disabled) {
+        .btn-back:hover, .btn-finish:hover{
           opacity: 0.9;
         }
+        
+        .btn-finish, .btn-back{
+          background: #f7b731; /* Un amarillo brillante/cálido */
+          color: #1a2a42; /* Texto oscuro */
+        }
 
+
+        /* Los puntos de navegación están ocultos */
         .dots {
-          margin-top: 10px;
-          display: flex;
-          gap: 10px;
-          justify-content: center;
+          visibility: hidden; 
+          height: 0;
+          overflow: hidden;
         }
 
-        .dots span {
-          width: 12px;
-          height: 12px;
-          background: #b0b0b0;
-          border-radius: 50%;
-        }
-
-        .dots .active {
-          background: #88c9f2;
-        }
-
-        /* --- Responsive (para pantallas más chicas) --- */
+        /* Responsive */
         @media (max-width: 768px) {
           .gustos-wrapper {
             width: 95vw;
@@ -414,8 +247,6 @@ export function ModalGustos({ open, close, onFinish }) {
           }
         }
       `}</style>
-
-
     </Modal>
   );
 }

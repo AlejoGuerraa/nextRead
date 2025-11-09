@@ -125,7 +125,18 @@ export default function Acceso() {
 
   const prevRegisterStep = () => setRegisterStep(s => Math.max(1, s - 1));
 
-  const handleFinishGustos = async (libros, generos, autores) => {
+  // Maneja el boton "Atras" del ModalGustos
+  const prevRegisterStepFromGustos = () => {
+
+    setShowGustos(false);
+    setTimeout(() => {
+        setRegisterStep(3);
+        setRegisterOpen(true);
+    }, 100); 
+  };
+
+
+  const handleFinishGustos = async (bannerUrl) => {
     try {
       const response = await axios.post('http://localhost:3000/nextRead/register', {
         nombre: registerForm.nombre,
@@ -135,16 +146,15 @@ export default function Acceso() {
         contrasena: registerForm.contrasena,
         fecha_nacimiento: registerForm.nacimiento,
         icono: registerForm.avatar,
-        banner: 'default-banner',
+
+        banner: bannerUrl,
         descripcion: registerForm.descripcion,
-        libros_rec: libros,
-        generos_rec: generos,
-        autores_rec: autores
       });
 
       const userData = {
         ...response.data,
-        correo: registerForm.correo
+        correo: registerForm.correo,
+        banner: bannerUrl, 
       }; 
       localStorage.setItem('user', JSON.stringify(userData));
       setShowGustos(false);
@@ -239,18 +249,15 @@ export default function Acceso() {
 
                   <div className="buttons">
                     <button className="btn-modal" onClick={prevRegisterStep}>← Atrás</button>
-                    {/* <button className="btn-modal" onClick={() => setShowGustos(true)}>Finalizar ✔</button> */}
                     <button
                       className="btn-modal"
                       onClick={() => {
-                        setRegisterOpen(false); // Cierra el modal de registro
-                        setTimeout(() => setShowGustos(true)); // Abre el de gustos
+                        setRegisterOpen(false);
+                        setTimeout(() => setShowGustos(true), 100); 
                       }}
                     >
-                      Finalizar ✔
+                      Siguiente ➜
                     </button>
-
-
                   </div>
                 </div>
               )}
@@ -263,8 +270,14 @@ export default function Acceso() {
             </div>
           </Modal>
 
-          {/* Modal de gustos */}
-          <ModalGustos open={showGustos} close={() => setShowGustos(false)} onFinish={handleFinishGustos} />
+          {/* Modal de gustos (Selección de Banner Opcional) */}
+          <ModalGustos 
+              open={showGustos} 
+              close={() => setShowGustos(false)} 
+              onFinish={handleFinishGustos} 
+
+              onBack={prevRegisterStepFromGustos} 
+          />
 
           {/* Modal de login */}
           <Modal openModal={loginOpen} closeModal={() => setLoginOpen(false)}>
