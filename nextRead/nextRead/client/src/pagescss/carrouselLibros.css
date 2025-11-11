@@ -1,0 +1,71 @@
+/* Wrapper para controlar margen interno y evitar superposición */
+.book-scroll-wrapper {
+    overflow: hidden;
+    padding: 0 60px; /* espacio para las flechas a los lados */
+}
+
+/* Contenedor de scroll horizontal */
+.book-scroll {
+    display: flex;
+    gap: 20px;
+    overflow-x: auto;
+    scroll-behavior: smooth;
+    scroll-snap-type: x mandatory;
+}
+
+/* Scrollbar invisible */
+.book-scroll::-webkit-scrollbar {
+    height: 0;
+}
+.book-scroll {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+}
+
+/* Cada card mantiene scroll snap */
+.book-scroll > * {
+    scroll-snap-align: start;
+    flex: 0 0 auto;
+}
+
+/* Botones de scroll mejorados */
+.scroll-btn {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    z-index: 10;
+    background-color: rgba(255, 255, 255, 0.8); /* más ligero y elegante */
+    backdrop-filter: blur(6px); /* efecto de vidrio difuminado */
+    color: #1A374D; /* color acorde con tu paleta */
+    border: none;
+    padding: 12px;
+    border-radius: 50%;
+    cursor: pointer;
+    font-size: 1.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15); /* sombra suave */
+    transition: transform 0.2s, background-color 0.2s, color 0.2s;
+}
+
+.scroll-btn:hover {
+    background-color: rgba(255, 255, 255, 1);
+    color: #406882; /* más oscuro al hacer hover */
+    transform: scale(1.1);
+}
+
+.scroll-btn.left {
+    left: 10px;
+}
+
+.scroll-btn.right {
+    right: 10px;
+}
+
+
+/* Ajuste de tamaño de card para que entren 6-7 libros visibles */
+.book-card {
+    width: 140px; /* Ajustar según ancho de pantalla para 6-7 cards */
+    min-width: 140px;
+}
