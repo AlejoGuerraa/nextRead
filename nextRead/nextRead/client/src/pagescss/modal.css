@@ -9,7 +9,7 @@
   text-align: center;
 }
 
-/* Para mantenerlo centrado correctamente (solo visual, no funcional) */
+
 dialog[open] {
   display: flex;
   align-items: center;

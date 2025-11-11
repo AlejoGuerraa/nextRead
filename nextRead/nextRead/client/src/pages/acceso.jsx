@@ -16,6 +16,8 @@ import { Step2 } from '../components/acceso/pasos/paso2';
 import { Step3 } from '../components/acceso/pasos/paso3';
 import { LoginModal } from '../components/acceso/modalLogin';
 
+import Footer from '../components/footer';
+
 import '../pagescss/loguearse_registrarse.css';
 
 export default function Acceso() {
@@ -249,9 +251,7 @@ export default function Acceso() {
         <FeatureCard icon={DiarioIcon} title="Diario de Lecturas" description="Registrá tu progreso y recomendá tus libros favoritos." />
       </div>
 
-      <footer className="footer-acceso">
-        <p>&copy; {new Date().getFullYear()} NextRead. Todos los derechos reservados.</p>
-      </footer>
+      <Footer/>
     </>
   );
 }
