@@ -16,70 +16,6 @@ const getAllBooks = async (_req, res) => {
   }
 };
 
-// const agregarLibroALista = async (req, res) => {
-//   try {
-//     const userId = req.user.id;
-//     const { idLibro } = req.params;
-//     const { tipo } = req.params; // puede ser 'favoritos', 'enLectura', 'paraLeer', etc.
-//     const libroIdNum = Number(idLibro);
-
-//     const usuario = await Usuario.findByPk(userId);
-//     if (!usuario) return res.status(404).json({ error: "Usuario no encontrado" });
-
-//     // 🔹 Campos que pueden tener conflicto
-//     const campos = ["libros_en_lectura", "libros_para_leer", "libros_leidos"];
-
-//     for (const campo of campos) {
-//       if (typeof usuario[campo] === "string") {
-//         try {
-//           usuario[campo] = JSON.parse(usuario[campo]);
-//         } catch {
-//           usuario[campo] = [];
-//         }
-//       }
-//       if (!Array.isArray(usuario[campo])) usuario[campo] = [];
-//     }
-
-//     // 🔹 Quitar el libro de las listas que no corresponden
-//     if (tipo === "enLectura") {
-//       usuario.libros_para_leer = usuario.libros_para_leer.filter(
-//         (item) => item.idLibro !== libroIdNum && item !== libroIdNum
-//       );
-//       usuario.libros_leidos = usuario.libros_leidos.filter(
-//         (item) => item.idLibro !== libroIdNum && item !== libroIdNum
-//       );
-//     } else if (tipo === "paraLeer") {
-//       usuario.libros_en_lectura = usuario.libros_en_lectura.filter(
-//         (item) => item.idLibro !== libroIdNum && item !== libroIdNum
-//       );
-//       usuario.libros_leidos = usuario.libros_leidos.filter(
-//         (item) => item.idLibro !== libroIdNum && item !== libroIdNum
-//       );
-//     }
-
-//     // 🔹 Agregar a la lista correspondiente
-//     const campoObjetivo =
-//       tipo === "enLectura"
-//         ? "libros_en_lectura"
-//         : tipo === "paraLeer"
-//         ? "libros_para_leer"
-//         : "libros_favoritos";
-
-//     const yaExiste = usuario[campoObjetivo].some(
-//       (item) => item.idLibro === libroIdNum || item === libroIdNum
-//     );
-
-//     if (!yaExiste) usuario[campoObjetivo].push({ idLibro: libroIdNum });
-
-//     await usuario.save();
-
-//     res.json({ message: `📘 Libro agregado correctamente a ${tipo}` });
-//   } catch (error) {
-//     console.error("Error en agregarLibroALista:", error);
-//     res.status(500).json({ error: "Error al agregar libro a la lista" });
-//   }
-// };
-
 const agregarLibroALista = async (req, res) => {
   try {
     const { tipo, idLibro } = req.params;
@@ -178,9 +114,6 @@ const agregarLibroALista = async (req, res) => {
     return res.status(500).json({ error: "Error al agregar el libro a la lista" });
   }
 };
-
-
-
 
 const guardarPuntuacion = async (req, res) => {
   try {
