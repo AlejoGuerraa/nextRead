@@ -1,27 +1,62 @@
 Los cambios que se realizaron del documento original están listados en este documento extra (parte de sofi)
 
-DE PARTE DEL BACKEND:
+ULTIMA MODIFICACIÓN: 16/11/2025
 
-- Se agregó la tabla 'Autor.js' y se modiifcó el archivo 'indexModel.js' para establerer coneciones entre libro y autor.
-  Además, se modificó un poco la tabla 'Libro.js'. (05/11: Se agregaron dos tablas Icono y Banner)
+==============================================================================================================================
 
-- Cuando se registra un usuario, se filtran los ID de los libros y autores recomendados, respecto a su estado existente en la base de datos.
-  Ante esto, siempre se va a llamar a lo que se envie desde el frontend hacia el backend para combinar los datos.
+PARTE DEL BACKEND:
 
-- Se agregaron algunos endpoints, como 'getTrendingBooks' para la pagina invitado (seguro lo voy a modificar), 'buscar' (hecho por agus, falta implementar en el backend),
-  'editarPerfil' (modificacion de alejo en el backend implementada en el codigo), endpoints para agregar autores y libros, y un endpoint que devuelve
-  los 10 primeros libros (por ahi lo modifico)
+- NUEVAS TABLAS: Se agregaron las tablas "Icono.js" y "Banner.js", falta vincularlas con el registro, pero la idea
+  de esto es que se creen los banners y los íconos de la página en sus respectivas tablas, para vincularlos (con una llave
+  foránea) al usuario que lo eligió.
 
-- Cambios en index.js
+- NUEVAS FUNCIONALIDADES DE LIBROS: Se implementó un endpoint denominado "agregarLibroALista", el cual se encarga de listar el
+  id del libro, determinado por parametros, en la tabla "Usuario.js"; De esta forma se va a poder guardar en distintos atributos en formato JSON,
+  y ellos serian "paraLeer", "favoritos", "enLectura", "listas" y "leido" (Esta última tiene una nueva implementación en el frontend). Esto se encuentra en
+  el archivo "peticionesLibros.js".
+
+- NUEVO RANKEO DE ESTRELLAS: Ahora cada usuario que esté logueado va a poder rankear el libro que quiera y se guardará en la base de datos, gracias al endpoint
+  "guardarPuntuacion". Este se encarga de guardar en la tabla "Resena.js" el id del libro y del usuario logueado que hizo el ranking (Se encuentra en "peticionesLibros.js).
+  Este está implementado en el componente "infoLibro.js", junto a las funcionalidades de libros explicadas anteriormente.
+
+- NUEVOS CAMBIOS EN LOS INSERTS: Se agregaron más autores y libros para insertar en la base de datos antes de ejecutar la aplicación en su totalidad.
+  Estos cambios se encuentran en "busqueda.js".
+
+- PEQUEÑOS CAMBIOS EN EL INDEX: Se agregaron todos los endpoints necesarios para que funcione todo el sector del backend en cada página.
+
+==============================================================================================================================
 
 DE PARTE DEL FRONTEND:
 
-- Se implementaron los códigos de caro y alejo, por lo que hay una página de acceso y para editar perfil. Las conexiones entre los perfiles no están del todo
-  bien modificadas, asi que lo voy a ver. Falta la parte del modal de gustos de caro
+- NUEVAS IMPLEMENTACIONES DE OTROS CÓDIGOS DEL GRUPO: Se agregaron nuevas funcionalidades de seguidores y seguidos (archivos css, paginas) y los componentes "footer.js" y "header.js". Además, la lista
+  de seguidores y seguidos ahora aparece en el perfil del usuario.
 
-- Ahora en la página de logueado se puede observar la portada de los libros que se unen con la base de datos.
+- MODIFICACIONES EN LA PÁGINA DE LIBRO: Las cosas nuevas de este apartado son:
 
-- En invitado tengo que modificar algunas cosas también para conectar la parte de libros "trending" para mostrar la foto, titulo y autor.
+1. Se agregó un nuevo botón "leído", que guarda en la base de datos el ID del libro seleccionado en el campo "libros_leidos".
 
-- En el main.jsx modifique las rutas por las que pusieron alejo y caro. Tambien agregue los documentos css que agregaron, asi que por mi parte no agregue nada nuevo de eso.
-  Falta acceder a los detalles del libro.
+2. Si un usuario invitado (no registrado/logueado) intenta apretar alguna de las funcionalidades mostradas, aparecerá en pantalla el popover de la página principal,
+  indicando al usuario que primero necesita iniciar sesión o registrarse para cumplir con esas funciones.
+
+3. Las estrellas ahora son funcionales, guardando los datos gracias al endpoint explicado anteriormente (guardarPuntuacion).
+
+- NUEVAS RUTAS EN EL MAIN: Ya en esta sección, se aplicaron las nuevas rutas para ir a las páginas de seguidores y seguidos en el perfil (también se modificó "perfil.jsx"
+  para que llegue a estas rutas correctamente).
+
+==============================================================================================================================
+
+COSAS QUE FALTAN IMPLEMENTAR:
+
+- Que el registro se vincule a las tablas de icono y banner para guardar y crear en la base de datos la opción elegida.
+
+- Mostrar otros datos en el perfil, como el banner elegido, los nombres de los libros leídos, favoritos y más.
+
+- Implementar funcionalidades de seguidores y seguidos.
+
+- Agregar un sistema de mail para notificar al usuario ciertos cambios (marcos me mandó el código, falta hacerlo funcional en nuestra página)
+
+- Agregar funcionalidades para las notificaciones.
+
+- Conectar la tabla "Resena" con el frontend.
+
+- Hacer carrousel de libros (que sea funcional y que se divida en categorías distintas).
