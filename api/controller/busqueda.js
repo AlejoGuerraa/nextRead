@@ -150,67 +150,33 @@ const getLibroById = async (req, res) => {
 async function crearAutores() {
     try {
         const autores = [
-            {
-                nombre: 'Gabriel García Márquez',
-                url_cara: 'https://www.revistaanfibia.com/wp-content/uploads/2015/01/Marquez.jpg'
-            },
-            {
-                nombre: 'Isabel Allende',
-                url_cara: 'https://www.usach.cl/sites/default/files/styles/noticias/public/isabel-allende.jpg?itok=TulNtsSJ'
-            },
-            {
-                nombre: 'George Orwell',
-                url_cara: 'https://upload.wikimedia.org/wikipedia/commons/8/82/George_Orwell%2C_c._1940_%2841928180381%29.jpg'
-            },
-            {
-                nombre: 'J.K. Rowling',
-                url_cara: 'https://m.media-amazon.com/images/S/amzn-author-media-prod/8cigckin175jtpsk3gs361r4ss._SY450_CR0%2C0%2C450%2C450_.jpg'
-            },
-            {
-                nombre: 'Stephen King',
-                url_cara: 'https://upload.wikimedia.org/wikipedia/commons/e/e3/Stephen_King%2C_Comicon.jpg'
-            },
-            {
-                nombre: 'Jane Austen',
-                url_cara: 'https://upload.wikimedia.org/wikipedia/commons/c/cd/Jane_Austen_coloured_version.jpg'
-            },
-            {
-                nombre: 'J.R.R. Tolkien',
-                url_cara: 'https://content-historia.nationalgeographic.com.es/medio/2024/01/02/tolkien-nacio_00000000_c2a98cb5_240102140103_550x775.jpg'
-            },
-            {
-                nombre: 'Miguel de Cervantes',
-                url_cara: 'https://upload.wikimedia.org/wikipedia/commons/9/99/Cervantes_J%C3%A1uregui.jpg'
-            },
-            {
-                nombre: 'Agatha Christie',
-                url_cara: 'https://upload.wikimedia.org/wikipedia/commons/8/88/Agatha_Christie.png'
-            },
-            {
-                nombre: 'Paulo Coelho',
-                url_cara: 'https://upload.wikimedia.org/wikipedia/commons/b/b3/Paulo_Coelho.jpg'
-            },
-            {
-                nombre: 'Antoine de Saint-Exupéry',
-                url_cara: 'https://upload.wikimedia.org/wikipedia/commons/7/79/Antoine_de_Saint-Exup%C3%A9ry_1933.jpg'
-            },
-            {
-                nombre: 'Suzanne Collins',
-                url_cara: 'https://upload.wikimedia.org/wikipedia/commons/8/8b/Suzanne_Collins.jpg'
-            }
+            { nombre: 'Gabriel García Márquez', url_cara: 'https://www.revistaanfibia.com/wp-content/uploads/2015/01/Marquez.jpg' },
+            { nombre: 'Isabel Allende', url_cara: 'https://www.usach.cl/sites/default/files/styles/noticias/public/isabel-allende.jpg?itok=TulNtsSJ' },
+            { nombre: 'George Orwell', url_cara: 'https://upload.wikimedia.org/wikipedia/commons/8/82/George_Orwell%2C_c._1940_%2841928180381%29.jpg' },
+            { nombre: 'J.K. Rowling', url_cara: 'https://m.media-amazon.com/images/S/amzn-author-media-prod/8cigckin175jtpsk3gs361r4ss._SY450_CR0%2C0%2C450%2C450_.jpg' },
+            { nombre: 'Stephen King', url_cara: 'https://upload.wikimedia.org/wikipedia/commons/e/e3/Stephen_King%2C_Comicon.jpg' },
+            { nombre: 'Jane Austen', url_cara: 'https://upload.wikimedia.org/wikipedia/commons/c/cd/Jane_Austen_coloured_version.jpg' },
+            { nombre: 'J.R.R. Tolkien', url_cara: 'https://content-historia.nationalgeographic.com.es/medio/2024/01/02/tolkien-nacio_00000000_c2a98cb5_240102140103_550x775.jpg' },
+            { nombre: 'Miguel de Cervantes', url_cara: 'https://upload.wikimedia.org/wikipedia/commons/9/99/Cervantes_J%C3%A1uregui.jpg' },
+            { nombre: 'Agatha Christie', url_cara: 'https://upload.wikimedia.org/wikipedia/commons/8/88/Agatha_Christie.png' },
+            { nombre: 'Paulo Coelho', url_cara: 'https://upload.wikimedia.org/wikipedia/commons/b/b3/Paulo_Coelho.jpg' },
+            { nombre: 'Antoine de Saint-Exupéry', url_cara: 'https://upload.wikimedia.org/wikipedia/commons/7/79/Antoine_de_Saint-Exup%C3%A9ry_1933.jpg' },
+            { nombre: 'Suzanne Collins', url_cara: 'https://upload.wikimedia.org/wikipedia/commons/8/8b/Suzanne_Collins.jpg' }
         ];
 
         const nuevosAutores = await Autor.bulkCreate(autores);
 
         console.log(`Se insertaron ${nuevosAutores.length} autores exitosamente.`);
+
     } catch (error) {
         console.error('Error al insertar autores con bulkCreate:', error);
     }
 }
 
+
+
 const cargarLibrosAutores = async (req, res) => {
     try {
-
         const trendingBooks = [
             { title: "El Alquimista", tipo: "Novela", author: "Paulo Coelho", rating: 4.3,
               url_portada: "https://books.google.com.py/books/content?id=lZZCzTM_9PUC&printsec=frontcover&img=1&zoom=1&edge=curl",
@@ -220,15 +186,15 @@ const cargarLibrosAutores = async (req, res) => {
               url_portada: "https://http2.mlstatic.com/D_NQ_NP_888637-MLU73120375963_112023-O.webp",
               id_autor: 1 },
 
-            { title: "1984", tipo: "Novela", author: "George Orwell", rating: 4.9,
+            { title: "1984", tipo: "Ficción", author: "George Orwell", rating: 4.9,
               url_portada: "https://images.cdn1.buscalibre.com/fit-in/360x360/ab/54/ab54a82815e061d7fc8f22bcd22f2605.jpg",
               id_autor: 3 },
 
-            { title: "Harry Potter y la Piedra Filosofal", tipo: "Fantasia", author: "J.K. Rowling", rating: 4.1,
-              url_portada: "https://www.planetadelibros.com/usuaris/libros/fotos/295/m_libros/portada_harry-potter-y-la-piedra-filosofal-harry-potter-1.png",
+            { title: "Harry Potter y la Piedra Filosofal", tipo: "Novela", author: "J.K. Rowling", rating: 4.1,
+              url_portada: "https://images.cdn1.buscalibre.com/fit-in/360x360/c4/e9/c4e93e876288b4a0021a0cef47efc8bf.jpg",
               id_autor: 4 },
 
-            { title: "Orgullo y Prejuicio", tipo: "Romance", author: "Jane Austen", rating: 3.9,
+            { title: "Orgullo y Prejuicio", tipo: "Novela", author: "Jane Austen", rating: 3.9,
               url_portada: "https://www.planetadelibros.com.ar/usuaris/libros/fotos/383/original/portada_orgullo-y-prejuicio_jane-austen_202308011307.jpg",
               id_autor: 6 },
 
@@ -236,24 +202,24 @@ const cargarLibrosAutores = async (req, res) => {
               url_portada: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQcMRZdGl9oMFn7_O4oyErwUXK9yrN3OcSe0w&s",
               id_autor: 8 },
 
-            { title: "El Señor de los Anillos", tipo: "Fantasia", author: "J.R.R. Tolkien", rating: 4.8,
-              url_portada: "https://i.pinimg.com/736x/3a/29/8b/3a298b825d4c5e34fb4a8d5b1991810c.jpg",
+            { title: "El Señor de los Anillos", tipo: "Ficción", author: "J.R.R. Tolkien", rating: 4.8,
+              url_portada: "https://www.planetadelibros.com/usuaris/libros/fotos/210/original/portada_el-senor-de-los-anillos_j-r-r-tolkien_201601252224.jpg",
               id_autor: 7 },
 
-            { title: "It", tipo: "Terror", author: "Stephen King", rating: 4.2,
-              url_portada: "https://upload.wikimedia.org/wikipedia/en/5/5a/It_cover.jpg",
+            { title: "It", tipo: "Ficción", author: "Stephen King", rating: 4.2,
+              url_portada: "https://images.cdn1.buscalibre.com/fit-in/360x360/5a/fd/5afd1629dab91b7960cc2e2437ef6efe.jpg",
               id_autor: 5 },
 
             { title: "El Principito", tipo: "Fábula", author: "Antoine de Saint-Exupéry", rating: 4.7,
-              url_portada: "https://m.media-amazon.com/images/I/81AVr2vR8oL.jpg",
+              url_portada: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQ7Cj9D3vS6NhVQG7ISDCP_ed4mKtJikyV2WA&s",
               id_autor: 11 },
 
-            { title: "Los Juegos del Hambre", tipo: "Distopia", author: "Suzanne Collins", rating: 4.5,
-              url_portada: "https://images.cdn2.buscalibre.com/fit-in/360x360/52/29/522996f132c7d6dd44f44b343029e9c6.jpg",
+            { title: "Los Juegos del Hambre", tipo: "Ficción", author: "Suzanne Collins", rating: 4.5,
+              url_portada: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQK0s2-lkDLtQTyBCsZ54a5ZCT75R3B-20xyw&s",
               id_autor: 12 },
 
-            { title: "Diez Negritos", tipo: "Misterio", author: "Agatha Christie", rating: 4.3,
-              url_portada: "https://images.cdn1.buscalibre.com/fit-in/360x360/27/0c/270c82fa06e675985d8dfe8e94cf2369.jpg",
+            { title: "Diez Negritos", tipo: "Ficción", author: "Agatha Christie", rating: 4.3,
+              url_portada: "https://images.cdn3.buscalibre.com/fit-in/360x360/41/b9/41b963350867a8288e37887171910ad2.jpg",
               id_autor: 9 }
         ];
 
@@ -265,21 +231,24 @@ const cargarLibrosAutores = async (req, res) => {
             descripcion: "Descripción no disponible",
             tema: "Varios",
             ranking: libro.rating,
-            generos: JSON.stringify(["Varios"]),
-            tags: JSON.stringify(["trending"]),
+            generos: ["Varios"],   // NO JSON.stringify → Sequelize JSON ya guarda como JSON
+            tags: ["trending"],
             url_portada: libro.url_portada,
             id_autor: libro.id_autor
         }));
 
         await Libro.bulkCreate(librosParaCrear);
 
-        res.json({ message: "✅ Libros y autores insertados correctamente" });
-
+        res.json({ message: "✅ Libros trending insertados correctamente" });
     } catch (error) {
-        console.error("❌ Error al agregar libros trending:", error);
-        res.status(500).json({ message: "Error al agregar libros trending", error: error.message });
+        console.error("❌ Error al agregar libros trending:", error.errors || error);
+        res.status(500).json({
+            message: "Error al agregar libros trending",
+            error: error.message,
+        });
     }
 };
+
 
 
 module.exports = {
