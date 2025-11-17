@@ -59,10 +59,9 @@ export default function InfoLibro({ libro, onRestrictedAction, actionRef }) {
     // ⭐ VALORAR LIBRO
     // =========================================
     const handleStarClick = async (rating) => {
-        setUserRating(rating);
-
         const auth = validarToken();
         if (!auth) return;
+        setUserRating(rating);
 
         try {
             const response = await axios.post(
