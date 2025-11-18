@@ -1,15 +1,14 @@
-/* Contenedor general */
 .slider-container {
     position: relative;
     width: 100%;
-    max-width: 1200px;  /* opcional: limita a 1200px para pantallas muy grandes */
-    margin: 0 auto 40px auto;
+    max-width: 1200px; 
+    margin: 5px auto 40px auto;
     overflow: hidden;
     border-radius: 15px;
     box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
 }
 
-/* Lista de imágenes */
+/* Lista de imagenes */
 .container-images ul {
     display: flex;
     padding: 0;
@@ -24,7 +23,7 @@
     display: flex;
     justify-content: center;
     align-items: center;
-    height: 600px !important; /* Mucho más alto */
+    height: 600px !important; /* Mucho mas alto */
 }
 
 /* Imagen */
@@ -33,6 +32,7 @@
     height: 100%;
     object-fit: cover;
     border-radius: 15px;
+
 }
 
 /* Flechas */
@@ -94,4 +94,14 @@
     width: 18px;
     height: 18px;
     background-color: #fff;
+}
+
+
+/* Transicion*/
+.container-images ul {
+    transition: transform 0.8s cubic-bezier(0.4, 0.0, 0.2, 1);
+}
+
+.container-images li {
+    flex-shrink: 0;
 }

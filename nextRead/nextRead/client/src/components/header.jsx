@@ -28,7 +28,7 @@ export default function Header({ user, onRestrictedAction, headerRightRef }) {
         </span>
 
         <div className="search-wrapper">
-          <SearchBar /> {/* Tu buscador funcional */}
+          <SearchBar />
         </div>
       </div>
 
