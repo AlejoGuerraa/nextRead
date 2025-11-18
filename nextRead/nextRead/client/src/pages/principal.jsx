@@ -1,4 +1,3 @@
-// src/pages/principal.jsx
 import React, { useEffect, useRef, useState } from "react";
 import axios from "axios";
 
@@ -9,6 +8,8 @@ import Footer from "../components/footer";
 import RestrictionPopover from "../components/popOver";
 
 import "../pagescss/principal.css";
+
+import fondo from "../assets/background/fondo.png";
 
 import carrousel1 from "../assets/carrousel/carrousel1.jpeg";
 import carrousel2 from "../assets/carrousel/carrousel2.jpeg";
@@ -40,7 +41,6 @@ export default function Principal() {
     document.title = "NextRead - Inicio";
   }, []);
 
-  // Cargar user desde localStorage pero NO redireccionar: queremos que la página funcione para invitados.
   useEffect(() => {
     const storedUser = localStorage.getItem("user");
     if (storedUser) {
@@ -75,14 +75,14 @@ export default function Principal() {
     setPopoverKey((k) => k + 1);
     setShowRestriction(false);
     setPopoverOpacity(0);
-    // small delay to restart animation
+
     setTimeout(() => {
       setShowRestriction(true);
       setTimeout(() => setPopoverOpacity(1), 10);
     }, 8);
   };
 
-  // callback que se pasa al Header: Header llamará esto cuando el usuario no esté logueado y clickee iconos
+  // callback que se pasa al Header: Header llamara esto cuando el usuario no esté logueado y clickee iconos
   const handleRestrictedAction = () => {
     showRestrictionPopover();
   };
@@ -110,19 +110,19 @@ export default function Principal() {
   };
 
   return (
-    <div className="logueado-container">
-      {/* PASAMOS headerRightRef y el callback para restricciones */}
+    <div className="logueado-container" style={{ backgroundImage: `url(${fondo})` }}>
+
       <Header
         user={user}
         onRestrictedAction={handleRestrictedAction}
         headerRightRef={headerRightRef}
       />
 
-      {/* Renderizamos el popover desde la página (posicionado relativo al headerRightRef) */}
+
       {showRestriction && headerRightRef.current && (
         <div
           key={popoverKey}
-          ref={popoverRef}                        // <-- asignamos ref aquí
+          ref={popoverRef}
           className="restriction-popover-wrapper"
           style={{
             opacity: popoverOpacity,

@@ -1,11 +1,33 @@
-/* ==================================== */
-/* 📚 Estilos de la Página Logueado (AJUSTADO) */
-/* ==================================== */
-
 .logueado-container {
+    position: relative;
     padding: 0;
-    background-color: #f4f7f6;
     min-height: 100vh;
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+}
+
+.logueado-container::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 400px;
+    background: linear-gradient(
+        rgba(5, 81, 157, 0.374),
+        rgba(0, 0, 0, 0)
+    );
+    pointer-events: none;
+    z-index: 1;
+}
+
+/* Asegurar que el contenido esté arriba del degradado */
+.logueado-main,
+.logueado-header,
+footer {
+    position: relative;
+    z-index: 2;
 }
 
 /* --- HEADER Y BUSCADOR (ESTILOS AZULES APLICADOS) --- */
@@ -341,10 +363,9 @@
     background: #555;
 }
 
-/* Popover (reutilizable) */
+
 .restriction-popover {
     position: relative;
-    /* el wrapper absoluto lo controla desde la página */
     background: #fff;
     border: 2px solid #0a6fb4;
     border-radius: 10px;
@@ -373,7 +394,6 @@
 }
 
 
-/* Responsive */
 @media (max-width: 1000px) {
     .container-images li {
         height: 220px;
