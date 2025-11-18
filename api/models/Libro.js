@@ -13,7 +13,6 @@ const Libro = sequelize.define('Libro', {
         allowNull: false
     },
 
-
     fecha_publicacion: {
         type: DataTypes.DATE,
         allowNull: false

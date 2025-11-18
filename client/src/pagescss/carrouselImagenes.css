@@ -1,14 +1,15 @@
 /* Contenedor general */
+/* Contenedor general */
 .slider-container {
-    margin-top: 40px;
     position: relative;
     width: 100%;
-    max-width: 1200px;  /* opcional: limita a 1200px para pantallas muy grandes */
-    margin: 0 auto 40px auto;
+    max-width: 1200px;
+    margin: 20px auto 40px auto; /* 👈 Aumenté el top y lo dejé en una sola línea */
     overflow: hidden;
     border-radius: 15px;
     box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
 }
+
 
 /* Lista de imágenes */
 .container-images ul {

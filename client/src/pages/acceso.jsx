@@ -24,7 +24,7 @@ import '../pagescss/loguearse_registrarse.css';
 
 export default function Acceso() {
   const navigate = useNavigate();
-  const location = useNavigation();
+  const location = useLocation();
   const params = new URLSearchParams(location.search);
 
   const [loginOpen, setLoginOpen] = useState(false);
@@ -40,10 +40,10 @@ export default function Acceso() {
 
   // ✅ AVATARES REALES (ubicados en public/iconos/)
   const avatarOptions = [
-    "/iconos/avLamparita.png",
-    "/iconos/avLechuza.png",
-    "/iconos/avLibroStar.png",
-    "/iconos/avLupa.png",
+    "/iconos/LogoDefault1.jpg",
+    "/iconos/LogoDefault2.png",
+    "/iconos/LogoDefault3.jpg",
+    "/iconos/LogoDefault4.png",
   ];
 
   const [registerForm, setRegisterForm] = useState({
@@ -159,7 +159,7 @@ export default function Acceso() {
         usuario: registerForm.usuario,
         contrasena: registerForm.contrasena,
         fecha_nacimiento: registerForm.nacimiento,
-        icono: registerForm.avatar, 
+        icono: registerForm.avatar,
         banner: bannerUrl,
         descripcion: registerForm.descripcion,
       });

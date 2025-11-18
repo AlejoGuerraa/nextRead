@@ -10,10 +10,10 @@ import RestrictionPopover from "../components/popOver";
 
 import "../pagescss/principal.css";
 
-import carrousel1 from "../assets/carrousel/carrousel1.jpeg";
-import carrousel2 from "../assets/carrousel/carrousel2.jpeg";
-import carrousel3 from "../assets/carrousel/carrousel3.jpeg";
-import carrousel4 from "../assets/carrousel/carrousel4.jpeg";
+import carrousel1 from "../assets/carrousel/carrouselPrincipito.jpg";
+import carrousel2 from "../assets/carrousel/carrouselOrgulloYPrejuicio.jpg";
+import carrousel3 from "../assets/carrousel/carrouselMetamorfosis.jpg";
+import carrousel4 from "../assets/carrousel/carrouselElTunel.jpg";
 
 const mockCarouselData = [
   { id: 1, imgUrl: carrousel1 },
