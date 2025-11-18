@@ -2,6 +2,7 @@
 import React, { useState } from "react";
 import { useParams } from "react-router-dom";
 import axios from "axios";
+import { Bookmark, Heart, Clock, PlusCircle, Book } from "lucide-react"; // iconos más lindos
 
 export default function InfoLibro({ libro, onRestrictedAction, actionRef }) {
     const { id } = useParams();
@@ -13,55 +14,40 @@ export default function InfoLibro({ libro, onRestrictedAction, actionRef }) {
 
     const API_BASE = "http://localhost:3000/nextread";
 
-    // =========================================
-    // 🔒 FUNCIÓN GENERAL DE RESTRICCIÓN (token)
-    // =========================================
     const validarToken = () => {
         const userData = JSON.parse(localStorage.getItem("user"));
         const token = userData?.token;
         const userId = userData?.id;
 
         if (!token || !userId) {
-            if (onRestrictedAction) onRestrictedAction(); // ⬅ llama al popover
+            if (onRestrictedAction) onRestrictedAction(); 
             return null;
         }
 
         return { token, userId };
     };
 
-    // =========================================
-    // 📌 AGREGAR LIBRO A CUALQUIER LISTA
-    // =========================================
-    const handleAddToList = async (tipo) => {
+    const handleAddToList = async (tipoLista) => {
         const auth = validarToken();
         if (!auth) return;
 
         try {
             const response = await axios.post(
-                `${API_BASE}/usuario/${tipo}/${id}`,
+                `${API_BASE}/usuario/${tipoLista}/${id}`,
                 {},
-                {
-                    headers: { Authorization: `Bearer ${auth.token}` },
-                }
+                { headers: { Authorization: `Bearer ${auth.token}` } }
             );
-
             alert(`✅ ${response.data.message}`);
         } catch (error) {
             console.error("Error al agregar libro:", error);
-            alert(
-                error.response?.data?.message ||
-                "❌ Error al agregar el libro a la lista."
-            );
+            alert(error.response?.data?.message || "❌ Error al agregar el libro a la lista.");
         }
     };
 
-    // =========================================
-    // ⭐ VALORAR LIBRO
-    // =========================================
     const handleStarClick = async (rating) => {
+        setUserRating(rating);
         const auth = validarToken();
         if (!auth) return;
-        setUserRating(rating);
 
         try {
             const response = await axios.post(
@@ -69,7 +55,6 @@ export default function InfoLibro({ libro, onRestrictedAction, actionRef }) {
                 { puntuacion: rating },
                 { headers: { Authorization: `Bearer ${auth.token}` } }
             );
-
             alert(response.data.message || `Le diste ${rating} estrellas ⭐`);
         } catch (error) {
             console.error("❌ ERROR EN rating:", error);
@@ -95,11 +80,11 @@ export default function InfoLibro({ libro, onRestrictedAction, actionRef }) {
                 <p className="libro-descripcion">{descripcion || "Sin descripción disponible."}</p>
 
                 <div className="libro-acciones" ref={actionRef}>
-                    <button className="btn secundario" onClick={() => handleAddToList("enLectura")}>🕮 En lectura</button>
-                    <button className="btn secundario" onClick={() => handleAddToList("favoritos")}>♡ Favorito</button>
-                    <button className="btn secundario" onClick={() => handleAddToList("paraLeer")}>⏱︎ Para leer</button>
-                    <button className="btn secundario" onClick={() => handleAddToList("lista")}>➕ Añadir a lista</button>
-                    <button className="btn secundario" onClick={() => handleAddToList("leido")}>📗 Leído</button>
+                    <button className="btn" onClick={() => handleAddToList("enLectura")}><Book /> En lectura</button>
+                    <button className="btn" onClick={() => handleAddToList("favoritos")}><Heart /> Favorito</button>
+                    <button className="btn" onClick={() => handleAddToList("paraLeer")}><Clock /> Para leer</button>
+                    <button className="btn" onClick={() => handleAddToList("lista")}><PlusCircle /> Añadir a lista</button>
+                    <button className="btn" onClick={() => handleAddToList("leido")}><Bookmark /> Leído</button>
                 </div>
 
                 <div className="libro-ranking-global">

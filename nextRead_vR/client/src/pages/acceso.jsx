@@ -8,7 +8,7 @@ import ComunidadIcon from '../assets/2LogoAcceso.png';
 import DiarioIcon from '../assets/3LogoAcceso.png';
 
 import { Modal } from '../components/acceso/modal';
-import { ModalGustos } from '../components/acceso/modalGustos';
+import { ModalGustos } from '../components/acceso/modalBanners';
 import { FeatureCard } from '../components/acceso/card';
 
 import { Step1 } from '../components/acceso/pasos/paso1';
@@ -17,6 +17,7 @@ import { Step3 } from '../components/acceso/pasos/paso3';
 import { LoginModal } from '../components/acceso/modalLogin';
 
 import Footer from '../components/footer';
+import HeaderAcceso from "../components/acceso/headerAcceso";
 
 import '../pagescss/loguearse_registrarse.css';
 
@@ -175,10 +176,7 @@ export default function Acceso() {
 
   return (
     <>
-      <header className="header-simple">
-        <img id="imagenLogo" src={icono} alt="Icono" />
-        <h1>NextRead</h1>
-      </header>
+       <HeaderAcceso />
 
       <div className="contenedor-imagen-acceso">
         <div className="texto-superpuesto">

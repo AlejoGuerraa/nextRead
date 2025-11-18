@@ -4,7 +4,7 @@ import { useParams } from "react-router-dom";
 import axios from "axios";
 
 import InfoLibro from "../components/infoLibro";
-import Resenas from "../components/reseñas";
+import Resenas from "../components/resenias";
 import Header from "../components/header";
 import Footer from "../components/footer";
 import RestrictionPopover from "../components/popOver";
