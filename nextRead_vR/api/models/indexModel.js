@@ -1,4 +1,6 @@
 // src/models/asociaciones.js
+
+// ------------------- ARCHIVO DE RELACIONES ENTRE CADA TABLA -------------------
 const { DataTypes } = require('sequelize');
 const sequelize = require('../config/db');
 

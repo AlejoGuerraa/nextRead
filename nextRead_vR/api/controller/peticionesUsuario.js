@@ -1,5 +1,10 @@
+// Tablas
 const User = require("../models/Usuario");
 const Libro = require("../models/Libro");
+const Icono = require("../models/Icono");
+const Banner = require("../models/Banner");
+
+// Librerias
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 
@@ -19,13 +24,18 @@ const getAllUsers = async (_req, res) => {
 const register = async (req, res) => {
     console.log(req.body);
 
-    const { nombre, apellido, correo, usuario, contrasena, fecha_nacimiento,
-        icono, banner, descripcion} = req.body;
+    const { 
+        nombre, apellido, correo, usuario, contrasena, fecha_nacimiento,
+        // Recibimos el símbolo del icono y la URL del banner
+        icono, banner, descripcion 
+    } = req.body;
 
+    // 1. VALIDACIONES BÁSICAS
     if (!nombre || !apellido || !correo || !contrasena || !fecha_nacimiento) {
         return res.status(401).json({ error: "Ingrese toda la información necesaria para continuar" });
     }
 
+    // 2. VALIDACIÓN DE CONTRASEÑA
     const tieneMayuscula = [...contrasena].some(letra => letra >= 'A' && letra <= 'Z');
     const tieneLongitud = contrasena.length >= 8;
 
@@ -35,24 +45,71 @@ const register = async (req, res) => {
         });
     }
 
-    const hashedPassw = await bcrypt.hash(contrasena, 10);
-
+    // 3. COMPROBACIÓN DE EXISTENCIA
     const usuarioasd = await User.findOne({ where: { usuario } });
     if (usuarioasd) return res.status(400).json({ error: "El nombre de usuario ya está registrado" });
 
     const correoadsd = await User.findOne({ where: { correo } });
     if (correoadsd) return res.status(400).json({ error: "El correo ya está registrado" });
 
+    // --- LÓGICA CLAVE: BUSCAR O CREAR ÍCONO Y BANNER ---
+    
+    let idIcono = null;
+    let idBanner = null;
+
+    try {
+        // Manejar Icono: Buscar por símbolo. Si no existe, lo crea.
+        if (icono) {
+            const [iconoInstance, created] = await Icono.findOrCreate({ 
+                where: { simbolo: icono },
+                defaults: { simbolo: icono } // Datos para crear si no existe
+            });
+            idIcono = iconoInstance.id;
+
+            if (created) {
+                console.log(`Nuevo icono creado dinámicamente: ${icono}`);
+            }
+        }
+
+        // Manejar Banner: Buscar por URL. Si no existe, lo crea.
+        if (banner) {
+            const [bannerInstance, created] = await Banner.findOrCreate({ 
+                where: { url: banner },
+                defaults: { url: banner } // Datos para crear si no existe
+            });
+            idBanner = bannerInstance.id;
+
+            if (created) {
+                console.log(`Nuevo banner creado dinámicamente: ${banner}`);
+            }
+        }
+
+    } catch (error) {
+        // En caso de un error de base de datos durante la búsqueda/creación
+        console.error("Error buscando o creando Icono/Banner:", error);
+        return res.status(500).json({ error: "Error interno al procesar Icono/Banner." });
+    }
+    
+    // 4. CREACIÓN DEL USUARIO
+    const hashedPassw = await bcrypt.hash(contrasena, 10);
+
     const newUser = await User.create({
-        nombre, apellido, correo, usuario,
+        nombre, 
+        apellido, 
+        correo, 
+        usuario,
         contrasena: hashedPassw,
-        fecha_nacimiento, icono, banner,
+        fecha_nacimiento, 
+        // Usamos los IDs obtenidos/creados
+        idIcono: idIcono, 
+        idBanner: idBanner,
         descripcion
     });
 
     res.status(200).json({ message: "Nuevo usuario creado", data: newUser });
 };
 
+// ----------------- LOGIN -----------------
 const login = async (req, res) => {
     try {
         const { correo, contrasena } = req.body;
