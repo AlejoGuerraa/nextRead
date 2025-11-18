@@ -3,7 +3,10 @@ import { useNavigate } from "react-router-dom";
 import SearchBar from "./busqueda";
 import NotificacionesModal from "./notificaciones/NotificacionesModal";
 import { useState } from "react";
-import { Bell, User, Home } from "lucide-react";
+import { Bell, User, Settings } from "lucide-react";
+
+// IMPORTAMOS LA IMAGEN
+import libroIcono from "../assets/libroIcono.png";
 
 export default function Header({ user, onRestrictedAction, headerRightRef }) {
   const navigate = useNavigate();
@@ -24,11 +27,19 @@ export default function Header({ user, onRestrictedAction, headerRightRef }) {
         {/* IZQUIERDA */}
         <div className="header-left">
           <div className="logo" onClick={() => navigate("/")}>
-            <Home size={28} className="home-icon" />
+            <div className="logo-circle">
+              <img
+                src={libroIcono}
+                alt="Inicio"
+                className="home-img"
+              />
+            </div>
           </div>
+
           <span className="app-title" onClick={() => navigate(-1)}>
             NextRead
           </span>
+
           <div className="search-wrapper">
             <SearchBar />
           </div>
@@ -38,11 +49,20 @@ export default function Header({ user, onRestrictedAction, headerRightRef }) {
         <div className="header-right" ref={headerRightRef}>
           <button
             className="icon-btn"
+            title="Configuración"
+            onClick={() => navigate("/configuracion")}
+          >
+            <Settings size={24} className="settings-icon" />
+          </button>
+
+          <button
+            className="icon-btn"
             title="Notificaciones"
             onClick={() => handleIconClick("notificaciones")}
           >
             <Bell size={24} className="bell-icon" />
           </button>
+
           <div
             className="profile-box"
             onClick={() => handleIconClick("perfil")}
@@ -69,6 +89,24 @@ export default function Header({ user, onRestrictedAction, headerRightRef }) {
             backdrop-filter: blur(8px);
           }
 
+          /* --------- LOGO CIRCLE (MODIFICADO) --------- */
+          .logo-circle {
+            width: 52px;        /* más grande */
+            height: 52px;
+            background: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 6px;
+            box-shadow: 0 3px 8px rgba(0,0,0,0.25);
+          }
+
+          /* Sin hover, sin zoom */
+          .logo-circle:hover {
+            transform: none;
+          }
+
           .header-left {
             display: flex;
             align-items: center;
@@ -77,32 +115,31 @@ export default function Header({ user, onRestrictedAction, headerRightRef }) {
 
           .logo {
             cursor: pointer;
-            padding: 6px;
-            border-radius: 14px;
-            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            padding: 0; /* ya no hace falta */
           }
 
-          .home-icon {
-            color: #2e5474ff; /* azul suave inicial */
-            transition: all 0.35s ease;
+          .home-img {
+            width: 36px;  /* imagen más grande */
+            height: 36px;
+            object-fit: contain;
+            transition: none; /* quitamos animación */
           }
 
-          .logo:hover .home-icon {
-            background: linear-gradient(135deg, #4ea8de, #1e81b0);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            transform: scale(1.25) rotate(-5deg);
+          /* Se elimina totalmente el efecto hover */
+          .logo:hover .home-img {
+            transform: none;
           }
 
           .app-title {
-            font-family: "Poppins", sans-serif;
+            font-family: "Montserrat Alternates", sans-serif;
             font-weight: 600;
-            font-size: 26px;
+            font-size: 32px;       /* MÁS GRANDE */
             color: #dde6ecff;
             cursor: pointer;
             text-shadow: 0 2px 6px rgba(0,0,0,0.4);
             transition: opacity 0.25s ease;
           }
+
 
           .app-title:hover {
             opacity: 0.9;
@@ -177,9 +214,9 @@ export default function Header({ user, onRestrictedAction, headerRightRef }) {
         `}</style>
       </header>
 
-      <NotificacionesModal 
-        open={openNotif} 
-        close={() => setOpenNotif(false)} 
+      <NotificacionesModal
+        open={openNotif}
+        close={() => setOpenNotif(false)}
       />
     </>
   );
