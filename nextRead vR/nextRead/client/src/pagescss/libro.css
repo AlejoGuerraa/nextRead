@@ -1,0 +1,244 @@
+:root {
+  --primary: #1A374D;
+  --secondary: #406882;
+  --accent: #6998AB;
+  --light-bg: #e8edf3;
+  --card-bg: #f5f7fa;
+  --text-dark: #1c1c1c;
+  --star-default: #888888;
+  --star-active: #ffb400;
+  --btn-bg: #406882;
+  --btn-hover: #1A374D;
+}
+
+/* ===== Body / Fondo ===== */
+body {
+  font-family: 'Inter', sans-serif;
+  background: linear-gradient(145deg, #e8edf3, #d1d9e6);
+  color: var(--primary);
+  min-height: 100vh;
+  margin: 0;
+  padding: 0;
+}
+
+/* ===== Contenedor Libro ===== */
+.libro-detalle-container {
+  max-width: 1100px;
+  margin: 50px auto;
+  padding: 20px;
+}
+
+/* ===== Card Libro (Neumorphism + elegante) ===== */
+.libro-card {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 30px;
+  background: var(--card-bg);
+  border-radius: 25px;
+  padding: 40px;
+  box-shadow: 15px 15px 30px rgba(0,0,0,0.06), -15px -15px 30px rgba(255,255,255,0.85);
+  transition: transform 0.35s ease, box-shadow 0.35s ease;
+}
+
+.libro-card:hover {
+  transform: translateY(-8px);
+  box-shadow: 20px 20px 45px rgba(0,0,0,0.12), -20px -20px 45px rgba(255,255,255,0.95);
+}
+
+/* ===== Portada flotante ===== */
+.libro-portada {
+  flex: 1 1 220px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 320px;
+  border-radius: 20px;
+  overflow: hidden;
+  background: linear-gradient(135deg, #dae8fc, #c1d7f0);
+  box-shadow: 5px 5px 15px rgba(0,0,0,0.1), -5px -5px 15px rgba(255,255,255,0.8);
+  transform: translateY(-12px);
+  transition: transform 0.35s ease, box-shadow 0.35s ease;
+}
+
+.libro-portada:hover {
+  transform: translateY(-16px) scale(1.03);
+  box-shadow: 8px 8px 25px rgba(0,0,0,0.12), -8px -8px 25px rgba(255,255,255,0.9);
+}
+
+.libro-portada img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 20px;
+}
+
+.portada-placeholder {
+  color: var(--secondary);
+  font-weight: 600;
+  font-size: 1.1rem;
+}
+
+/* ===== Info Libro ===== */
+.libro-info {
+  flex: 2;
+  display: flex;
+  flex-direction: column;
+}
+
+.libro-titulo {
+  font-size: 2.2rem;
+  color: var(--primary);
+  margin-bottom: 10px;
+  font-weight: 700;
+}
+
+.libro-autor {
+  font-size: 1.2rem;
+  color: var(--secondary);
+  margin-bottom: 22px;
+  font-weight: 500;
+}
+
+.libro-meta {
+  display: flex;
+  gap: 20px;
+  color: var(--accent);
+  font-weight: 500;
+  margin-bottom: 22px;
+  font-size: 0.95rem;
+}
+
+.libro-descripcion {
+  color: var(--text-dark);
+  line-height: 1.75;
+  background-color: #f0f4f8;
+  padding: 22px;
+  border-radius: 18px;
+  margin-bottom: 32px;
+  box-shadow: inset 5px 5px 12px rgba(0,0,0,0.03), inset -5px -5px 12px rgba(255,255,255,0.85);
+  transition: box-shadow 0.3s ease;
+}
+
+.libro-descripcion:hover {
+  box-shadow: inset 6px 6px 16px rgba(0,0,0,0.04), inset -6px -6px 16px rgba(255,255,255,0.9);
+}
+
+/* ===== Acciones ===== */
+.libro-acciones {
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+  margin-bottom: 28px;
+}
+
+.btn {
+  background-color: var(--btn-bg);
+  color: white;
+  border: none;
+  padding: 12px 20px;
+  border-radius: 14px;
+  cursor: pointer;
+  font-size: 1rem;
+  font-weight: 500;
+  transition: all 0.35s ease;
+  box-shadow: 5px 5px 15px rgba(0,0,0,0.08), -5px -5px 15px rgba(255,255,255,0.9);
+}
+
+.btn:hover {
+  background-color: var(--btn-hover);
+  transform: translateY(-3px) scale(1.03);
+  box-shadow: 8px 8px 20px rgba(0,0,0,0.1), -8px -8px 20px rgba(255,255,255,0.95);
+}
+
+/* ===== Rating ===== */
+.libro-footer {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 32px;
+}
+
+.libro-footer label {
+  font-weight: 600;
+  margin-right: 10px;
+  color: var(--primary);
+}
+
+.libro-rating {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.estrella {
+  font-size: 28px;
+  color: var(--star-default);
+  cursor: pointer;
+  transition: all 0.25s ease;
+  text-shadow: 0 0 3px rgba(0,0,0,0.2);
+}
+
+.estrella:hover {
+  transform: scale(1.35);
+}
+
+.estrella.activa {
+  color: var(--star-active);
+  text-shadow: 0 0 6px rgba(255,180,0,0.7);
+}
+
+/* Número de ranking */
+.rating-numero {
+  margin-left: 6px;
+  color: var(--secondary);
+  font-weight: 600;
+  font-size: 1rem;
+}
+
+/* ===== Comentarios ===== */
+.comentarios-section {
+  margin-top: 50px;
+  padding-top: 20px;
+  border-top: 1px solid #cbd5e1;
+}
+
+.comentario {
+  display: flex;
+  gap: 14px;
+  margin-bottom: 18px;
+  background-color: #edf2f8;
+  padding: 16px;
+  border-radius: 18px;
+  box-shadow: inset 4px 4px 12px rgba(0,0,0,0.04), inset -4px -4px 12px rgba(255,255,255,0.9);
+  transition: box-shadow 0.3s ease, transform 0.3s ease;
+}
+
+.comentario:hover {
+  transform: translateY(-2px);
+  box-shadow: inset 5px 5px 14px rgba(0,0,0,0.05), inset -5px -5px 14px rgba(255,255,255,0.92);
+}
+
+.comentario-avatar {
+  font-size: 2rem;
+}
+
+.comentario-usuario {
+  font-weight: 600;
+  color: var(--primary);
+}
+
+.comentario-texto {
+  margin: 6px 0;
+  color: var(--text-dark);
+}
+
+.comentario-estrellas {
+  color: var(--star-active);
+}
+
+.cargando, .error {
+  text-align: center;
+  margin-top: 60px;
+  font-size: 1.25rem;
+  color: var(--secondary);
+}
