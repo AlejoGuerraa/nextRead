@@ -1,3 +1,4 @@
+// Acceso.jsx
 import React, { useEffect, useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import axios from 'axios';
@@ -8,7 +9,7 @@ import ComunidadIcon from '../assets/2LogoAcceso.png';
 import DiarioIcon from '../assets/3LogoAcceso.png';
 
 import { Modal } from '../components/acceso/modal';
-import { ModalGustos } from '../components/acceso/modalGustos';
+import { ModalGustos } from '../components/acceso/modalBanners';
 import { FeatureCard } from '../components/acceso/card';
 
 import { Step1 } from '../components/acceso/pasos/paso1';
@@ -17,12 +18,13 @@ import { Step3 } from '../components/acceso/pasos/paso3';
 import { LoginModal } from '../components/acceso/modalLogin';
 
 import Footer from '../components/footer';
+import HeaderAcceso from "../components/acceso/headerAcceso";
 
 import '../pagescss/loguearse_registrarse.css';
 
 export default function Acceso() {
   const navigate = useNavigate();
-  const location = useLocation();
+  const location = useNavigation();
   const params = new URLSearchParams(location.search);
 
   const [loginOpen, setLoginOpen] = useState(false);
@@ -35,6 +37,15 @@ export default function Acceso() {
   /* Registro */
   const [registerStep, setRegisterStep] = useState(1);
   const [registerErrors, setRegisterErrors] = useState({});
+
+  // ✅ AVATARES REALES (ubicados en public/iconos/)
+  const avatarOptions = [
+    "/iconos/avLamparita.png",
+    "/iconos/avLechuza.png",
+    "/iconos/avLibroStar.png",
+    "/iconos/avLupa.png",
+  ];
+
   const [registerForm, setRegisterForm] = useState({
     correo: '',
     contrasena: '',
@@ -44,11 +55,10 @@ export default function Acceso() {
     usuario: '',
     nacimiento: '',
     descripcion: '',
-    avatar: '≽^• ˕ • ྀི≼',
+    avatar: avatarOptions[0], // primera imagen real
   });
 
   const [showAvatarPicker, setShowAvatarPicker] = useState(false);
-  const avatarOptions = ['🧸ྀི', '♡', '₍^. .^₎⟆', '≽^-⩊-^≼', 'ᓚ₍⑅^..^₎♡', '🐔'];
   const [showGustos, setShowGustos] = useState(false);
 
   useEffect(() => {
@@ -130,7 +140,7 @@ export default function Acceso() {
 
   const prevRegisterStep = () => setRegisterStep((s) => Math.max(1, s - 1));
 
-  // ✅ Corregido: función robusta para manejar el avatar
+  // ⭐ Maneja el avatar seleccionado
   const handleToggleAvatar = (value) => {
     if (typeof value === 'string') {
       setRegisterForm((prev) => ({ ...prev, avatar: value }));
@@ -140,45 +150,42 @@ export default function Acceso() {
     setShowAvatarPicker((prev) => !prev);
   };
 
-    const handleFinishGustos = async (bannerUrl) => {
-      try {
-        await axios.post('http://localhost:3000/nextread/register', {
-          nombre: registerForm.nombre,
-          apellido: registerForm.apellido,
-          correo: registerForm.correo,
-          usuario: registerForm.usuario,
-          contrasena: registerForm.contrasena,
-          fecha_nacimiento: registerForm.nacimiento,
-          icono: registerForm.avatar,
-          banner: bannerUrl,
-          descripcion: registerForm.descripcion,
-        });
+  const handleFinishGustos = async (bannerUrl) => {
+    try {
+      await axios.post('http://localhost:3000/nextread/register', {
+        nombre: registerForm.nombre,
+        apellido: registerForm.apellido,
+        correo: registerForm.correo,
+        usuario: registerForm.usuario,
+        contrasena: registerForm.contrasena,
+        fecha_nacimiento: registerForm.nacimiento,
+        icono: registerForm.avatar, 
+        banner: bannerUrl,
+        descripcion: registerForm.descripcion,
+      });
 
-        const loginResponse = await axios.post('http://localhost:3000/nextread/login', {
-          correo: registerForm.correo,
-          contrasena: registerForm.contrasena,
-        });
+      const loginResponse = await axios.post('http://localhost:3000/nextread/login', {
+        correo: registerForm.correo,
+        contrasena: registerForm.contrasena,
+      });
 
-        localStorage.setItem(
-          'user',
-          JSON.stringify({ ...loginResponse.data, correo: registerForm.correo, banner: bannerUrl })
-        );
+      localStorage.setItem(
+        'user',
+        JSON.stringify({ ...loginResponse.data, correo: registerForm.correo, banner: bannerUrl })
+      );
 
-        setShowGustos(false);
-        setRegisterOpen(false);
-        navigate('/');
-      } catch (error) {
-        console.error(error);
-        alert('Error al registrar usuario.');
-      }
-    };
+      setShowGustos(false);
+      setRegisterOpen(false);
+      navigate('/');
+    } catch (error) {
+      console.error(error);
+      alert('Error al registrar usuario.');
+    }
+  };
 
   return (
     <>
-      <header className="header-simple">
-        <img id="imagenLogo" src={icono} alt="Icono" />
-        <h1>NextRead</h1>
-      </header>
+      <HeaderAcceso />
 
       <div className="contenedor-imagen-acceso">
         <div className="texto-superpuesto">
@@ -251,7 +258,7 @@ export default function Acceso() {
         <FeatureCard icon={DiarioIcon} title="Diario de Lecturas" description="Registrá tu progreso y recomendá tus libros favoritos." />
       </div>
 
-      <Footer/>
+      <Footer />
     </>
   );
 }

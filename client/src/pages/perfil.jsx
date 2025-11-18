@@ -48,7 +48,6 @@ export default function Perfil() {
         navigate("/acceso");
       });
   }, [navigate]);
-  
 
   const handleLogout = () => {
     localStorage.removeItem("user");

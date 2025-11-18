@@ -1,5 +1,6 @@
 /* Contenedor general */
 .slider-container {
+    margin-top: 40px;
     position: relative;
     width: 100%;
     max-width: 1200px;  /* opcional: limita a 1200px para pantallas muy grandes */

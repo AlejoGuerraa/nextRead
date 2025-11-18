@@ -1,9 +1,42 @@
 const User = require("../models/Usuario");
-const Libro = require("../models/Libro");
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 
 const claveSecreta = 'AdminLibros';
+
+// -------------------------------------------------
+// HELPER: AGREGAR NOTIFICACIÓN AL USUARIO
+// -------------------------------------------------
+async function agregarNotificacion(userId, mensaje, nombre = "Sistema") {
+    try {
+        const usuario = await User.findByPk(userId);
+
+        if (!usuario) return;
+
+        let notis = [];
+
+        if (usuario.notificaciones) {
+            try {
+                notis = JSON.parse(usuario.notificaciones);
+            } catch (_) { notis = []; }
+        }
+
+        const nueva = {
+            id: Date.now(),
+            nombre,
+            mensaje,
+            fecha: new Date().toISOString()
+        };
+
+        notis.unshift(nueva);
+
+        usuario.notificaciones = JSON.stringify(notis);
+        await usuario.save();
+    } catch (err) {
+        console.log("Error guardando notificación:", err);
+    }
+}
+
 
 // ----------------- GET USERS -----------------
 const getAllUsers = async (_req, res) => {
@@ -15,12 +48,13 @@ const getAllUsers = async (_req, res) => {
     }
 };
 
+
 // ----------------- REGISTER -----------------
 const register = async (req, res) => {
     console.log(req.body);
 
     const { nombre, apellido, correo, usuario, contrasena, fecha_nacimiento,
-        icono, banner, descripcion} = req.body;
+        icono, banner, descripcion } = req.body;
 
     if (!nombre || !apellido || !correo || !contrasena || !fecha_nacimiento) {
         return res.status(401).json({ error: "Ingrese toda la información necesaria para continuar" });
@@ -47,12 +81,15 @@ const register = async (req, res) => {
         nombre, apellido, correo, usuario,
         contrasena: hashedPassw,
         fecha_nacimiento, icono, banner,
-        descripcion
+        descripcion,
+        notificaciones: JSON.stringify([])
     });
 
     res.status(200).json({ message: "Nuevo usuario creado", data: newUser });
 };
 
+
+// ----------------- LOGIN -----------------
 const login = async (req, res) => {
     try {
         const { correo, contrasena } = req.body;
@@ -71,6 +108,10 @@ const login = async (req, res) => {
         const userData = user.get({ plain: true });
         delete userData.contrasena;
 
+        userData.notificaciones = userData.notificaciones
+            ? JSON.parse(userData.notificaciones)
+            : [];
+
         return res.status(200).json({ token, ...userData });
     } catch (err) {
         console.error("Error en login:", err);
@@ -79,9 +120,10 @@ const login = async (req, res) => {
 };
 
 
+// ----------------- GET USER -----------------
 const getUser = async (req, res) => {
     try {
-        const userId = req.user.id; // extraído del token
+        const userId = req.user.id;
         const usuario = await User.findByPk(userId, {
             attributes: { exclude: ['contrasena'] }
         });
@@ -90,16 +132,24 @@ const getUser = async (req, res) => {
             return res.status(404).json({ error: "Usuario no encontrado" });
         }
 
-        res.json(usuario);
+        const userData = usuario.get({ plain: true });
+        userData.notificaciones = usuario.notificaciones
+            ? JSON.parse(usuario.notificaciones)
+            : [];
+
+        res.json(userData);
+
     } catch (error) {
         console.error(error);
         return res.status(500).json({ error: "Error en el servidor" });
     }
 };
 
+
+// ----------------- EDITAR PERFIL -----------------
 const editarPerfil = async (req, res) => {
     try {
-        const userId = req.user.id; // viene del token
+        const userId = req.user.id;
         const {
             nombre,
             apellido,
@@ -114,7 +164,6 @@ const editarPerfil = async (req, res) => {
         const usuario = await User.findByPk(userId);
         if (!usuario) return res.status(404).json({ error: "Usuario no encontrado" });
 
-        // Solo actualizamos los campos que vienen
         if (nombre !== undefined) usuario.nombre = nombre;
         if (apellido !== undefined) usuario.apellido = apellido;
         if (descripcion !== undefined) usuario.descripcion = descripcion;
@@ -138,5 +187,6 @@ module.exports = {
     register,
     login,
     getUser,
-    editarPerfil
+    editarPerfil,
+    agregarNotificacion
 };

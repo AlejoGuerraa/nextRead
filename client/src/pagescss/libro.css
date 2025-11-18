@@ -21,68 +21,6 @@ body {
   padding: 0;
 }
 
-/* ===== Header ===== */
-.main-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  background-color: var(--primary);
-  color: white;
-  padding: 12px 40px;
-  box-shadow: 0 6px 12px rgba(0,0,0,0.15);
-  /* border-bottom-left-radius: 16px;  <- eliminado */
-  /* border-bottom-right-radius: 16px; <- eliminado */
-}
-
-.header-left {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
-.logo-icon {
-  width: 50px;
-  height: 50px;
-  border-radius: 50%;
-  cursor: pointer;
-}
-
-.title-block {
-  display: flex;
-  flex-direction: column;
-  line-height: 1.2;
-}
-
-.app-title {
-  font-size: 1.6rem;
-  font-weight: bold;
-}
-
-.app-subtitle {
-  font-size: 0.85rem;
-  color: #cbd5e1;
-}
-
-.header-right {
-  display: flex;
-  align-items: center;
-}
-
-.btn-logout {
-  background-color: var(--btn-bg);
-  color: white;
-  border: none;
-  padding: 10px 16px;
-  border-radius: 10px;
-  cursor: pointer;
-  transition: all 0.3s;
-}
-
-.btn-logout:hover {
-  background-color: var(--btn-hover);
-  transform: translateY(-2px);
-}
-
 /* ===== Contenedor Libro ===== */
 .libro-detalle-container {
   max-width: 1100px;
@@ -90,21 +28,21 @@ body {
   padding: 20px;
 }
 
-/* ===== Card Libro (Neumorphism) ===== */
+/* ===== Card Libro (Neumorphism + elegante) ===== */
 .libro-card {
   display: flex;
   flex-wrap: wrap;
   gap: 30px;
   background: var(--card-bg);
-  border-radius: 20px;
+  border-radius: 25px;
   padding: 40px;
-  box-shadow: 15px 15px 30px rgba(0,0,0,0.08), -15px -15px 30px rgba(255,255,255,0.9);
-  transition: transform 0.3s, box-shadow 0.3s;
+  box-shadow: 15px 15px 30px rgba(0,0,0,0.06), -15px -15px 30px rgba(255,255,255,0.85);
+  transition: transform 0.35s ease, box-shadow 0.35s ease;
 }
 
 .libro-card:hover {
-  transform: translateY(-6px);
-  box-shadow: 20px 20px 40px rgba(0,0,0,0.12), -20px -20px 40px rgba(255,255,255,0.95);
+  transform: translateY(-8px);
+  box-shadow: 20px 20px 45px rgba(0,0,0,0.12), -20px -20px 45px rgba(255,255,255,0.95);
 }
 
 /* ===== Portada flotante ===== */
@@ -118,7 +56,13 @@ body {
   overflow: hidden;
   background: linear-gradient(135deg, #dae8fc, #c1d7f0);
   box-shadow: 5px 5px 15px rgba(0,0,0,0.1), -5px -5px 15px rgba(255,255,255,0.8);
-  transform: translateY(-10px);
+  transform: translateY(-12px);
+  transition: transform 0.35s ease, box-shadow 0.35s ease;
+}
+
+.libro-portada:hover {
+  transform: translateY(-16px) scale(1.03);
+  box-shadow: 8px 8px 25px rgba(0,0,0,0.12), -8px -8px 25px rgba(255,255,255,0.9);
 }
 
 .libro-portada img {
@@ -131,6 +75,7 @@ body {
 .portada-placeholder {
   color: var(--secondary);
   font-weight: 600;
+  font-size: 1.1rem;
 }
 
 /* ===== Info Libro ===== */
@@ -141,15 +86,17 @@ body {
 }
 
 .libro-titulo {
-  font-size: 2rem;
+  font-size: 2.2rem;
   color: var(--primary);
-  margin-bottom: 8px;
+  margin-bottom: 10px;
+  font-weight: 700;
 }
 
 .libro-autor {
-  font-size: 1.15rem;
+  font-size: 1.2rem;
   color: var(--secondary);
-  margin-bottom: 20px;
+  margin-bottom: 22px;
+  font-weight: 500;
 }
 
 .libro-meta {
@@ -157,51 +104,58 @@ body {
   gap: 20px;
   color: var(--accent);
   font-weight: 500;
-  margin-bottom: 20px;
+  margin-bottom: 22px;
+  font-size: 0.95rem;
 }
 
 .libro-descripcion {
   color: var(--text-dark);
-  line-height: 1.7;
+  line-height: 1.75;
   background-color: #f0f4f8;
-  padding: 20px;
-  border-radius: 15px;
-  margin-bottom: 30px;
-  box-shadow: inset 5px 5px 10px rgba(0,0,0,0.03), inset -5px -5px 10px rgba(255,255,255,0.8);
+  padding: 22px;
+  border-radius: 18px;
+  margin-bottom: 32px;
+  box-shadow: inset 5px 5px 12px rgba(0,0,0,0.03), inset -5px -5px 12px rgba(255,255,255,0.85);
+  transition: box-shadow 0.3s ease;
+}
+
+.libro-descripcion:hover {
+  box-shadow: inset 6px 6px 16px rgba(0,0,0,0.04), inset -6px -6px 16px rgba(255,255,255,0.9);
 }
 
 /* ===== Acciones ===== */
 .libro-acciones {
   display: flex;
-  gap: 15px;
+  gap: 16px;
   flex-wrap: wrap;
-  margin-bottom: 25px;
+  margin-bottom: 28px;
 }
 
 .btn {
   background-color: var(--btn-bg);
   color: white;
   border: none;
-  padding: 10px 18px;
-  border-radius: 12px;
+  padding: 12px 20px;
+  border-radius: 14px;
   cursor: pointer;
   font-size: 1rem;
-  transition: all 0.3s;
-  box-shadow: 5px 5px 12px rgba(0,0,0,0.08), -5px -5px 12px rgba(255,255,255,0.9);
+  font-weight: 500;
+  transition: all 0.35s ease;
+  box-shadow: 5px 5px 15px rgba(0,0,0,0.08), -5px -5px 15px rgba(255,255,255,0.9);
 }
 
 .btn:hover {
   background-color: var(--btn-hover);
-  transform: translateY(-3px);
-  box-shadow: 6px 6px 15px rgba(0,0,0,0.1), -6px -6px 15px rgba(255,255,255,0.95);
+  transform: translateY(-3px) scale(1.03);
+  box-shadow: 8px 8px 20px rgba(0,0,0,0.1), -8px -8px 20px rgba(255,255,255,0.95);
 }
 
 /* ===== Rating ===== */
 .libro-footer {
   display: flex;
   align-items: center;
-  gap: 12px;
-  margin-bottom: 30px;
+  gap: 14px;
+  margin-bottom: 32px;
 }
 
 .libro-footer label {
@@ -213,24 +167,24 @@ body {
 .libro-rating {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 10px;
 }
 
 .estrella {
-  font-size: 26px;
+  font-size: 28px;
   color: var(--star-default);
   cursor: pointer;
-  transition: all 0.2s;
-  text-shadow: 0 0 2px rgba(0,0,0,0.2);
+  transition: all 0.25s ease;
+  text-shadow: 0 0 3px rgba(0,0,0,0.2);
 }
 
 .estrella:hover {
-  transform: scale(1.3);
+  transform: scale(1.35);
 }
 
 .estrella.activa {
   color: var(--star-active);
-  text-shadow: 0 0 4px rgba(255,180,0,0.7);
+  text-shadow: 0 0 6px rgba(255,180,0,0.7);
 }
 
 /* Número de ranking */
@@ -250,12 +204,18 @@ body {
 
 .comentario {
   display: flex;
-  gap: 12px;
+  gap: 14px;
   margin-bottom: 18px;
   background-color: #edf2f8;
-  padding: 15px;
-  border-radius: 15px;
-  box-shadow: inset 3px 3px 8px rgba(0,0,0,0.04), inset -3px -3px 8px rgba(255,255,255,0.9);
+  padding: 16px;
+  border-radius: 18px;
+  box-shadow: inset 4px 4px 12px rgba(0,0,0,0.04), inset -4px -4px 12px rgba(255,255,255,0.9);
+  transition: box-shadow 0.3s ease, transform 0.3s ease;
+}
+
+.comentario:hover {
+  transform: translateY(-2px);
+  box-shadow: inset 5px 5px 14px rgba(0,0,0,0.05), inset -5px -5px 14px rgba(255,255,255,0.92);
 }
 
 .comentario-avatar {
@@ -279,6 +239,6 @@ body {
 .cargando, .error {
   text-align: center;
   margin-top: 60px;
-  font-size: 1.2rem;
+  font-size: 1.25rem;
   color: var(--secondary);
 }

@@ -9,6 +9,7 @@ import PaginaLibro from './pages/libro';
 import EditarPerfil from './pages/editarPerfil';
 import Seguidores from './pages/seguidores';
 import Seguidos from './pages/seguidos';
+import Configuracion from './pages/configuracion';
 
 import { useEffect } from "react";
 import { useLocation } from "react-router-dom";
@@ -31,6 +32,8 @@ export default function TitleManager() {
       document.title = "NextRead - Editar perfil";
     } else if (path === "/seguidores") {
       document.title = "NextRead - Seguidores";
+    } else if (path === "/configuracion") {
+      document.title = "NextRead - Configuracion";
     } else if (path === "/seguidos") {
       document.title = "NextRead - Seguidos";
     } else {
@@ -49,6 +52,7 @@ const router = createBrowserRouter([
   { path: "/libro/:id", element: <PaginaLibro /> },
   { path: "/seguidores", element: <Seguidores /> },
   { path: "/seguidos", element: <Seguidos /> },
+  { path: "/configuracion", element: <Configuracion /> },
 ]);
 
 ReactDOM.createRoot(document.getElementById('root')).render(
