@@ -67,12 +67,30 @@ export default function Perfil() {
     );
   }
 
+  const librosLeidosCount = (() => {
+    if (!user.libros_leidos) return 0;
+
+    // Caso array real
+    if (Array.isArray(user.libros_leidos)) {
+      return user.libros_leidos.length;
+    }
+
+    // Caso JSON string
+    try {
+      const arr = JSON.parse(user.libros_leidos);
+      return Array.isArray(arr) ? arr.length : 0;
+    } catch {
+      return 0;
+    }
+  })();
+
+
   const seguirLeyendo = Array.isArray(user.libros_en_lectura) ? user.libros_en_lectura : [];
   const favoritos = Array.isArray(user.libros_favoritos) ? user.libros_favoritos : [];
   const userLists = user.listas || {};
 
   const stats = {
-    libros_leidos: user.libros_leidos ?? 0,
+    libros_leidos: librosLeidosCount,
     autor_preferido: user.autor_preferido && user.autor_preferido.trim() ? user.autor_preferido : "No definido",
     genero_preferido: user.genero_preferido && user.genero_preferido.trim() ? user.genero_preferido : "No definido",
     titulo_preferido: user.titulo_preferido && user.titulo_preferido.trim() ? user.titulo_preferido : "No definido",
@@ -109,7 +127,7 @@ export default function Perfil() {
           <span className="book-rating">
             {rating
               ? "★".repeat(Math.round(rating)).slice(0, 5) +
-                "☆".repeat(Math.max(0, 5 - Math.round(rating)))
+              "☆".repeat(Math.max(0, 5 - Math.round(rating)))
               : "—"}
           </span>
           <button className="btn-secondary small">Ver</button>
@@ -144,8 +162,8 @@ export default function Perfil() {
   const userAchievements = Array.isArray(user.logros)
     ? user.logros
     : Array.isArray(user.logros_ids)
-    ? user.logros_ids
-    : [];
+      ? user.logros_ids
+      : [];
 
   return (
     <div className="profile-page">

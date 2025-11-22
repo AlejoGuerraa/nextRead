@@ -1,9 +1,24 @@
-// src/components/perfil/estadisticas.jsx
-import React from "react";
-
 export default function Estadisticas({ user, ratingGeneral, onCreateList }) {
+    
+    const librosLeidosCount = (() => {
+        if (!user.libros_leidos) return 0;
+
+        // Caso array real
+        if (Array.isArray(user.libros_leidos)) {
+            return user.libros_leidos.length;
+        }
+
+        // Caso JSON string
+        try {
+            const arr = JSON.parse(user.libros_leidos);
+            return Array.isArray(arr) ? arr.length : 0;
+        } catch {
+            return 0;
+        }
+    })();
+
     const stats = {
-        libros_leidos: user.libros_leidos ?? 0,
+        libros_leidos: librosLeidosCount,
         autor_preferido: user.autor_preferido || "No definido",
         genero_preferido: user.genero_preferido || "No definido",
         titulo_preferido: user.titulo_preferido || "No definido",
