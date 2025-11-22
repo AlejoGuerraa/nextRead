@@ -115,34 +115,50 @@ const getTendencias = async (req, res) => {
 // ✅ NUEVO ENDPOINT: Obtener detalle de Libro por ID (con Autor)
 // ===================================================================
 const getLibroById = async (req, res) => {
-    const { id } = req.params;
+    const { id } = req.params;
 
-    try {
-        const libro = await Libro.findByPk(id, {
-            // 💡 Incluimos el modelo Autor usando el alias 'Autor'
-            include: [{
-                model: Autor,
-                as: 'Autor',
-                attributes: ['id', 'nombre', 'url_cara']
-            }],
-            // Mapeamos 'url_portada' a 'portada' para que coincida con el frontend
-            attributes: {
-                exclude: ['id_autor'], // Excluimos el ID interno de la respuesta
-                include: [['url_portada', 'portada']] // Añadimos 'portada' como alias de 'url_portada'
+    try {
+        let libro = await Libro.findByPk(id, { // 💡 Cambiamos 'const' por 'let' para poder modificarlo
+            include: [{
+                model: Autor,
+                as: 'Autor',
+                attributes: ['id', 'nombre', 'url_cara']
+            }],
+            attributes: {
+                exclude: ['id_autor'],
+                include: [['url_portada', 'portada']]
+            }
+        });
+
+        if (!libro) {
+            return res.status(404).json({ message: `Libro con ID ${id} no encontrado.` });
+        }
+
+        // 👇 SOLUCIÓN: Desestructurar y parsear 'generos'
+        // Usamos .get({ plain: true }) para obtener un objeto JS plano y manipularlo.
+        libro = libro.get({ plain: true });
+
+        if (typeof libro.generos === 'string') {
+            try {
+                // Parseamos la cadena JSON a un array de JavaScript
+                libro.generos = JSON.parse(libro.generos); 
+            } catch (e) {
+                console.error("Error al parsear generos:", e);
+                libro.generos = []; // En caso de error, aseguramos que sea un array vacío
             }
-        });
-
-        if (!libro) {
-            return res.status(404).json({ message: `Libro con ID ${id} no encontrado.` });
         }
+        // Si ya es un array (porque se hizo el get, o porque el ORM lo hizo automáticamente), no hace nada.
+        if (!Array.isArray(libro.generos)) {
+            libro.generos = [];
+        }
+        
+        // El frontend recibirá ahora el 'generos' como un Array JS
+        res.json(libro);
 
-        // El frontend recibirá: { id: 1, titulo: '...', Autor: { id: 1, nombre: '...' } }
-        res.json(libro);
-
-    } catch (error) {
-        console.error("Error al obtener el libro por ID:", error);
-        res.status(500).json({ message: 'Error interno del servidor al consultar el libro.' });
-    }
+    } catch (error) {
+        console.error("Error al obtener el libro por ID:", error);
+        res.status(500).json({ message: 'Error interno del servidor al consultar el libro.' });
+    }
 };
 
 
@@ -212,35 +228,35 @@ const cargarLibrosAutores = async (req, res) => {
     try {
 
         const trendingBooks = [
-            { title: "El Alquimista", tipo: "Novela", author: "Paulo Coelho", rating: 4.3,
+            { title: "El Alquimista", tipo: "Novela", genero: "Drama", author: "Paulo Coelho", rating: 4.3,
               url_portada: "https://books.google.com.py/books/content?id=lZZCzTM_9PUC&printsec=frontcover&img=1&zoom=1&edge=curl",
               id_autor: 10 },
 
-            { title: "Cien Años de Soledad", tipo: "Novela", author: "Gabriel García Márquez", rating: 3.7,
+            { title: "Cien Años de Soledad", tipo: "Novela", genero: "Ficción", author: "Gabriel García Márquez", rating: 3.7,
               url_portada: "https://http2.mlstatic.com/D_NQ_NP_888637-MLU73120375963_112023-O.webp",
               id_autor: 1 },
 
-            { title: "1984", tipo: "Novela", author: "George Orwell", rating: 4.9,
+            { title: "1984", tipo: "Novela", genero: "Distopia", author: "George Orwell", rating: 4.9,
               url_portada: "https://images.cdn1.buscalibre.com/fit-in/360x360/ab/54/ab54a82815e061d7fc8f22bcd22f2605.jpg",
               id_autor: 3 },
 
-            { title: "Harry Potter y la Piedra Filosofal", tipo: "Fantasia", author: "J.K. Rowling", rating: 4.1,
+            { title: "Harry Potter y la Piedra Filosofal", tipo: "Manga" , genero: "Fantasia", author: "J.K. Rowling", rating: 4.1,
               url_portada: "https://www.planetadelibros.com/usuaris/libros/fotos/295/m_libros/portada_harry-potter-y-la-piedra-filosofal-harry-potter-1.png",
               id_autor: 4 },
 
-            { title: "Orgullo y Prejuicio", tipo: "Romance", author: "Jane Austen", rating: 3.9,
+            { title: "Orgullo y Prejuicio", tipo: "Biografía", genero: "Romance", author: "Jane Austen", rating: 3.9,
               url_portada: "https://www.planetadelibros.com.ar/usuaris/libros/fotos/383/original/portada_orgullo-y-prejuicio_jane-austen_202308011307.jpg",
               id_autor: 6 },
 
-            { title: "Don Quijote de la Mancha", tipo: "Novela", author: "Miguel de Cervantes", rating: 4.6,
+            { title: "Don Quijote de la Mancha", tipo: "Novela", genero: "Ficción", author: "Miguel de Cervantes", rating: 4.6,
               url_portada: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQcMRZdGl9oMFn7_O4oyErwUXK9yrN3OcSe0w&s",
               id_autor: 8 },
 
-            { title: "El Señor de los Anillos", tipo: "Fantasia", author: "J.R.R. Tolkien", rating: 4.8,
+            { title: "El Señor de los Anillos", tipo: "Novela", genero: "Fantasia", author: "J.R.R. Tolkien", rating: 4.8,
               url_portada: "https://i.pinimg.com/736x/3a/29/8b/3a298b825d4c5e34fb4a8d5b1991810c.jpg",
               id_autor: 7 },
 
-            { title: "It", tipo: "Terror", author: "Stephen King", rating: 4.2,
+            { title: "It", tipo: "Novela", genero: "Terror", author: "Stephen King", rating: 4.2,
               url_portada: "https://upload.wikimedia.org/wikipedia/en/5/5a/It_cover.jpg",
               id_autor: 5 },
 
@@ -248,11 +264,11 @@ const cargarLibrosAutores = async (req, res) => {
               url_portada: "https://m.media-amazon.com/images/I/81AVr2vR8oL.jpg",
               id_autor: 11 },
 
-            { title: "Los Juegos del Hambre", tipo: "Distopia", author: "Suzanne Collins", rating: 4.5,
+            { title: "Los Juegos del Hambre", tipo: "Novela", genero: "Ficción", author: "Suzanne Collins", rating: 4.5,
               url_portada: "https://images.cdn2.buscalibre.com/fit-in/360x360/52/29/522996f132c7d6dd44f44b343029e9c6.jpg",
               id_autor: 12 },
 
-            { title: "Diez Negritos", tipo: "Misterio", author: "Agatha Christie", rating: 4.3,
+            { title: "Diez Negritos", tipo: "Novela", genero: "Misterio", author: "Agatha Christie", rating: 4.3,
               url_portada: "https://images.cdn1.buscalibre.com/fit-in/360x360/27/0c/270c82fa06e675985d8dfe8e94cf2369.jpg",
               id_autor: 9 }
         ];
@@ -265,7 +281,7 @@ const cargarLibrosAutores = async (req, res) => {
             descripcion: "Descripción no disponible",
             tema: "Varios",
             ranking: libro.rating,
-            generos: JSON.stringify(["Varios"]),
+            generos: [libro.genero] || JSON.stringify(["Varios"]),
             tags: JSON.stringify(["trending"]),
             url_portada: libro.url_portada,
             id_autor: libro.id_autor
