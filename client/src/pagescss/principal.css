@@ -1,0 +1,268 @@
+/* ==================================== */
+/* 📚 Estilos de la Página Logueado (AJUSTADO SUAVE + FONDO CELSTE) */
+/* ==================================== */
+
+.logueado-container {
+    padding: 0;
+    background-color: #eaf2fb; /* fondo celeste muy claro */
+    min-height: 100vh;
+}
+
+/* --- HEADER Y BUSCADOR --- */
+.logueado-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 25px;
+    background-color: #4c6ca3;
+    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.12);
+    color: #fff;
+    margin-bottom: 25px;
+    border-radius: 0 0 12px 12px;
+}
+
+.header-left,
+.header-right {
+    display: flex;
+    align-items: center;
+}
+
+.logo {
+    font-size: 1.8rem;
+    margin-right: 10px;
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    background-color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #4c6ca3;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+    transition: transform 0.2s ease;
+}
+
+.logo:hover {
+    transform: scale(1.05);
+}
+
+.app-title {
+    font-size: 1.5rem;
+    font-weight: 800;
+    color: #fff;
+    margin-right: 15px;
+}
+
+.logueado-header .search-bar {
+    padding: 9px 18px;
+    border: none;
+    border-radius: 25px;
+    width: 260px;
+    font-size: 0.95rem;
+    box-shadow: inset 0 2px 6px rgba(0, 0, 0, 0.08);
+    outline: none;
+}
+
+/* iconos del header */
+.icon {
+    width: 42px;
+    height: 42px;
+    border-radius: 50%;
+    background-color: rgba(255, 255, 255, 0.15);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.6rem;
+    margin-left: 15px;
+    cursor: pointer;
+    color: #fff;
+    transition: all 0.25s ease;
+}
+
+.icon:hover {
+    background-color: rgba(255, 255, 255, 0.25);
+    transform: scale(1.1);
+}
+
+.profile {
+    display: flex;
+    align-items: center;
+    margin-left: 15px;
+    cursor: pointer;
+    font-size: 1rem;
+    font-weight: 600;
+    color: #fff;
+    padding: 9px 18px;
+    border-radius: 25px;
+    background-color: #0a6fb4;
+    transition: background-color 0.25s ease, transform 0.2s ease;
+}
+
+.profile:hover {
+    background-color: #084e82;
+    transform: translateY(-2px);
+}
+
+/* --- MAIN CONTENT --- */
+.logueado-main {
+    padding: 0 20px;
+}
+
+/* --- CARRUSEL --- */
+.slider-container {
+    position: relative;
+    width: 100%;
+    overflow: hidden;
+    margin-bottom: 30px;
+    border-radius: 14px;
+    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.08);
+}
+
+.container-images li {
+    flex-shrink: 0;
+    width: 100%;
+    height: 280px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    border-radius: 12px;
+    overflow: hidden;
+}
+
+.container-images img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 12px;
+    transition: transform 0.3s ease;
+}
+
+.container-images img:hover {
+    transform: scale(1.03);
+}
+
+.arrow {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    background-color: rgba(0, 0, 0, 0.4);
+    color: white;
+    border: none;
+    padding: 10px 14px;
+    cursor: pointer;
+    z-index: 10;
+    font-size: 1.5rem;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 42px;
+    height: 42px;
+    transition: all 0.25s ease;
+}
+
+.arrow:hover:not(.disabled) {
+    background-color: rgba(0, 0, 0, 0.6);
+    transform: scale(1.1);
+}
+
+.dots-container {
+    position: absolute;
+    bottom: 12px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    gap: 8px;
+}
+
+.dot {
+    width: 10px;
+    height: 10px;
+    background-color: rgba(255, 255, 255, 0.6);
+    border-radius: 50%;
+    cursor: pointer;
+    transition: all 0.25s ease;
+}
+
+.dot.active {
+    background-color: #fff;
+}
+
+/* --- BOOK SECTION --- */
+.book-section {
+    padding: 22px 0;
+}
+
+/* Títulos de sección: Novedades y Tendencias */
+.book-section-header h3 {
+    margin: 0;
+    font-size: 1.55rem;
+    color: #2e4a7d; /* azul elegante */
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; /* tipografía moderna */
+    font-weight: 700;
+}
+
+/* Selector de género */
+.genre-select {
+    padding: 9px 18px;
+    border: 1px solid #ccc;
+    border-radius: 25px;
+    background-color: #fff;
+    font-size: 0.95rem;
+    cursor: pointer;
+    appearance: none;
+    background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 292.4 292.4"><path fill="%23000000" d="M287 69.4a17.6 17.6 0 00-13-5.4H18.4c-5 0-9.3 1.8-12.9 5.4A17.6 17.6 0 000 82.2c0 5 1.8 9.3 5.4 12.9l128 127.9c3.6 3.6 7.8 5.4 12.9 5.4s9.3-1.8 12.9-5.4L287 95.1a17.6 17.6 0 005.4-12.9c0-5-1.8-9.2-5.4-12.8z"/></svg>');
+    background-repeat: no-repeat;
+    background-position: right 12px center;
+    background-size: 12px;
+    padding-right: 36px;
+    min-width: 150px;
+}
+
+/* --- BOOK CARDS --- */
+.book-scroll {
+    display: flex;
+    overflow-x: auto;
+    padding-bottom: 16px;
+}
+
+.book-card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    cursor: pointer;
+    transition: transform 0.25s ease, box-shadow 0.25s ease;
+    padding: 16px;
+    border-radius: 12px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
+    background-color: #fff;
+    margin: 0 12px;
+    width: 150px;
+    flex-shrink: 0;
+    user-select: none;
+}
+
+.book-card:hover {
+    transform: translateY(-6px);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.12);
+}
+
+.book-cover-img, .book-cover-placeholder {
+    width: 100px;
+    height: 150px;
+    border-radius: 8px;
+    margin-bottom: 8px;
+}
+
+/* Popover */
+.restriction-popover {
+    background: #fff;
+    border: 2px solid #0a6fb4;
+    border-radius: 14px;
+    padding: 16px 18px;
+    width: 240px;
+    text-align: left;
+    box-shadow: 0 10px 26px rgba(12, 27, 56, 0.15);
+    font-family: Inter, sans-serif;
+}
