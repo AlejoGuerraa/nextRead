@@ -18,7 +18,7 @@ export default function Estadisticas({ user, ratingGeneral, onCreateList }) {
     })();
 
     const stats = {
-        libros_leidos: librosLeidosCount,
+        libros_leidos: librosLeidosCount ?? 0,
         autor_preferido: user.autor_preferido || "No definido",
         genero_preferido: user.genero_preferido || "No definido",
         titulo_preferido: user.titulo_preferido || "No definido",

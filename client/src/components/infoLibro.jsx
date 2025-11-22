@@ -9,6 +9,7 @@ export default function InfoLibro({ libro, onRestrictedAction, actionRef }) {
     const { titulo, Autor, portada, generos, anio, tipo, descripcion, ranking } = libro;
     const autorNombre = Autor?.nombre || "Autor Desconocido";
 
+    const [user, setUser] = useState('')
     const [userRating, setUserRating] = useState(0);
     const [hoverRating, setHoverRating] = useState(0);
 
@@ -20,7 +21,7 @@ export default function InfoLibro({ libro, onRestrictedAction, actionRef }) {
         const userId = userData?.id;
 
         if (!token || !userId) {
-            if (onRestrictedAction) onRestrictedAction(); 
+            if (onRestrictedAction) onRestrictedAction();
             return null;
         }
 
@@ -37,6 +38,12 @@ export default function InfoLibro({ libro, onRestrictedAction, actionRef }) {
                 {},
                 { headers: { Authorization: `Bearer ${auth.token}` } }
             );
+
+            setUser(prev => ({
+                ...prev,
+                libros_leidos: response.data.libros_leidos
+            }));
+
             alert(`✅ ${response.data.message}`);
         } catch (error) {
             console.error("Error al agregar libro:", error);
