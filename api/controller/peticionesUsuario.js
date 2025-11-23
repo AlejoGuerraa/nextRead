@@ -135,7 +135,8 @@ const login = async (req, res) => {
 
 const getUser = async (req, res) => {
     try {
-        const userId = req.user.id; // extraído del token
+        const userId = req.user.id;
+
         const usuario = await User.findOne({
             where: { id: userId },
             include: [
@@ -145,17 +146,83 @@ const getUser = async (req, res) => {
             attributes: { exclude: ['contrasena'] }
         });
 
-
         if (!usuario) {
             return res.status(404).json({ error: "Usuario no encontrado" });
         }
 
-        res.json(usuario);
+        // --------------------------
+        // 1️⃣ Asegurar parseo de JSON correctamente
+        // --------------------------
+        const parseArray = (value) => {
+            if (!value) return [];
+            if (Array.isArray(value)) return value;
+
+            try {
+                return JSON.parse(value);
+            } catch {
+                return [];
+            }
+        };
+
+        const librosEnLecturaIDs = parseArray(usuario.libros_en_lectura);
+        const librosFavoritosIDs = parseArray(usuario.libros_favoritos);
+        const librosLeidosIDs = parseArray(usuario.libros_leidos);
+
+        // --------------------------
+        // 2️⃣ Armar lista de IDs
+        // --------------------------
+        const todosLosIDs = [
+            ...librosEnLecturaIDs,
+            ...librosFavoritosIDs,
+            ...librosLeidosIDs
+        ];
+
+        let librosBD = [];
+
+        if (todosLosIDs.length > 0) {
+            librosBD = await Libro.findAll({
+                where: { id: todosLosIDs },
+                attributes: [
+                    "id",
+                    "titulo",
+                    "anio",
+                    "tipo",
+                    "descripcion",
+                    "tema",
+                    "ranking",
+                    "generos",
+                    "url_portada",
+                    "id_autor"
+                ]
+            });
+        }
+
+        // Mapa de ID → Libro
+        const librosMap = {};
+        librosBD.forEach(libro => {
+            librosMap[libro.id] = libro;
+        });
+
+        // --------------------------
+        // 3️⃣ Reemplazar IDs → Objetos completos
+        // --------------------------
+        const usuarioData = {
+            ...usuario.toJSON(),
+
+            libros_en_lectura: librosEnLecturaIDs.map(id => librosMap[id]).filter(Boolean),
+            libros_favoritos: librosFavoritosIDs.map(id => librosMap[id]).filter(Boolean),
+            libros_leidos: librosLeidosIDs.map(id => librosMap[id]).filter(Boolean)
+        };
+
+        return res.json(usuarioData);
+
     } catch (error) {
         console.error(error);
         return res.status(500).json({ error: "Error en el servidor" });
     }
 };
+
+
 
 const editarPerfil = async (req, res) => {
     try {
