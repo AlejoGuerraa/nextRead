@@ -9,7 +9,7 @@ const Icono = sequelize.define('Icono', {
   },
   
   simbolo: {
-    type: DataTypes.STRING(10), // guarda el emoji o texto corto
+    type: DataTypes.STRING(255), // guarda el emoji o texto corto
     allowNull: false
   },
 },

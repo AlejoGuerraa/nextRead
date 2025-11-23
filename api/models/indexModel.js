@@ -100,8 +100,8 @@ Libro.belongsTo(Autor, {
 
 // Icono con Usuario - Banner con Usuario
 
-Usuario.belongsTo(Icono, { foreignKey: 'idIcono', as: 'icono' });
-Usuario.belongsTo(Banner, { foreignKey: 'idBanner', as: 'banner' });
+Usuario.belongsTo(Icono, { foreignKey: "idIcono", as: "iconoData" });
+Usuario.belongsTo(Banner, { foreignKey: "idBanner", as: "bannerData" });
 
 Icono.hasMany(Usuario, { foreignKey: 'idIcono', as: 'usuarios' });
 Banner.hasMany(Usuario, { foreignKey: 'idBanner', as: 'usuarios' });

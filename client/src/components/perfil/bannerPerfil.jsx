@@ -5,21 +5,28 @@ export default function BannerPerfil({ user, onEdit, colors = {} }) {
     const tempBanner = colors.tempBanner || "#8e59f1ff";
 
     // ✔ Normalizar el icono (por si viene con comillas extras del JSON)
-    const cleanIcon =
-        typeof user.icono === "string"
-            ? user.icono.replace(/^"|"$/g, "") // saca comillas si existen
-            : user.icono;
+    // ✔ Usar iconoData del backend
+    // ✔ Normalizar el icono recibido
+    const rawIcon = user.iconoData?.simbolo;
 
-    // ✔ Si el avatar viene en null / undefined / string vacía -> fallback
-    const avatarSrc = cleanIcon && cleanIcon.trim() !== "" 
-        ? cleanIcon 
-        : "/iconos/default.png"; // asegurate de tener un default o cambialo
+    let avatarSrc = user.iconoData ?? "/iconos/LogoDefault1.jpg";
+
+    if (rawIcon) {
+        if (!rawIcon.startsWith("/") && !rawIcon.startsWith("http")) {
+            // Si solo es un nombre de archivo → lo buscamos en /public/iconos
+            avatarSrc = `/iconos/${rawIcon}`;
+        } else {
+            avatarSrc = rawIcon;
+        }
+    }
+
+
 
     return (
         <section
             className="profile-banner fancy-banner"
             style={{
-                backgroundColor: user.banner || tempBanner,
+                backgroundColor: user.bannerData?.url || tempBanner,
                 backgroundImage: `linear-gradient(180deg, rgba(0,0,0,0.15), rgba(0,0,0,0.25))`
             }}
         >

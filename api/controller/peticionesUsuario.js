@@ -24,10 +24,10 @@ const getAllUsers = async (_req, res) => {
 const register = async (req, res) => {
     console.log(req.body);
 
-    const { 
+    const {
         nombre, apellido, correo, usuario, contrasena, fecha_nacimiento,
         // Recibimos el símbolo del icono y la URL del banner
-        icono, banner, descripcion 
+        icono, banner, descripcion
     } = req.body;
 
     // 1. VALIDACIONES BÁSICAS
@@ -53,27 +53,24 @@ const register = async (req, res) => {
     if (correoadsd) return res.status(400).json({ error: "El correo ya está registrado" });
 
     // --- LÓGICA CLAVE: BUSCAR O CREAR ÍCONO Y BANNER ---
-    
+
     let idIcono = null;
     let idBanner = null;
 
     try {
         // Manejar Icono: Buscar por símbolo. Si no existe, lo crea.
-        if (icono) {
-            const [iconoInstance, created] = await Icono.findOrCreate({ 
-                where: { simbolo: icono },
-                defaults: { simbolo: icono } // Datos para crear si no existe
+        if (icono !== undefined) {
+            const [iconoInstance] = await Icono.findOrCreate({
+                where: { simbolo: icono },   // simbolo = "/iconos/LogoDefault1.jpg"
+                defaults: { simbolo: icono }
             });
-            idIcono = iconoInstance.id;
-
-            if (created) {
-                console.log(`Nuevo icono creado dinámicamente: ${icono}`);
-            }
+            usuario.idIcono = iconoInstance.id;
         }
+
 
         // Manejar Banner: Buscar por URL. Si no existe, lo crea.
         if (banner) {
-            const [bannerInstance, created] = await Banner.findOrCreate({ 
+            const [bannerInstance, created] = await Banner.findOrCreate({
                 where: { url: banner },
                 defaults: { url: banner } // Datos para crear si no existe
             });
@@ -89,19 +86,19 @@ const register = async (req, res) => {
         console.error("Error buscando o creando Icono/Banner:", error);
         return res.status(500).json({ error: "Error interno al procesar Icono/Banner." });
     }
-    
+
     // 4. CREACIÓN DEL USUARIO
     const hashedPassw = await bcrypt.hash(contrasena, 10);
 
     const newUser = await User.create({
-        nombre, 
-        apellido, 
-        correo, 
+        nombre,
+        apellido,
+        correo,
         usuario,
         contrasena: hashedPassw,
-        fecha_nacimiento, 
+        fecha_nacimiento,
         // Usamos los IDs obtenidos/creados
-        idIcono: idIcono, 
+        idIcono: idIcono,
         idBanner: idBanner,
         descripcion
     });
@@ -139,9 +136,15 @@ const login = async (req, res) => {
 const getUser = async (req, res) => {
     try {
         const userId = req.user.id; // extraído del token
-        const usuario = await User.findByPk(userId, {
+        const usuario = await User.findOne({
+            where: { id: userId },
+            include: [
+                { model: Icono, as: "iconoData", attributes: ["simbolo"] },
+                { model: Banner, as: "bannerData", attributes: ["url"] }
+            ],
             attributes: { exclude: ['contrasena'] }
         });
+
 
         if (!usuario) {
             return res.status(404).json({ error: "Usuario no encontrado" });
@@ -156,13 +159,13 @@ const getUser = async (req, res) => {
 
 const editarPerfil = async (req, res) => {
     try {
-        const userId = req.user.id; // viene del token
+        const userId = req.user.id;
         const {
             nombre,
             apellido,
             descripcion,
-            banner,
-            icono,
+            banner,   // URL nueva
+            icono,    // emoji nuevo
             genero_preferido,
             autor_preferido,
             titulo_preferido
@@ -171,24 +174,46 @@ const editarPerfil = async (req, res) => {
         const usuario = await User.findByPk(userId);
         if (!usuario) return res.status(404).json({ error: "Usuario no encontrado" });
 
-        // Solo actualizamos los campos que vienen
+        // 🔹 1. Actualiza texto normal
         if (nombre !== undefined) usuario.nombre = nombre;
         if (apellido !== undefined) usuario.apellido = apellido;
         if (descripcion !== undefined) usuario.descripcion = descripcion;
-        if (banner !== undefined) usuario.banner = banner;
-        if (icono !== undefined) usuario.icono = icono;
         if (genero_preferido !== undefined) usuario.genero_preferido = genero_preferido;
         if (autor_preferido !== undefined) usuario.autor_preferido = autor_preferido;
         if (titulo_preferido !== undefined) usuario.titulo_preferido = titulo_preferido;
 
+        // 🔹 2. Manejar ICONO
+        if (icono !== undefined) {
+            const [iconoInstance] = await Icono.findOrCreate({
+                where: { simbolo: icono },   // simbolo = "/iconos/LogoDefault1.jpg"
+                defaults: { simbolo: icono }
+            });
+            usuario.idIcono = iconoInstance.id;
+        }
+
+
+        // 🔹 3. Manejar BANNER (URL)
+        if (banner !== undefined) {
+            const [bannerInstance] = await Banner.findOrCreate({
+                where: { url: banner },
+                defaults: { url: banner }
+            });
+            usuario.idBanner = bannerInstance.id;
+        }
+
         await usuario.save();
 
-        res.status(200).json({ msg: "Perfil actualizado correctamente", usuario });
+        return res.json({
+            msg: "Perfil actualizado correctamente",
+            usuario
+        });
+
     } catch (error) {
         console.error(error);
         res.status(500).json({ error: "Error al actualizar perfil" });
     }
 };
+
 
 module.exports = {
     getAllUsers,

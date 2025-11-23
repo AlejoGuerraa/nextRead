@@ -100,10 +100,12 @@ export const Step3 = ({ form, errors, onChange, avatarOptions, toggleAvatar, nex
         <h2>Personaliza tu perfil</h2>
 
         <div className="perfil-icono" onClick={() => toggleAvatar()}>
-            <img src={form.avatar} alt="Avatar seleccionado" className="perfil-img" />
+            <img
+                src={form.avatar}
+                alt="Avatar seleccionado"
+                className="perfil-img"
+            />
         </div>
-
-        <p>Click en el avatar para cambiarlo</p>
 
         {showPicker && (
             <div className="avatar-picker">
@@ -111,13 +113,13 @@ export const Step3 = ({ form, errors, onChange, avatarOptions, toggleAvatar, nex
                     <img
                         key={i}
                         src={a}
-                        alt={`avatar-${i}`}
-                        className={`avatar ${form.avatar === a ? 'selected' : ''}`}
+                        className={`avatar ${form.avatar === a ? "selected" : ""}`}
                         onClick={() => toggleAvatar(a)}
                     />
                 ))}
             </div>
         )}
+
 
         <textarea
             name="descripcion"
