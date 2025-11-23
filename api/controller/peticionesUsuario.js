@@ -1,6 +1,8 @@
 // Tablas
 const User = require("../models/Usuario");
 const Libro = require("../models/Libro");
+const Autor = require("../models/Autor");
+const Resena = require("../models/Resena");
 const Icono = require("../models/Icono");
 const Banner = require("../models/Banner");
 
@@ -193,9 +195,28 @@ const getUser = async (req, res) => {
                     "generos",
                     "url_portada",
                     "id_autor"
+                ],
+                include: [
+                    {
+                        model: Autor,
+                        as: "Autor",
+                        attributes: ["id", "nombre", "url_cara"]
+                    }
                 ]
             });
         }
+
+        // ---------------------------------------------------
+        // 🔵 NUEVO: Aplanar datos y agregar nombre_autor
+        // ---------------------------------------------------
+        librosBD = librosBD.map(libro => {
+            const json = libro.toJSON();
+            return {
+                ...json,
+                id: json.id, // aseguramos que siempre exista
+                nombre_autor: json.Autor ? json.Autor.nombre : "Desconocido"
+            };
+        });
 
         // Mapa de ID → Libro
         const librosMap = {};

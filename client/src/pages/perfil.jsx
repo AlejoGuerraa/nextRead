@@ -54,6 +54,10 @@ export default function Perfil() {
     navigate("/acceso");
   };
 
+  const handleBookCardClick = (bookId) => {
+    window.location.href = `/libro/${bookId}`;
+  };
+
   if (loading) {
     return <div className="center">Cargando datos del usuario...</div>;
   }
@@ -110,19 +114,40 @@ export default function Perfil() {
 
   const renderBookCard = (book, index) => {
     const title = book?.title || book?.titulo || "Título desconocido";
-    const author = book?.author || book?.autor || "Autor desconocido";
+
+    const id =
+      book.id ||
+      book.id_libro ||
+      book.book_id ||
+      book.idBook ||
+      book.id_libros ||
+      null;
+
+    const author =
+      book?.autorData?.nombre ||
+      book?.nombre_autor ||
+      "Autor desconocido";
+
+
     const rating = book?.rating ?? book?.puntuacion ?? null;
-    const cover = book?.cover || book?.imagen || null;
+
+    const cover =
+      book?.cover ||
+      book?.imagen ||
+      book?.url_portada ||
+      null;
 
     return (
       <div key={index} className="book-card" aria-label={`card-${index}`}>
         <div className="book-cover">
           {cover ? <img src={cover} alt={title} /> : <div className="book-cover-placeholder">📘</div>}
         </div>
+
         <div className="book-meta">
           <span className="book-title">{title}</span>
           <span className="book-author">{author}</span>
         </div>
+
         <div className="book-footer">
           <span className="book-rating">
             {rating
@@ -130,12 +155,15 @@ export default function Perfil() {
               "☆".repeat(Math.max(0, 5 - Math.round(rating)))
               : "—"}
           </span>
-          <button className="btn-secondary small">Ver</button>
+          <button className="btn-secondary small"
+            onClick={() => handleBookCardClick(id)}>Ver</button>
         </div>
+
         {book?.favorite && <div className="ribbon">Top</div>}
       </div>
     );
   };
+
 
   const renderRow = (items) =>
     !items || !items.length ? (
