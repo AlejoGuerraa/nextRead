@@ -1,5 +1,5 @@
 export default function Estadisticas({ user, ratingGeneral, onCreateList }) {
-    
+
     const librosLeidosCount = (() => {
         if (!user.libros_leidos) return 0;
 
@@ -20,11 +20,16 @@ export default function Estadisticas({ user, ratingGeneral, onCreateList }) {
     const stats = {
         libros_leidos: librosLeidosCount ?? 0,
         autor_preferido: user.autor_preferido || "No definido",
-        genero_preferido: user.genero_preferido || "No definido",
+        genero_preferido: (() => {
+            if (!user.genero_preferido) return "No definido";
+            if (Array.isArray(user.genero_preferido)) return user.genero_preferido[0] || "No definido";
+            return String(user.genero_preferido);
+        })(),
         titulo_preferido: user.titulo_preferido || "No definido",
         seguidos: user.seguidos ?? 0,
         seguidores: user.seguidores ?? 0,
     };
+
 
     return (
         <aside className="profile-right card-glass">

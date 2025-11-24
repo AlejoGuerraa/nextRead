@@ -256,6 +256,51 @@ const getUser = async (req, res) => {
             };
         });
 
+        // --- Calcular género más leído ---
+        let generoMasLeido = "No definido";
+
+        try {
+            const generosContador = {};
+
+            // --- Filtrar SOLO los libros leídos ---
+            const librosLeidos = librosBD.filter(lib => librosLeidosIDs.includes(lib.id));
+
+            for (const libro of librosLeidos) {
+                if (!libro.generos) continue;
+
+                let generosArray;
+
+                // Caso string: "Fantasía, Acción"
+                if (typeof libro.generos === "string") {
+                    generosArray = libro.generos.split(",").map(g => g.trim());
+                }
+                // Caso JSON: ["Fantasía", "Acción"]
+                else if (Array.isArray(libro.generos)) {
+                    generosArray = libro.generos;
+                }
+
+                if (generosArray) {
+                    generosArray.forEach(genero => {
+                        generosContador[genero] = (generosContador[genero] || 0) + 1;
+                    });
+                }
+            }
+
+            // Obtener el género más frecuente
+            const entries = Object.entries(generosContador);
+            if (entries.length > 0) {
+                const genero = entries.sort((a, b) => b[1] - a[1])[0][0];
+                generoMasLeido = String(genero);   // ← 🔥 SE VUELVE STRING SÍ O SÍ
+            }
+        } catch (err) {
+            console.error("Error calculando género preferido:", err);
+        }
+
+        // --- Agregar el dato al JSON final del usuario sin modificar la BD ---
+        usuario.dataValues.genero_preferido = generoMasLeido;
+
+
+
         // Mapa por ID
         const librosMap = {};
         librosBD.forEach(libro => (librosMap[libro.id] = libro));
@@ -266,7 +311,8 @@ const getUser = async (req, res) => {
 
             libros_en_lectura: librosEnLecturaIDs.map(id => librosMap[id]).filter(Boolean),
             libros_favoritos: librosFavoritosIDs.map(id => librosMap[id]).filter(Boolean),
-            libros_leidos: librosLeidosIDs.map(id => librosMap[id]).filter(Boolean)
+            libros_leidos: librosLeidosIDs.map(id => librosMap[id]).filter(Boolean),
+            genero_preferido: generoMasLeido
         };
 
         // --------------------------------------
