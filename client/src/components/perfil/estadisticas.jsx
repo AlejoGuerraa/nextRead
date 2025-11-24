@@ -20,10 +20,10 @@ export default function Estadisticas({ user, ratingGeneral, onCreateList }) {
     const stats = {
         libros_leidos: librosLeidosCount ?? 0,
         autor_preferido: user.autor_preferido || "No definido",
-        genero_preferido: (() => {
-            if (!user.genero_preferido) return "No definido";
-            if (Array.isArray(user.genero_preferido)) return user.genero_preferido[0] || "No definido";
-            return String(user.genero_preferido);
+        genero_mas_leido: (() => {
+            if (!user.genero_top_leyente) return "No definido";
+            if (Array.isArray(user.genero_top_leyente)) return user.genero_top_leyente[0] || "No definido";
+            return String(user.genero_top_leyente);
         })(),
         titulo_preferido: user.titulo_preferido || "No definido",
         seguidos: user.seguidos ?? 0,
@@ -36,7 +36,7 @@ export default function Estadisticas({ user, ratingGeneral, onCreateList }) {
             <h4>Actividad último mes</h4>
             <ul className="activity-list">
                 <li>Has leído <strong>{stats.libros_leidos}</strong> libros</li>
-                <li>Género más leído: <strong>{stats.genero_preferido === "No definido" ? "—" : stats.genero_preferido}</strong></li>
+                <li>Género más leído: <strong>{stats.genero_mas_leido === "No definido" ? "—" : stats.genero_mas_leido}</strong></li>
                 <li>Rating general: <strong>{ratingGeneral ? `${ratingGeneral} / 5` : "—"}</strong></li>
             </ul>
             <div className="cta-row">

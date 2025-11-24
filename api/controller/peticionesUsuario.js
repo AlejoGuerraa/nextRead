@@ -231,7 +231,7 @@ const getUser = async (req, res) => {
                     },
                     {
                         model: Resena,
-                        as: "Resenas",     // nombre cualquiera
+                        as: "Resenas",
                         required: false,
                         where: { usuario_id: usuario.id },
                         attributes: ["puntuacion"]
@@ -240,15 +240,13 @@ const getUser = async (req, res) => {
             });
         }
 
-        // --- Aplanar datos y agregar nombre_autor + puntuacion_usuario ---
+        // --- Aplanar datos de libros ---
         librosBD = librosBD.map(libro => {
             const json = libro.toJSON();
 
             return {
                 ...json,
                 nombre_autor: json.Autor ? json.Autor.nombre : "Desconocido",
-
-                // Si el usuario hizo reseña → mostrar su puntuación
                 puntuacion_usuario:
                     json.Resenas && json.Resenas.length > 0
                         ? json.Resenas[0].puntuacion
@@ -256,13 +254,14 @@ const getUser = async (req, res) => {
             };
         });
 
-        // --- Calcular género más leído ---
+        // -----------------------------------
+        // 🔥 CALCULAR GÉNERO MÁS LEÍDO (STRING)
+        // -----------------------------------
         let generoMasLeido = "No definido";
 
         try {
             const generosContador = {};
 
-            // --- Filtrar SOLO los libros leídos ---
             const librosLeidos = librosBD.filter(lib => librosLeidosIDs.includes(lib.id));
 
             for (const libro of librosLeidos) {
@@ -270,64 +269,68 @@ const getUser = async (req, res) => {
 
                 let generosArray;
 
-                // Caso string: "Fantasía, Acción"
+                // Si viene como "Fantasía, Acción"
                 if (typeof libro.generos === "string") {
                     generosArray = libro.generos.split(",").map(g => g.trim());
                 }
-                // Caso JSON: ["Fantasía", "Acción"]
+                // Si viene como JSON ["Fantasía", "Acción"]
                 else if (Array.isArray(libro.generos)) {
                     generosArray = libro.generos;
                 }
 
                 if (generosArray) {
-                    generosArray.forEach(genero => {
+                    for (const genero of generosArray) {
                         generosContador[genero] = (generosContador[genero] || 0) + 1;
-                    });
+                    }
                 }
             }
 
-            // Obtener el género más frecuente
+            // Obtener género más usado
             const entries = Object.entries(generosContador);
+
             if (entries.length > 0) {
                 const genero = entries.sort((a, b) => b[1] - a[1])[0][0];
-                generoMasLeido = String(genero);   // ← 🔥 SE VUELVE STRING SÍ O SÍ
+                generoMasLeido = String(genero); // ← SIEMPRE STRING
             }
+
         } catch (err) {
-            console.error("Error calculando género preferido:", err);
+            console.error("Error calculando género más leído:", err);
         }
 
-        // --- Agregar el dato al JSON final del usuario sin modificar la BD ---
-        usuario.dataValues.genero_preferido = generoMasLeido;
+        // ❗ Ya NO ponemos genero_preferido acá
+        // usuario.dataValues.genero_preferido = generoMasLeido;
 
 
-
-        // Mapa por ID
+        // ------------------------
+        // Construir el JSON final
+        // ------------------------
         const librosMap = {};
         librosBD.forEach(libro => (librosMap[libro.id] = libro));
 
-        // Reemplazar listas
         const usuarioData = {
             ...usuario.toJSON(),
 
             libros_en_lectura: librosEnLecturaIDs.map(id => librosMap[id]).filter(Boolean),
             libros_favoritos: librosFavoritosIDs.map(id => librosMap[id]).filter(Boolean),
             libros_leidos: librosLeidosIDs.map(id => librosMap[id]).filter(Boolean),
-            genero_preferido: generoMasLeido
+
+            // 🔥 NUEVO ATRIBUTO SIEMPRE STRING
+            genero_top_leyente: generoMasLeido
         };
 
+
+
         // --------------------------------------
-        // 🔥 Calcular rating general del usuario
+        // 🔥 Calcular rating general
         // --------------------------------------
 
         let ratingGeneral = null;
 
-        // Buscar TODAS las reseñas del usuario
         const resenasUsuario = await Resena.findAll({
             where: { usuario_id: usuario.id },
             attributes: ["puntuacion"]
         });
 
-        // Calcular promedio si existen
         if (resenasUsuario.length > 0) {
             const ratings = resenasUsuario
                 .map(r => r.puntuacion)
@@ -339,9 +342,6 @@ const getUser = async (req, res) => {
                 ) / 10;
             }
         }
-
-        // Agregar al JSON final antes de enviarlo
-        usuarioData.rating_general = ratingGeneral;
 
         return res.json(usuarioData);
 

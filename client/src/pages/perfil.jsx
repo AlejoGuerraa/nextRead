@@ -271,6 +271,7 @@ export default function Perfil() {
               <div className="stat-number">{stats.seguidores}</div>
             </div>
           </div>
+          <button onClick={handleLogout}>Desloguearse</button>
         </section>
 
         <section className="lists-section">
