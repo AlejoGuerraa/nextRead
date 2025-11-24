@@ -128,8 +128,11 @@ export default function Perfil() {
       book?.nombre_autor ||
       "Autor desconocido";
 
-
-    const rating = book?.rating ?? book?.puntuacion ?? null;
+    const rating =
+      book?.puntuacion_usuario ??
+      book?.rating ??
+      book?.puntuacion ??
+      null;
 
     const cover =
       book?.cover ||

@@ -152,13 +152,10 @@ const getUser = async (req, res) => {
             return res.status(404).json({ error: "Usuario no encontrado" });
         }
 
-        // --------------------------
-        // 1️⃣ Asegurar parseo de JSON correctamente
-        // --------------------------
+        // --- Parseo seguro de arrays JSON ---
         const parseArray = (value) => {
             if (!value) return [];
             if (Array.isArray(value)) return value;
-
             try {
                 return JSON.parse(value);
             } catch {
@@ -170,9 +167,6 @@ const getUser = async (req, res) => {
         const librosFavoritosIDs = parseArray(usuario.libros_favoritos);
         const librosLeidosIDs = parseArray(usuario.libros_leidos);
 
-        // --------------------------
-        // 2️⃣ Armar lista de IDs
-        // --------------------------
         const todosLosIDs = [
             ...librosEnLecturaIDs,
             ...librosFavoritosIDs,
@@ -201,32 +195,39 @@ const getUser = async (req, res) => {
                         model: Autor,
                         as: "Autor",
                         attributes: ["id", "nombre", "url_cara"]
+                    },
+                    {
+                        model: Resena,
+                        as: "Resenas",     // nombre cualquiera
+                        required: false,
+                        where: { usuario_id: usuario.id },
+                        attributes: ["puntuacion"]
                     }
                 ]
             });
         }
 
-        // ---------------------------------------------------
-        // 🔵 NUEVO: Aplanar datos y agregar nombre_autor
-        // ---------------------------------------------------
+        // --- Aplanar datos y agregar nombre_autor + puntuacion_usuario ---
         librosBD = librosBD.map(libro => {
             const json = libro.toJSON();
+
             return {
                 ...json,
-                id: json.id, // aseguramos que siempre exista
-                nombre_autor: json.Autor ? json.Autor.nombre : "Desconocido"
+                nombre_autor: json.Autor ? json.Autor.nombre : "Desconocido",
+
+                // Si el usuario hizo reseña → mostrar su puntuación
+                puntuacion_usuario: 
+                    json.Resenas && json.Resenas.length > 0
+                        ? json.Resenas[0].puntuacion
+                        : null
             };
         });
 
-        // Mapa de ID → Libro
+        // Mapa por ID
         const librosMap = {};
-        librosBD.forEach(libro => {
-            librosMap[libro.id] = libro;
-        });
+        librosBD.forEach(libro => (librosMap[libro.id] = libro));
 
-        // --------------------------
-        // 3️⃣ Reemplazar IDs → Objetos completos
-        // --------------------------
+        // Reemplazar listas
         const usuarioData = {
             ...usuario.toJSON(),
 
@@ -242,7 +243,6 @@ const getUser = async (req, res) => {
         return res.status(500).json({ error: "Error en el servidor" });
     }
 };
-
 
 
 const editarPerfil = async (req, res) => {
