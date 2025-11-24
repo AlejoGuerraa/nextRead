@@ -1,6 +1,6 @@
 const express = require('express');
 
-const { getAllUsers, register, login, getUser, editarPerfil } = require('./controller/peticionesUsuario');
+const { agregarNotificacion, getAllUsers, register, login, getUser, editarPerfil } = require('./controller/peticionesUsuario');
 const { buscar, cargarLibrosAutores, crearAutores, getTendencias, getLibroById } = require('./controller/busqueda');
 const { getAllBooks, agregarLibroALista, guardarPuntuacion } = require('./controller/peticionesLibros');
 
@@ -38,6 +38,26 @@ server.get('/nextread/allUsers', getAllUsers);
 server.post('/nextread/register', register);
 server.post('/nextread/login', login);
 server.patch('/nextread/user/editar', isAuth, editarPerfil);
+
+// ---------------------- NOTIFICACIONES ----------------------
+server.post('/nextread/notificacion/:idUsuario', async (req, res) => {
+    try {
+        const { idUsuario } = req.params;
+        const { mensaje } = req.body;
+
+        if (!mensaje) {
+            return res.status(400).json({ error: "Falta el mensaje de la notificación" });
+        }
+
+        await agregarNotificacion(idUsuario, mensaje);
+
+        return res.status(200).json({ msg: "Notificación enviada correctamente" });
+
+    } catch (error) {
+        console.error("Error enviando notificación:", error);
+        return res.status(500).json({ error: "Error en el servidor" });
+    }
+});
 
 // Endpoints de búsqueda
 server.get('/nextread/buscar', buscar);

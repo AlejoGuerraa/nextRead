@@ -70,46 +70,49 @@ const buscar = async (req, res) => {
 
 const getTendencias = async (req, res) => {
     try {
-        const { genero } = req.query; // Ej: "Terror", "Romance", "Clásicos"
+        const { genero } = req.query;
 
-        let whereClause = {}; // Objeto para construir la consulta dinámicamente
+        let whereClause = {};
 
-        // 1. Lógica de filtrado por Género
-        // Si se proporciona un género y no es el valor por defecto "Género..."
         if (genero && genero !== 'Género...') {
-            // Usamos Op.like para buscar dentro del campo JSON 'generos'.
-            // Esto asume que tus géneros están guardados como un array de strings: ["Terror", "Misterio"]
-            // La consulta buscará la cadena de texto, ej: %"Terror"%
             whereClause.generos = {
-                [Op.like]: `%\"${genero}\"%`,
+                [Op.like]: `%\"${genero}\"%`
             };
         }
-        // Si no se proporciona 'genero' o es "Género...", whereClause queda vacío
-        // y traerá libros de todos los géneros.
 
-        // 2. Consulta principal
         const libros = await Libro.findAll({
             where: whereClause,
-            order: [
-                ['ranking', 'DESC'] // Ordenamos por ranking para que sean "Tendencias"
-            ],
+            order: [['ranking', 'DESC']],
             include: [
                 {
                     model: Autor,
-                    as: 'Autor', // El 'as' debe coincidir con tu definición de relación
-                    attributes: ['id', 'nombre', 'url_cara'], // Solo los campos necesarios
-                    required: false, // LEFT JOIN, para traer libros aunque no tengan autor
-                },
-            ],
+                    as: 'Autor',
+                    attributes: ['id', 'nombre', 'url_cara'],
+                    required: false
+                }
+            ]
         });
 
-        res.json(libros);
+        // 🚀 TRANSFORMAR los datos para el frontend
+        const librosMapeados = libros.map(libro => ({
+            id_libro: libro.id,
+            titulo: libro.titulo,
+            url_portada: libro.url_portada,
+            nombre_autor: libro.Autor ? libro.Autor.nombre : "Autor desconocido",
+            url_cara_autor: libro.Autor ? libro.Autor.url_cara : null,
+            ranking: libro.ranking ?? null,
+            puntuacion: libro.puntuacion ?? null,
+            generos: libro.generos ?? []
+        }));
+
+        res.json(librosMapeados);
 
     } catch (error) {
         console.error('Error al obtener tendencias:', error);
         res.status(500).json({ message: 'Error al obtener las tendencias' });
     }
 };
+
 
 // ===================================================================
 // ✅ NUEVO ENDPOINT: Obtener detalle de Libro por ID (con Autor)

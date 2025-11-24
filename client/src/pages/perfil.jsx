@@ -11,6 +11,7 @@ import BannerPerfil from "../components/perfil/bannerPerfil";
 import SeccionAbout from "../components/perfil/seccionAbout";
 import Estadisticas from "../components/perfil/estadisticas";
 import ListaLogros from "../components/logros/listaLogros";
+import BookList from "../components/carrouselLibros";
 import Footer from "../components/footer";
 
 const COLORS = {
@@ -128,9 +129,9 @@ export default function Perfil() {
       book?.nombre_autor ||
       "Autor desconocido";
 
-    const rating =
+    // ⭐ En Perfil quiero mostrar SOLO la puntuación del usuario
+    const userRating =
       book?.puntuacion_usuario ??
-      book?.rating ??
       book?.puntuacion ??
       null;
 
@@ -152,12 +153,15 @@ export default function Perfil() {
         </div>
 
         <div className="book-footer">
+
+          {/* ⭐ Mostrar SOLO la puntuación del usuario */}
           <span className="book-rating">
-            {rating
-              ? "★".repeat(Math.round(rating)).slice(0, 5) +
-              "☆".repeat(Math.max(0, 5 - Math.round(rating)))
+            {userRating
+              ? "★".repeat(Math.round(userRating)).slice(0, 5) +
+              "☆".repeat(Math.max(0, 5 - Math.round(userRating)))
               : "—"}
           </span>
+
           <button className="btn-secondary small"
             onClick={() => handleBookCardClick(id)}>Ver</button>
         </div>
@@ -166,6 +170,7 @@ export default function Perfil() {
       </div>
     );
   };
+
 
 
   const renderRow = (items) =>
@@ -204,6 +209,12 @@ export default function Perfil() {
     : Array.isArray(user.logros_ids)
       ? user.logros_ids
       : [];
+
+  const normalizeBooks = (arr) =>
+    arr.map((b) => ({
+      ...b,
+      id: b.id || b.id_libro || b.book_id || b.idBook || null
+    }));
 
   return (
     <div className="profile-page">
@@ -268,16 +279,28 @@ export default function Perfil() {
               <h3>Seguir leyendo</h3>
               <span className="list-meta">{seguirLeyendo.length} libros</span>
             </div>
-            <div className="books-row hide-scrollbar">{renderRow(seguirLeyendo)}</div>
+
+            <BookList
+              libros={normalizeBooks(seguirLeyendo)}
+              onBookClick={(id) => handleBookCardClick(id)}
+            />
+
           </div>
+
 
           <div className="list-block">
             <div className="list-header">
               <h3>Favoritos</h3>
               <span className="list-meta">{favoritos.length} libros</span>
             </div>
-            <div className="books-row hide-scrollbar">{renderRow(favoritos)}</div>
+
+            <BookList
+              libros={normalizeBooks(favoritos)}
+              onBookClick={(id) => handleBookCardClick(id)}
+            />
+
           </div>
+
         </section>
 
         <section className="achievements-section">

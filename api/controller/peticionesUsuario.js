@@ -12,6 +12,39 @@ const jwt = require('jsonwebtoken');
 
 const claveSecreta = 'AdminLibros';
 
+// -------------------------------------------------
+// HELPER: AGREGAR NOTIFICACIÓN AL USUARIO
+// -------------------------------------------------
+async function agregarNotificacion(userId, mensaje, nombre = "Sistema") {
+    try {
+        const usuario = await User.findByPk(userId);
+
+        if (!usuario) return;
+
+        let notis = [];
+
+        if (usuario.notificaciones) {
+            try {
+                notis = JSON.parse(usuario.notificaciones);
+            } catch (_) { notis = []; }
+        }
+
+        const nueva = {
+            id: Date.now(),
+            nombre,
+            mensaje,
+            fecha: new Date().toISOString()
+        };
+
+        notis.unshift(nueva);
+
+        usuario.notificaciones = JSON.stringify(notis);
+        await usuario.save();
+    } catch (err) {
+        console.log("Error guardando notificación:", err);
+    }
+}
+
 // ----------------- GET USERS -----------------
 const getAllUsers = async (_req, res) => {
     try {
@@ -332,6 +365,7 @@ const editarPerfil = async (req, res) => {
 
 
 module.exports = {
+    agregarNotificacion,
     getAllUsers,
     register,
     login,
