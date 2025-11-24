@@ -24,17 +24,6 @@ export default function BookList({ libros, onBookClick }) {
 
     return (
         <section style={{ marginTop: "30px", position: "relative" }}>
-            <h2
-                style={{
-                    fontSize: "1.8rem",
-                    fontWeight: "600",
-                    marginBottom: "15px",
-                    marginLeft: "20px",
-                    color: "#222",
-                }}
-            >
-                Novedades y Tendencias
-            </h2>
 
             {/* Botón izquierdo */}
             <button className="scroll-btn left" onClick={scrollLeft}>

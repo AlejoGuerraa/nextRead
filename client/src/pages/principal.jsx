@@ -141,12 +141,89 @@ export default function Principal() {
         <Carousel slides={mockCarouselData} currentIndex={currentIndex} setCurrentIndex={setCurrentIndex} />
 
         <section className="book-section">
+          <h2
+            style={{
+              fontSize: "1.8rem",
+              fontWeight: "600",
+              marginBottom: "15px",
+              marginLeft: "20px",
+              color: "#222",
+            }}
+          >
+            Novedades y Tendencias
+          </h2>
           <BookList libros={libros} onBookClick={handleBookCardClick} />
+          <h2
+            style={{
+              fontSize: "1.8rem",
+              fontWeight: "600",
+              marginBottom: "15px",
+              marginLeft: "20px",
+              color: "#222",
+            }}
+          >
+            Novedades y Tendencias
+          </h2>
           <BookList libros={libros} onBookClick={handleBookCardClick} />
+          <h2
+            style={{
+              fontSize: "1.8rem",
+              fontWeight: "600",
+              marginBottom: "15px",
+              marginLeft: "20px",
+              color: "#222",
+            }}
+          >
+            Novedades y Tendencias
+          </h2>
           <BookList libros={libros} onBookClick={handleBookCardClick} />
+          <h2
+            style={{
+              fontSize: "1.8rem",
+              fontWeight: "600",
+              marginBottom: "15px",
+              marginLeft: "20px",
+              color: "#222",
+            }}
+          >
+            Novedades y Tendencias
+          </h2>
           <BookList libros={libros} onBookClick={handleBookCardClick} />
+          <h2
+            style={{
+              fontSize: "1.8rem",
+              fontWeight: "600",
+              marginBottom: "15px",
+              marginLeft: "20px",
+              color: "#222",
+            }}
+          >
+            Novedades y Tendencias
+          </h2>
           <BookList libros={libros} onBookClick={handleBookCardClick} />
+          <h2
+            style={{
+              fontSize: "1.8rem",
+              fontWeight: "600",
+              marginBottom: "15px",
+              marginLeft: "20px",
+              color: "#222",
+            }}
+          >
+            Novedades y Tendencias
+          </h2>
           <BookList libros={libros} onBookClick={handleBookCardClick} />
+          <h2
+            style={{
+              fontSize: "1.8rem",
+              fontWeight: "600",
+              marginBottom: "15px",
+              marginLeft: "20px",
+              color: "#222",
+            }}
+          >
+            Novedades y Tendencias
+          </h2>
           <BookList libros={libros} onBookClick={handleBookCardClick} />
         </section>
       </main>

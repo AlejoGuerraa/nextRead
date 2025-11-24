@@ -176,17 +176,26 @@ export default function Perfil() {
     );
 
   const computeGeneralRating = () => {
-    if (typeof user.rating_general === "number") return Math.round(user.rating_general * 10) / 10;
-    const sources = [...seguirLeyendo, ...favoritos];
-    const ratings = sources
-      .map((b) => b?.rating ?? b?.puntuacion ?? b?.calificacion)
-      .filter((r) => typeof r === "number" && !isNaN(r));
-    if (ratings.length) {
-      const avg = ratings.reduce((a, b) => a + b, 0) / ratings.length;
-      return Math.round(avg * 10) / 10;
+    if (!Array.isArray(user.libros_leidos) || user.libros_leidos.length === 0) {
+      return null;
     }
-    return null;
+
+    // Tomamos SOLO los libros leídos
+    const ratings = user.libros_leidos
+      .map((libro) =>
+        libro?.puntuacion_usuario ??  // puntuación que el usuario le dio
+        libro?.ranking ??             // ranking global del libro
+        libro?.puntuacion ?? null
+      )
+      .filter((r) => typeof r === "number" && !isNaN(r));
+
+    if (ratings.length === 0) return null;
+
+    // Promedio
+    const avg = ratings.reduce((a, b) => a + b, 0) / ratings.length;
+    return Math.round(avg * 10) / 10; // un decimal
   };
+
 
   const ratingGeneral = computeGeneralRating();
 

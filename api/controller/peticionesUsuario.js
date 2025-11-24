@@ -216,7 +216,7 @@ const getUser = async (req, res) => {
                 nombre_autor: json.Autor ? json.Autor.nombre : "Desconocido",
 
                 // Si el usuario hizo reseña → mostrar su puntuación
-                puntuacion_usuario: 
+                puntuacion_usuario:
                     json.Resenas && json.Resenas.length > 0
                         ? json.Resenas[0].puntuacion
                         : null
@@ -235,6 +235,34 @@ const getUser = async (req, res) => {
             libros_favoritos: librosFavoritosIDs.map(id => librosMap[id]).filter(Boolean),
             libros_leidos: librosLeidosIDs.map(id => librosMap[id]).filter(Boolean)
         };
+
+        // --------------------------------------
+        // 🔥 Calcular rating general del usuario
+        // --------------------------------------
+
+        let ratingGeneral = null;
+
+        // Buscar TODAS las reseñas del usuario
+        const resenasUsuario = await Resena.findAll({
+            where: { usuario_id: usuario.id },
+            attributes: ["puntuacion"]
+        });
+
+        // Calcular promedio si existen
+        if (resenasUsuario.length > 0) {
+            const ratings = resenasUsuario
+                .map(r => r.puntuacion)
+                .filter(n => typeof n === "number");
+
+            if (ratings.length > 0) {
+                ratingGeneral = Math.round(
+                    (ratings.reduce((a, b) => a + b, 0) / ratings.length) * 10
+                ) / 10;
+            }
+        }
+
+        // Agregar al JSON final antes de enviarlo
+        usuarioData.rating_general = ratingGeneral;
 
         return res.json(usuarioData);
 
