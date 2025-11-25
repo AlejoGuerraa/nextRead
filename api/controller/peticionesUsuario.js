@@ -307,6 +307,16 @@ const getUser = async (req, res) => {
         const librosMap = {};
         librosBD.forEach(libro => (librosMap[libro.id] = libro));
 
+        const limpiarStringGenero = (str) => {
+            if (!str) return "";
+            return String(str)
+                .replace(/[\[\]"]+/g, "")  // saca corchetes y comillas
+                .replace(/\\+/g, "")       // saca escapes
+                .trim();                   // limpia espacios
+        };
+
+        generoMasLeido = limpiarStringGenero(generoMasLeido);
+
         const usuarioData = {
             ...usuario.toJSON(),
 
