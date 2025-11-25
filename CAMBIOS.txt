@@ -1,0 +1,62 @@
+Los cambios que se realizaron del documento original están listados en este documento extra (parte de sofi)
+
+ULTIMA MODIFICACIÓN: 16/11/2025
+
+==============================================================================================================================
+
+PARTE DEL BACKEND:
+
+- NUEVAS TABLAS: Se agregaron las tablas "Icono.js" y "Banner.js", falta vincularlas con el registro, pero la idea
+  de esto es que se creen los banners y los íconos de la página en sus respectivas tablas, para vincularlos (con una llave
+  foránea) al usuario que lo eligió.
+
+- NUEVAS FUNCIONALIDADES DE LIBROS: Se implementó un endpoint denominado "agregarLibroALista", el cual se encarga de listar el
+  id del libro, determinado por parametros, en la tabla "Usuario.js"; De esta forma se va a poder guardar en distintos atributos en formato JSON,
+  y ellos serian "paraLeer", "favoritos", "enLectura", "listas" y "leido" (Esta última tiene una nueva implementación en el frontend). Esto se encuentra en
+  el archivo "peticionesLibros.js".
+
+- NUEVO RANKEO DE ESTRELLAS: Ahora cada usuario que esté logueado va a poder rankear el libro que quiera y se guardará en la base de datos, gracias al endpoint
+  "guardarPuntuacion". Este se encarga de guardar en la tabla "Resena.js" el id del libro y del usuario logueado que hizo el ranking (Se encuentra en "peticionesLibros.js).
+  Este está implementado en el componente "infoLibro.js", junto a las funcionalidades de libros explicadas anteriormente.
+
+- NUEVOS CAMBIOS EN LOS INSERTS: Se agregaron más autores y libros para insertar en la base de datos antes de ejecutar la aplicación en su totalidad.
+  Estos cambios se encuentran en "busqueda.js".
+
+- PEQUEÑOS CAMBIOS EN EL INDEX: Se agregaron todos los endpoints necesarios para que funcione todo el sector del backend en cada página.
+
+==============================================================================================================================
+
+DE PARTE DEL FRONTEND:
+
+- NUEVAS IMPLEMENTACIONES DE OTROS CÓDIGOS DEL GRUPO: Se agregaron nuevas funcionalidades de seguidores y seguidos (archivos css, paginas) y los componentes "footer.js" y "header.js". Además, la lista
+  de seguidores y seguidos ahora aparece en el perfil del usuario.
+
+- MODIFICACIONES EN LA PÁGINA DE LIBRO: Las cosas nuevas de este apartado son:
+
+1. Se agregó un nuevo botón "leído", que guarda en la base de datos el ID del libro seleccionado en el campo "libros_leidos".
+
+2. Si un usuario invitado (no registrado/logueado) intenta apretar alguna de las funcionalidades mostradas, aparecerá en pantalla el popover de la página principal,
+  indicando al usuario que primero necesita iniciar sesión o registrarse para cumplir con esas funciones.
+
+3. Las estrellas ahora son funcionales, guardando los datos gracias al endpoint explicado anteriormente (guardarPuntuacion).
+
+- NUEVAS RUTAS EN EL MAIN: Ya en esta sección, se aplicaron las nuevas rutas para ir a las páginas de seguidores y seguidos en el perfil (también se modificó "perfil.jsx"
+  para que llegue a estas rutas correctamente).
+
+==============================================================================================================================
+
+COSAS QUE FALTAN IMPLEMENTAR:
+
+- Que el registro se vincule a las tablas de icono y banner para guardar y crear en la base de datos la opción elegida.
+
+- Mostrar otros datos en el perfil, como el banner elegido, los nombres de los libros leídos, favoritos y más.
+
+- Implementar funcionalidades de seguidores y seguidos.
+
+- Agregar un sistema de mail para notificar al usuario ciertos cambios (marcos me mandó el código, falta hacerlo funcional en nuestra página)
+
+- Agregar funcionalidades para las notificaciones.
+
+- Conectar la tabla "Resena" con el frontend.
+
+- Hacer carrousel de libros (que sea funcional y que se divida en categorías distintas).
