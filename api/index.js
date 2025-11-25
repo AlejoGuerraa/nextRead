@@ -14,6 +14,7 @@ const sequelize = require('./config/db');
 const { FORCE } = require('sequelize/lib/index-hints');
 
 require('./models/Usuario');
+require('./models/Libro');
 require('./models/Logro');
 require('./models/Resena');
 require('./models/Usuario_Logro');

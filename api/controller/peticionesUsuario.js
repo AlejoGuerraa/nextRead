@@ -137,8 +137,8 @@ const register = async (req, res) => {
         idBanner: idBanner,
         descripcion,
         // Al registrarse, otorgar los iconos y banners por defecto
-        iconos_obtenidos: [1,2,3,4,5,6],
-        banners_obtenidos: [1,2,3,4,5]
+        iconos_obtenidos: [1, 2, 3, 4, 5, 6],
+        banners_obtenidos: [1, 2, 3, 4, 5]
     });
 
     res.status(200).json({ message: "Nuevo usuario creado", data: newUser });
@@ -272,13 +272,21 @@ const getUser = async (req, res) => {
         });
 
         // -----------------------------------
-        // 🔥 CALCULAR GÉNERO MÁS LEÍDO (STRING)
+        // 🔥 CALCULAR GÉNERO MÁS LEÍDO
         // -----------------------------------
+
+        const limpiarStringGenero = (str) => {
+            if (!str) return "";
+            return String(str)
+                .replace(/[\[\]"]+/g, "")   // elimina corchetes y comillas
+                .replace(/\\+/g, "")        // elimina backslashes
+                .trim();
+        };
+
         let generoMasLeido = "No definido";
 
         try {
             const generosContador = {};
-
             const librosLeidos = librosBD.filter(lib => librosLeidosIDs.includes(lib.id));
 
             for (const libro of librosLeidos) {
@@ -286,12 +294,9 @@ const getUser = async (req, res) => {
 
                 let generosArray;
 
-                // Si viene como "Fantasía, Acción"
                 if (typeof libro.generos === "string") {
                     generosArray = libro.generos.split(",").map(g => g.trim());
-                }
-                // Si viene como JSON ["Fantasía", "Acción"]
-                else if (Array.isArray(libro.generos)) {
+                } else if (Array.isArray(libro.generos)) {
                     generosArray = libro.generos;
                 }
 
@@ -302,17 +307,15 @@ const getUser = async (req, res) => {
                 }
             }
 
-            // Obtener género más usado
             const entries = Object.entries(generosContador);
-
             if (entries.length > 0) {
-                const genero = entries.sort((a, b) => b[1] - a[1])[0][0];
-                generoMasLeido = String(genero); // ← SIEMPRE STRING
+                generoMasLeido = limpiarStringGenero(entries.sort((a, b) => b[1] - a[1])[0][0]);
             }
 
         } catch (err) {
             console.error("Error calculando género más leído:", err);
         }
+
 
         // ❗ Ya NO ponemos genero_preferido acá
         // usuario.dataValues.genero_preferido = generoMasLeido;
