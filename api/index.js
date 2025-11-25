@@ -68,20 +68,7 @@ server.post('/nextread/notificacion/:idUsuario', async (req, res) => {
 // Endpoints de búsqueda
 server.get('/nextread/buscar', buscar);
 server.get('/nextread/tendencias', getTendencias);
-server.get("/nextread/libros/por-decada", async (req, res) => {
-    try {
-        const libros = await Libro.findAll({
-            attributes: ["id", "titulo", "anio", "url_portada", "generos"]
-        });
-
-        const grupos = await getLibrosPorDecada(libros.map(l => l.toJSON()));
-
-        res.json(grupos);
-    } catch (error) {
-        console.error(error);
-        res.status(500).json({ error: "Error obteniendo libros por década" });
-    }
-});
+server.get("/nextread/libros/por-decada", getLibrosPorDecada);
 
 server.post('/nextread/autorMasLeido', getMasDeAutor);
 server.get('/nextread/libro/:id', getLibroById);

@@ -194,7 +194,7 @@ const getMasDeAutor = async (req, res) => {
 };
 
 // Agrupa libros por década (ej: "60s", "70s", "80s", "90s", "2000s")
-async function getLibrosPorDecada(libros) {
+async function porDecada(libros) {
     if (!Array.isArray(libros)) return {};
 
     const grupos = {};
@@ -223,6 +223,20 @@ async function getLibrosPorDecada(libros) {
     return grupos;
 }
 
+const getLibrosPorDecada = async (req, res) => {
+    try {
+        const libros = await Libro.findAll({
+            attributes: ["id", "titulo", "anio", "url_portada", "generos"]
+        });
+
+        const grupos = await porDecada(libros.map(l => l.toJSON()));
+
+        res.json(grupos);
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: "Error obteniendo libros por década" });
+    }
+}
 
 
 // =======================================================

@@ -99,7 +99,7 @@ const register = async (req, res) => {
                 where: { simbolo: icono },   // simbolo = "/iconos/LogoDefault1.jpg"
                 defaults: { simbolo: icono }
             });
-            usuario.idIcono = iconoInstance.id;
+            idIcono = iconoInstance.id;
         }
 
 
