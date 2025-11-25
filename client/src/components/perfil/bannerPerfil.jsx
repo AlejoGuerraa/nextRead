@@ -1,33 +1,36 @@
 // src/components/perfil/bannerPerfil.jsx
 import React from "react";
 
-export default function BannerPerfil({ user, onEdit, colors = {} }) {
+export default function BannerPerfil({ user, onEdit, onLogout, colors = {} }) {
     const tempBanner = colors.tempBanner || "#8e59f1ff";
 
-    // ✔ Normalizar el icono (por si viene con comillas extras del JSON)
-    // ✔ Usar iconoData del backend
-    // ✔ Normalizar el icono recibido
-    const rawIcon = user.iconoData?.simbolo;
+    // Obtener la URL del banner desde bannerData
+    const bannerUrl = user?.bannerData?.url || null;
 
-    let avatarSrc = user.iconoData ?? "/iconos/LogoDefault1.jpg";
+    // Normalizar el icono (puede venir como '/iconos/..' o solo 'LogoDefault1.jpg')
+    const rawIcon = user?.iconoData?.simbolo || user?.icono || null;
 
+    let avatarSrc = "/iconos/LogoDefault1.jpg";
     if (rawIcon) {
-        if (!rawIcon.startsWith("/") && !rawIcon.startsWith("http")) {
-            // Si solo es un nombre de archivo → lo buscamos en /public/iconos
-            avatarSrc = `/iconos/${rawIcon}`;
-        } else {
-            avatarSrc = rawIcon;
+        if (typeof rawIcon === 'string') {
+            if (rawIcon.startsWith('/') || rawIcon.startsWith('http')) {
+                avatarSrc = rawIcon;
+            } else {
+                avatarSrc = `/iconos/${rawIcon}`;
+            }
         }
     }
 
-
+    const bannerStyle = bannerUrl
+        ? { backgroundImage: `url(${bannerUrl})`, backgroundSize: 'cover', backgroundPosition: 'center' }
+        : { backgroundColor: tempBanner };
 
     return (
         <section
             className="profile-banner fancy-banner"
             style={{
-                backgroundColor: user.bannerData?.url || tempBanner,
-                backgroundImage: `linear-gradient(180deg, rgba(0,0,0,0.15), rgba(0,0,0,0.25))`
+                ...bannerStyle,
+                position: 'relative'
             }}
         >
             <div className="banner-inner">
@@ -37,13 +40,16 @@ export default function BannerPerfil({ user, onEdit, colors = {} }) {
                         src={avatarSrc}
                         alt="Avatar"
                         className="perfil-img"
-                        onError={(e) => { e.target.src = "/iconos/default.png"; }}
+                        onError={(e) => { e.target.src = "/iconos/LogoDefault1.jpg"; }}
                     />
 
                     <div className="avatar-ring" />
                 </div>
 
                 <div className="banner-actions">
+                    <button className="btn-logout-banner" onClick={onLogout}>
+                        Desloguearse
+                    </button>
                     <div className="edit-sep" aria-hidden="true">--</div>
                     <button className="btn-primary small" onClick={onEdit}>
                         Editar perfil

@@ -39,9 +39,6 @@ export default function Estadisticas({ user, ratingGeneral, onCreateList }) {
                 <li>Género más leído: <strong>{stats.genero_mas_leido === "No definido" ? "—" : stats.genero_mas_leido}</strong></li>
                 <li>Rating general: <strong>{ratingGeneral ? `${ratingGeneral} / 5` : "—"}</strong></li>
             </ul>
-            <div className="cta-row">
-                <button className="btn-outline" onClick={onCreateList}>Crear lista</button>
-            </div>
         </aside>
     );
 }

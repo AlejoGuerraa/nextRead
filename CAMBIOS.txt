@@ -60,3 +60,20 @@ COSAS QUE FALTAN IMPLEMENTAR:
 - Conectar la tabla "Resena" con el frontend.
 
 - Hacer carrousel de libros (que sea funcional y que se divida en categorías distintas).
+
+Hacer modal de crear lista y añadir a lista
+Terminar el manual
+
+
+1	/banners/bibliotecaAntigua.jpg
+2	/banners/cafeYlectura.jpg
+3	/banners/minimalistaAzul.jpg
+4	/banners/bosqueMagico.jpg
+5	/banners/cieloEstrellado.jpg
+
+1	/iconos/LogoDefault1.jpg
+2	/iconos/LogoDefault2.png
+3	/iconos/LogoDefault3.jpg
+4	/iconos/LogoDefault4.png
+5	/iconos/LogoDefault5.png
+6	/iconos/LogoDefault6.png

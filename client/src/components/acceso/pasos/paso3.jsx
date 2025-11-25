@@ -1,5 +1,59 @@
 // Step3.jsx
-export const Step3 = ({ form, errors, onChange, avatarOptions, toggleAvatar, next, back, showPicker }) => (
+import { useEffect, useState } from 'react';
+import axios from 'axios';
+
+export const Step3 = ({ form, errors, onChange, avatarOptions, toggleAvatar, next, back, showPicker }) => {
+    const [iconos, setIconos] = useState([]);
+    const [loadingIconos, setLoadingIconos] = useState(true);
+    const [firstIconUrl, setFirstIconUrl] = useState(null);
+
+    useEffect(() => {
+        // Fetch iconos from backend
+        axios
+            .get('http://localhost:3000/nextread/iconos')
+            .then((res) => {
+                setIconos(res.data);
+                setLoadingIconos(false);
+                // Set default avatar to first icon
+                if (res.data.length > 0) {
+                    const firstIcon = res.data[0].simbolo;
+                    setFirstIconUrl(firstIcon);
+                    // Only set if form.avatar is empty
+                    if (!form.avatar || form.avatar === '') {
+                        toggleAvatar(firstIcon);
+                    }
+                }
+            })
+            .catch((err) => {
+                console.error('Error al obtener iconos:', err);
+                setLoadingIconos(false);
+            });
+    }, []);
+
+    // Si no hay iconos de BD, usamos avatarOptions o defaults
+    const defaultAvatars = [
+        '/iconos/LogoDefault1.jpg',
+        '/iconos/LogoDefault2.png',
+        '/iconos/LogoDefault3.jpg',
+        '/iconos/LogoDefault4.png'
+    ];
+
+    // Determine which icons to display - limit to first 4
+    let icons = [];
+    if (iconos.length > 0) {
+        // Si tenemos iconos de BD, usamos sus símbolos (solo los primeros 4)
+        icons = iconos.slice(0, 4).map(i => i.simbolo);
+    } else if (Array.isArray(avatarOptions) && avatarOptions.length > 0) {
+        icons = avatarOptions.slice(0, 4);
+    } else {
+        icons = defaultAvatars;
+    }
+
+    const canProceed = () => {
+        return form.avatar && form.descripcion && !errors.descripcion;
+    };
+
+    return (
     <div className="step">
 
         {/* ---------- CSS INCRUSTADO ---------- */}
@@ -33,12 +87,13 @@ export const Step3 = ({ form, errors, onChange, avatarOptions, toggleAvatar, nex
             }
 
             .avatar {
-                width: 55px;
-                height: 55px;
+                width: 60px;
+                height: 60px;
                 border-radius: 50%;
                 cursor: pointer;
                 transition: transform 0.20s ease, box-shadow 0.20s ease;
                 object-fit: cover;
+                border: 2px solid transparent;
             }
 
             .avatar:hover {
@@ -47,9 +102,8 @@ export const Step3 = ({ form, errors, onChange, avatarOptions, toggleAvatar, nex
             }
 
             .avatar.selected {
-                outline: 3px solid #6c47ff;
-                outline-offset: 3px;
-                border-radius: 50%;
+                border-color: #ffffff;
+                box-shadow: 0 0 10px rgba(255,255,255,0.6);
             }
 
             textarea {
@@ -90,9 +144,14 @@ export const Step3 = ({ form, errors, onChange, avatarOptions, toggleAvatar, nex
                 font-size: 15px;
             }
 
-            .btn-modal:hover {
+            .btn-modal:hover:not(:disabled) {
                 background: #493dff;
                 transform: translateY(-3px);
+            }
+
+            .btn-modal:disabled {
+                opacity: 0.5;
+                cursor: not-allowed;
             }
         `}</style>
         {/* ---------- FIN CSS ---------- */}
@@ -101,7 +160,7 @@ export const Step3 = ({ form, errors, onChange, avatarOptions, toggleAvatar, nex
 
         <div className="perfil-icono" onClick={() => toggleAvatar()}>
             <img
-                src={form.avatar}
+                src={form.avatar || firstIconUrl || '/iconos/LogoDefault1.jpg'}
                 alt="Avatar seleccionado"
                 className="perfil-img"
             />
@@ -109,12 +168,13 @@ export const Step3 = ({ form, errors, onChange, avatarOptions, toggleAvatar, nex
 
         {showPicker && (
             <div className="avatar-picker">
-                {avatarOptions.map((a, i) => (
+                {icons.map((a, i) => (
                     <img
                         key={i}
                         src={a}
                         className={`avatar ${form.avatar === a ? "selected" : ""}`}
                         onClick={() => toggleAvatar(a)}
+                        alt={`avatar-${i}`}
                     />
                 ))}
             </div>
@@ -133,7 +193,14 @@ export const Step3 = ({ form, errors, onChange, avatarOptions, toggleAvatar, nex
 
         <div className="buttons">
             <button className="btn-modal" onClick={back}>← Atrás</button>
-            <button className="btn-modal" onClick={next}>Siguiente ➜</button>
+            <button 
+                className="btn-modal" 
+                onClick={next}
+                disabled={!canProceed()}
+            >
+                Siguiente ➜
+            </button>
         </div>
     </div>
 );
+}

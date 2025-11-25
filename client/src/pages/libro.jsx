@@ -30,6 +30,13 @@ export default function Libro() {
   const { id } = useParams();
   const [libro, setLibro] = useState(null);
   const [error, setError] = useState(null);
+  const initialUser = (() => {
+    try {
+      const raw = localStorage.getItem("user");
+      return raw ? JSON.parse(raw) : null;
+    } catch { return null; }
+  })();
+  const [user, setUser] = useState(initialUser);
 
   // ==== POPOVER ====
   const actionRef = useRef(null);         // donde está el botón que dispara la restricción
@@ -42,7 +49,18 @@ export default function Libro() {
     setShowPopover(true);
   };
 
-  const isLogged = Boolean(localStorage.getItem("user"));
+  const isLogged = Boolean(initialUser);
+
+  useEffect(() => {
+    const storedUser = localStorage.getItem("user");
+    if (storedUser) {
+      try {
+        setUser(JSON.parse(storedUser));
+      } catch {
+        setUser(null);
+      }
+    }
+  }, []);
 
   // cerrar popover al click fuera
   useEffect(() => {
@@ -81,7 +99,7 @@ export default function Libro() {
 
   return (
     <div className="pagina-libro">
-      <Header />
+      <Header user={user} onRestrictedAction={handleRestrictedAction} />
 
       <div
         className="libro-detalle-container"

@@ -1,8 +1,9 @@
 const express = require('express');
 
-const { agregarNotificacion, getAllUsers, register, login, getUser, editarPerfil } = require('./controller/peticionesUsuario');
+const { agregarNotificacion, getAllUsers, register, login, getUser, editarPerfil, checkEmail, checkUsername } = require('./controller/peticionesUsuario');
 const { buscar, getTendencias, getMasDeAutor, getLibroById } = require('./controller/busqueda');
-const { getAllBooks, agregarLibroALista, guardarPuntuacion } = require('./controller/peticionesLibros');
+const { getAllBooks, agregarLibroALista, guardarPuntuacion, obtenerResenas } = require('./controller/peticionesLibros');
+const { getAllBanners, getAllIconos } = require('./controller/banners');
 
 const isAuth = require('./middlewares/isAuth');
 
@@ -33,6 +34,10 @@ server.use((req, res, next) => {
 // Endpoints de usuario
 server.get('/nextread/user',isAuth, getUser)
 server.get('/nextread/allUsers', getAllUsers);
+server.get('/nextread/banners', getAllBanners);
+server.get('/nextread/iconos', getAllIconos);
+server.get('/nextread/check-email', checkEmail);
+server.get('/nextread/check-username', checkUsername);
 server.post('/nextread/register', register);
 server.post('/nextread/login', login);
 server.patch('/nextread/user/editar', isAuth, editarPerfil);
@@ -66,6 +71,7 @@ server.get('/nextread/libros', getAllBooks);
 
 server.post('/nextread/usuario/:tipo/:idLibro', isAuth, agregarLibroALista);
 server.post('/nextread/resena/:idLibro', isAuth, guardarPuntuacion);
+server.get('/nextread/resenas/:idLibro', obtenerResenas);
 
 server.listen(3000, '0.0.0.0', async () => {
   try {

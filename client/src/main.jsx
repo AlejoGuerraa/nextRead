@@ -1,6 +1,6 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
-import { createBrowserRouter, RouterProvider } from 'react-router-dom';
+import { createBrowserRouter, RouterProvider, Outlet } from 'react-router-dom';
 
 import Principal from './pages/principal';
 import Acceso from './pages/acceso';
@@ -13,8 +13,10 @@ import Configuracion from './pages/configuracion';
 
 import { useEffect } from "react";
 import { useLocation } from "react-router-dom";
+import { ToastProvider } from './components/ToastProvider';
 
-export default function TitleManager() {
+// Componente que gestiona el título de la página
+function TitleManager() {
   const location = useLocation();
 
   useEffect(() => {
@@ -36,27 +38,36 @@ export default function TitleManager() {
       document.title = "NextRead - Configuracion";
     } else if (path === "/seguidos") {
       document.title = "NextRead - Seguidos";
+    } else if (path === "/") {
+      document.title = "NextRead - Inicio";
     } else {
       document.title = "NextRead 📚";
     }
   }, [location]);
 
-  return null;
+  return <Outlet />;
 }
 
 const router = createBrowserRouter([
-  { path: "/", element: <Principal /> },
-  { path: "/acceso", element: <Acceso /> },
-  { path: "/perfil", element: <Perfil /> },
-  { path: "/perfil/editar", element: <EditarPerfil /> },
-  { path: "/libro/:id", element: <PaginaLibro /> },
-  { path: "/seguidores", element: <Seguidores /> },
-  { path: "/seguidos", element: <Seguidos /> },
-  { path: "/configuracion", element: <Configuracion /> },
+  {
+    element: <TitleManager />,
+    children: [
+      { path: "/", element: <Principal /> },
+      { path: "/acceso", element: <Acceso /> },
+      { path: "/perfil", element: <Perfil /> },
+      { path: "/perfil/editar", element: <EditarPerfil /> },
+      { path: "/libro/:id", element: <PaginaLibro /> },
+      { path: "/seguidores", element: <Seguidores /> },
+      { path: "/seguidos", element: <Seguidos /> },
+      { path: "/configuracion", element: <Configuracion /> },
+    ]
+  }
 ]);
 
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
-    <RouterProvider router={router} />
+    <ToastProvider>
+      <RouterProvider router={router} />
+    </ToastProvider>
   </React.StrictMode>
 );

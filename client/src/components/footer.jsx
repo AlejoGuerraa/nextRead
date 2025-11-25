@@ -17,8 +17,7 @@
                     <div className="footer-section contact"> 
                         <h4>Contacto</h4>
                         <p>Email: <a href="mailto:nextRead@gmail.com">nextRead@gmail.com</a></p>
-                        <p>Teléfono: 123 345 567</p>
-                        <p>Direccion: si</p>
+                        <p>Teléfono: +54 911 3421 1426</p>
                     </div>
 
                     {/* 2. SECCIÓN ENLACES (CENTRO) */}
@@ -28,7 +27,7 @@
                             <li><a href="/">Inicio</a></li>
                             <li><a href="/nosotros">Sobre Nosotros</a></li>
                             <li><a href="/servicios">Servicios</a></li>
-                            <li><a href="/contacto">Contacto</a></li>
+                            <li><a href="/help">Ayuda</a></li>
                         </ul>
                     </div>
                     

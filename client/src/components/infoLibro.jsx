@@ -1,5 +1,6 @@
 // InfoLibro.jsx
 import React, { useState } from "react";
+import { useToast } from './ToastProvider';
 import { useParams } from "react-router-dom";
 import axios from "axios";
 import { Bookmark, Heart, Clock, PlusCircle, Book } from "lucide-react"; // iconos más lindos
@@ -12,6 +13,7 @@ export default function InfoLibro({ libro, onRestrictedAction, actionRef }) {
     const [user, setUser] = useState('')
     const [userRating, setUserRating] = useState(0);
     const [hoverRating, setHoverRating] = useState(0);
+    const toast = useToast();
 
     const API_BASE = "http://localhost:3000/nextread";
 
@@ -44,10 +46,10 @@ export default function InfoLibro({ libro, onRestrictedAction, actionRef }) {
                 libros_leidos: response.data.libros_leidos
             }));
 
-            alert(`✅ ${response.data.message}`);
+            toast?.push(response.data.message || 'Libro actualizado', 'success');
         } catch (error) {
             console.error("Error al agregar libro:", error);
-            alert(error.response?.data?.message || "❌ Error al agregar el libro a la lista.");
+            toast?.push(error.response?.data?.message || "Error al agregar el libro a la lista.", 'error');
         }
     };
 
@@ -62,7 +64,7 @@ export default function InfoLibro({ libro, onRestrictedAction, actionRef }) {
                 { puntuacion: rating },
                 { headers: { Authorization: `Bearer ${auth.token}` } }
             );
-            alert(response.data.message || `Le diste ${rating} estrellas ⭐`);
+            toast?.push(response.data.message || `Le diste ${rating} estrellas ⭐`, 'success');
         } catch (error) {
             console.error("❌ ERROR EN rating:", error);
         }

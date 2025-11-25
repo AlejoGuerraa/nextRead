@@ -135,7 +135,10 @@ const register = async (req, res) => {
         // Usamos los IDs obtenidos/creados
         idIcono: idIcono,
         idBanner: idBanner,
-        descripcion
+        descripcion,
+        // Al registrarse, otorgar los iconos y banners por defecto
+        iconos_obtenidos: [1,2,3,4,5,6],
+        banners_obtenidos: [1,2,3,4,5]
     });
 
     res.status(200).json({ message: "Nuevo usuario creado", data: newUser });
@@ -410,11 +413,48 @@ const editarPerfil = async (req, res) => {
 };
 
 
+// ----- CHECK EMAIL/USERNAME EXISTENCE -----
+const checkEmail = async (req, res) => {
+    try {
+        const { correo } = req.query;
+
+        if (!correo) {
+            return res.status(400).json({ error: "Email requerido" });
+        }
+
+        const usuario = await User.findOne({ where: { correo } });
+
+        return res.json({ exists: !!usuario });
+    } catch (error) {
+        console.error("Error al verificar email:", error);
+        return res.status(500).json({ error: "Error en el servidor" });
+    }
+};
+
+const checkUsername = async (req, res) => {
+    try {
+        const { usuario } = req.query;
+
+        if (!usuario) {
+            return res.status(400).json({ error: "Usuario requerido" });
+        }
+
+        const user = await User.findOne({ where: { usuario } });
+
+        return res.json({ exists: !!user });
+    } catch (error) {
+        console.error("Error al verificar usuario:", error);
+        return res.status(500).json({ error: "Error en el servidor" });
+    }
+};
+
 module.exports = {
     agregarNotificacion,
     getAllUsers,
     register,
     login,
     getUser,
-    editarPerfil
+    editarPerfil,
+    checkEmail,
+    checkUsername
 };

@@ -1,6 +1,8 @@
 const Resena = require('../models/Resena')
 const Libro = require('../models/Libro');
 const Usuario = require('../models/Usuario');
+const Icono = require('../models/Icono');
+const sequelize = require('../config/db');
 
 const getAllBooks = async (_req, res) => {
   try {
@@ -75,10 +77,6 @@ const agregarLibroALista = async (req, res) => {
     // Lógica específica: si añadimos a enLectura/paraLeer/lista -> quitar de leidos
     if (["enLectura", "paraLeer", "lista"].includes(tipo)) {
       leidos = leidos.filter(x => x !== idNum);
-      // actualizar la variable correspondiente si 'leido' es el array del mapa
-      if (tipo !== "leido") {
-        // quito de la variable que representa los leidos y luego lo guardaré más abajo
-      }
     }
 
     // Si añadimos como 'leido' -> quitar de enLectura/paraLeer/listas
@@ -98,8 +96,6 @@ const agregarLibroALista = async (req, res) => {
     usuario.libros_para_leer = [...new Set(paraLeer)];
     usuario.listas = [...new Set(listas)];
 
-    // Pero también debemos asegurarnos de que el array modificado por 'entry' esté reflejado:
-    // (por ejemplo, si entry.campo === 'libros_favoritos' y entry.arr fue modificado)
     usuario[entry.campo] = [...new Set(entry.arr)];
 
     await usuario.save();
@@ -118,7 +114,7 @@ const agregarLibroALista = async (req, res) => {
 
 const guardarPuntuacion = async (req, res) => {
   try {
-    const userId = req.user.id; // viene del token
+    const userId = req.user.id;
     const { idLibro } = req.params;
     const { puntuacion, comentario } = req.body;
 
@@ -126,28 +122,45 @@ const guardarPuntuacion = async (req, res) => {
       return res.status(400).json({ error: "La puntuación debe ser entre 1 y 5 estrellas." });
     }
 
-    // Verificar que el libro exista
     const libro = await Libro.findByPk(idLibro);
     if (!libro) return res.status(404).json({ error: "Libro no encontrado." });
 
-    // Verificar si el usuario ya reseñó este libro (actualizar en lugar de duplicar)
     let resena = await Resena.findOne({
       where: { usuario_id: userId, libro_id: idLibro }
     });
 
     if (resena) {
-      // Si ya existe, actualiza la puntuación y el comentario
       resena.puntuacion = puntuacion;
       if (comentario) resena.comentario = comentario;
       await resena.save();
     } else {
-      // Si no existe, crea una nueva reseña
       resena = await Resena.create({
         usuario_id: userId,
         libro_id: idLibro,
         puntuacion,
         comentario: comentario || ""
       });
+    }
+
+    // Añadir el libro a la lista de 'leidos' del usuario si no está ya
+    try {
+      const usuario = await Usuario.findByPk(userId);
+      if (usuario) {
+        let leidos = usuario.libros_leidos;
+        if (typeof leidos === 'string') {
+          try { leidos = JSON.parse(leidos); } catch { leidos = []; }
+        }
+        if (!Array.isArray(leidos)) leidos = [];
+        const idNum = Number(idLibro);
+        if (!leidos.includes(idNum)) {
+          leidos.push(idNum);
+          // dedupe and save
+          usuario.libros_leidos = Array.from(new Set(leidos));
+          await usuario.save();
+        }
+      }
+    } catch (err) {
+      console.error('Error actualizando libros_leidos del usuario:', err);
     }
 
     res.json({
@@ -160,9 +173,45 @@ const guardarPuntuacion = async (req, res) => {
   }
 };
 
+const obtenerResenas = async (req, res) => {
+  try {
+    const { idLibro } = req.params;
+
+    const libro = await Libro.findByPk(idLibro);
+    if (!libro) return res.status(404).json({ error: "Libro no encontrado." });
+
+    const resenas = await Resena.findAll({
+      where: { libro_id: idLibro },
+      include: [
+        {
+          model: Usuario,
+          as: 'Usuario',
+          attributes: ["id", "nombre", "apellido", "idIcono"],
+          include: [
+            {
+              model: Icono,
+              as: "iconoData",
+              attributes: ["simbolo"]
+            }
+          ]
+        }
+      ],
+      order: [
+        [sequelize.literal("CASE WHEN comentario != '' THEN 0 ELSE 1 END"), "ASC"],
+        ["fecha", "DESC"]
+      ]
+    });
+
+    res.json(resenas);
+  } catch (error) {
+    console.error("Error al obtener reseñas:", error);
+    res.status(500).json({ error: "Error al obtener las reseñas." });
+  }
+};
 
 module.exports = {
   getAllBooks,
   agregarLibroALista,
-  guardarPuntuacion
+  guardarPuntuacion,
+  obtenerResenas
 }

@@ -218,13 +218,13 @@ export default function Perfil() {
 
   return (
     <div className="profile-page">
-      <Header user={user} onLogout={handleLogout} />
-      <BannerPerfil user={user} onEdit={() => navigate("/perfil/editar")} colors={COLORS} avatarContent={avatarContent} />
+      <Header user={user} />
+      <BannerPerfil user={user} onEdit={() => navigate("/perfil/editar")} onLogout={handleLogout} colors={COLORS} avatarContent={avatarContent} />
 
       <main className="profile-main enhanced-main">
         <section className="profile-summary">
           <SeccionAbout user={user} />
-          <Estadisticas user={user} ratingGeneral={ratingGeneral} onCreateList={() => navigate("/listas/crear")} />
+          <Estadisticas user={user} ratingGeneral={ratingGeneral} />
         </section>
 
         {/* ESTADÍSTICAS CON BOTONES DE NAVEGACIÓN */}
@@ -271,7 +271,6 @@ export default function Perfil() {
               <div className="stat-number">{stats.seguidores}</div>
             </div>
           </div>
-          <button onClick={handleLogout}>Desloguearse</button>
         </section>
 
         <section className="lists-section">

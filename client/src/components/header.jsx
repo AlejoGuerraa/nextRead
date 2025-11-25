@@ -12,10 +12,21 @@ export default function Header({ user, onRestrictedAction, headerRightRef }) {
   const navigate = useNavigate();
   const [openNotif, setOpenNotif] = useState(false);
 
+  // Fallback: si no se pasa `user` por props, intentar leer de localStorage
+  const currentUser = user || (() => {
+    try {
+      const s = localStorage.getItem('user');
+      return s ? JSON.parse(s) : null;
+    } catch {
+      return null;
+    }
+  })();
+
   const handleIconClick = (target) => {
-    if (user) {
+    if (currentUser) {
       if (target === "notificaciones") setOpenNotif(true);
       if (target === "perfil") navigate("/perfil");
+      if (target === "configuracion") navigate("/configuracion");
     } else {
       onRestrictedAction?.();
     }
@@ -50,7 +61,7 @@ export default function Header({ user, onRestrictedAction, headerRightRef }) {
           <button
             className="icon-btn"
             title="Configuración"
-            onClick={() => navigate("/configuracion")}
+            onClick={() => handleIconClick("configuracion")}
           >
             <Settings size={24} className="settings-icon" />
           </button>
@@ -66,10 +77,10 @@ export default function Header({ user, onRestrictedAction, headerRightRef }) {
           <div
             className="profile-box"
             onClick={() => handleIconClick("perfil")}
-            title={user ? "Ir al perfil" : "Necesitas una cuenta"}
+            title={currentUser ? "Ir al perfil" : "Necesitas una cuenta"}
           >
             <User size={22} className="user-icon" />
-            <span className="username">{user?.nombre || "Invitado"}</span>
+            <span className="username">{currentUser?.nombre || "Invitado"}</span>
           </div>
         </div>
 
