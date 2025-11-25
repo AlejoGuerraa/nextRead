@@ -11,6 +11,7 @@ export default function BookCard({ book, onClick }) {
         "Sin título";
 
     const author =
+    book.Autor?.nombre ||
         book.nombre_autor ||
         book.nombre ||
         book.autorData?.nombre ||
