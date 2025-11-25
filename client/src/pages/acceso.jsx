@@ -40,10 +40,10 @@ export default function Acceso() {
 
   // ✅ AVATARES REALES (ubicados en public/iconos/)
   const avatarOptions = [
-    "/iconos/LogoDefault1.jpg",
-    "/iconos/LogoDefault2.png",
-    "/iconos/LogoDefault3.jpg",
-    "/iconos/LogoDefault4.png",
+    "src/assets/iconos/LogoDefault1.jpg",
+    "src/assets/iconos/LogoDefault2.png",
+    "src/assets/iconos/LogoDefault3.jpg",
+    "src/assets/iconos/LogoDefault4.png",
   ];
 
   const [registerForm, setRegisterForm] = useState({

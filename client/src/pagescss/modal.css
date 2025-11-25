@@ -1,9 +1,11 @@
 .modal-dialog {
+  position: fixed !important;
   border: none;
   border-radius: 16px;
-  padding: 30px;
+  padding-bottom: 90px;
+  padding-top:48px;
   background: white;
-  width: 440px;
+  width: 420px;
   max-width: 90%;
   box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
   text-align: center;
@@ -17,11 +19,14 @@ dialog[open] {
 }
 
 
-/* Para el modal de login */
 .modal-dialog:has(.login-content) {
-  width: 420px;
+  width: 410px;
   max-width: 90%;
+  padding-top: 20px;
+  padding-bottom: 20px;
 }
+
+
 
 /* === SOLO para el modal de gustos === */
 .modal-dialog.modal-gustos {

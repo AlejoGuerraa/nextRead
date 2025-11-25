@@ -12,7 +12,7 @@ export default function BookCard({ book, onClick }) {
 
     const author =
         book.nombre_autor ||
-        book.autor ||
+        book.nombre ||
         book.autorData?.nombre ||
         "Autor desconocido";
 
@@ -26,25 +26,21 @@ export default function BookCard({ book, onClick }) {
         book.puntuacion_usuario ??
         book.puntuacion ??
         book.ranking ??
+        Math.floor(book.ranking || 0) ??
         null;
 
     return (
-        <div className="book-card" onClick={() => onClick(id)}>
-            <div className="book-cover">
-                {cover ? <img src={cover} alt={title} /> : <div className="placeholder">📘</div>}
-            </div>
-
-            <div className="book-info">
-                <h4>{title}</h4>
-                <p>{author}</p>
-            </div>
-
-            <div className="book-stars">
-                {rating
-                    ? "★".repeat(Math.round(rating)).slice(0,5) +
-                      "☆".repeat(5 - Math.round(rating))
-                    : "—"}
-            </div>
+        <div className="book-card" onClick={() => onClick(book.id)}>
+            {cover ? (
+                <img src={cover} alt={title} className="book-cover-img" />
+            ) : (
+                <div className="book-cover-placeholder">📖</div>
+            )}
+            <span className="book-title">{title}</span>
+            <span className="book-author">{author}</span>
+            <span className="book-stars">
+                {"★".repeat(rating)}{"☆".repeat(5 - rating)} ({rating ?? "0"})
+            </span>
         </div>
     );
 }

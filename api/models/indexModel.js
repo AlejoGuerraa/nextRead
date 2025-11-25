@@ -88,14 +88,13 @@ Logro.belongsToMany(Usuario, {
 });
 
 Autor.hasMany(Libro, {
-    foreignKey: 'id_autor', // Clave foránea en la tabla Libro
-    as: 'Libros'
+    foreignKey: "id_autor",
+    as: "Libros"
 });
 
-// Un Libro pertenece a un solo Autor
 Libro.belongsTo(Autor, {
-    foreignKey: 'id_autor', // Clave foránea en la tabla Libro
-    as: 'Autor'
+    foreignKey: "id_autor",
+    as: "Autor"
 });
 
 // Icono con Usuario - Banner con Usuario
