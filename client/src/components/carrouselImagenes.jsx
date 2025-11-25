@@ -2,7 +2,8 @@ import React, { useRef, useEffect, useState } from "react";
 import "../pagescss/carrouselImagenes.css";
 
 export default function Carousel({ slides }) {
-    const [currentIndex, setCurrentIndex] = useState(1); 
+    // Se Empieza directamente en la primera imagen real (indice 1).
+    const [currentIndex, setCurrentIndex] = useState(1);
     const listRef = useRef(null);
 
     const extendedSlides = [
@@ -11,46 +12,74 @@ export default function Carousel({ slides }) {
         slides[0] // clon primero
     ];
 
-    // Mover con transición
+    // ---------------------------------------------
+    // GESTION DEL MOVIMIENTO Y RESETEOS INSTANTANEOS
+    // ---------------------------------------------
     useEffect(() => {
         const node = listRef.current;
         if (!node) return;
 
-        node.style.transition = "transform 0.6s ease-in-out";
-        node.style.transform = `translateX(-${currentIndex * 100}%)`;
-    }, [currentIndex]);
+        // Si estamos en un clon, forzar el reseteo inmediato sin transicion.
+        if (currentIndex === extendedSlides.length - 1) {
+            // Mover al primer slide real (indice 1)
+            node.style.transition = "none";
+            node.style.transform = `translateX(-100%)`;
+            // Establecer el estado real en el proximo microtask
+            setTimeout(() => {
+                setCurrentIndex(1);
+            }, 0); 
+            return;
 
-    // Detectar cuando esta en un slide clonado para resetear
-    useEffect(() => {
-        const node = listRef.current;
-        if (!node) return;
-
-        const handleTransitionEnd = () => {
-            if (currentIndex === extendedSlides.length - 1) {
-                node.style.transition = "none"; 
-                setCurrentIndex(1); 
-                node.style.transform = `translateX(-100%)`;
-            }
-
-            if (currentIndex === 0) {
-                node.style.transition = "none";
+        } else if (currentIndex === 0) {
+            // Mover al ultimo slide real (indice slides.length)
+            node.style.transition = "none";
+            node.style.transform = `translateX(-${slides.length * 100}%)`;
+            // Establecer el estado real en el proximo microtask
+            setTimeout(() => {
                 setCurrentIndex(slides.length);
-                node.style.transform = `translateX(-${slides.length * 100}%)`;
-            }
-        };
+            }, 0);
+            return;
+        }
 
-        node.addEventListener("transitionend", handleTransitionEnd);
-        return () => node.removeEventListener("transitionend", handleTransitionEnd);
-    }, [currentIndex, slides.length]);
+        // --- Movimiento Normal (Cuando no es un clon) ---
+        // Aplicar la transición CSS (tomada del CSS global)
+        node.style.transition = ""; // Usar la transicion definida en el CSS
+        node.style.transform = `translateX(-${currentIndex * 100}%)`;
 
-    // Autoplay
+    }, [currentIndex, slides.length, extendedSlides.length]); 
+
+
+    // ---------------------------------------------
+    // AUTOPLAY (Mantener el movimiento)
+    // ---------------------------------------------
     useEffect(() => {
         const interval = setInterval(() => {
             setCurrentIndex((prev) => prev + 1);
         }, 5000);
-        return () => clearInterval(interval);
-    }, []);
+        
+        // CORRECCIÓN BUG DE INACTIVIDAD (Solucion de contingencia)
+        // Ya que la logica de reseteo está en el useEffect principal, 
+        // este listener simplemente asegura que React recalcule el estado 
+        // si la pestaña está inactiva y vuelve, forzando la ejecución del useEffect principal.
+        const handleFocus = () => {
+            if (listRef.current && listRef.current.style.transition === 'none') {
+                // Si el carrusel se quedo sin transicion (porque estaba en reseteo),
+                // lo forzamos a un indice para que el useEffect re-calcule.
+                setCurrentIndex(currentIndex); 
+            }
+        };
 
+        window.addEventListener('focus', handleFocus);
+
+        return () => {
+            clearInterval(interval);
+            window.removeEventListener('focus', handleFocus);
+        }
+    }, [currentIndex]); // Añadimos currentIndex para que el listener se actualice
+
+    // ---------------------------------------------
+    // Los Dots (No necesitan cambio, ya estan bien)
+    // ---------------------------------------------
     return (
         <div className="slider-container">
             <div className="container-images">
@@ -66,11 +95,14 @@ export default function Carousel({ slides }) {
             {/* Dots normales */}
             <div className="dots-container">
                 {slides.map((_, i) => {
+                    // Calculo del índice real para los dots:
+                    // Si está en el clon final (extended.len - 1), el índice real es 0.
+                    // Si está en el clon inicial (0), el índice real es slides.length - 1.
                     const realIndex =
-                        currentIndex === 0
-                            ? slides.length - 1
-                            : currentIndex === extendedSlides.length - 1
+                        currentIndex === extendedSlides.length - 1
                             ? 0
+                            : currentIndex === 0
+                            ? slides.length - 1
                             : currentIndex - 1;
 
                     return (

@@ -1,17 +1,14 @@
-/* Contenedor general */
-/* Contenedor general */
 .slider-container {
     position: relative;
     width: 100%;
-    max-width: 1200px;
-    margin: 20px auto 40px auto; /* 👈 Aumenté el top y lo dejé en una sola línea */
+    max-width: 1200px; 
+    margin: 5px auto 40px auto;
     overflow: hidden;
     border-radius: 15px;
     box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
 }
 
-
-/* Lista de imágenes */
+/* Lista de imagenes */
 .container-images ul {
     display: flex;
     padding: 0;
@@ -20,13 +17,12 @@
     scroll-behavior: smooth;
 }
 
-/* Cada slide */
 .container-images li  {
     flex: 0 0 100%;
     display: flex;
     justify-content: center;
     align-items: center;
-    height: 600px !important; /* Mucho más alto */
+    height: 600px !important;
 }
 
 /* Imagen */
@@ -35,45 +31,10 @@
     height: 100%;
     object-fit: cover;
     border-radius: 15px;
+
 }
 
-/* Flechas */
-.arrow {
-    position: absolute;
-    top: 50%;
-    transform: translateY(-50%);
-    background-color: rgba(0,0,0,0.5);
-    color: #fff;
-    border-radius: 50%;
-    width: 60px;
-    height: 60px;
-    font-size: 2rem;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    cursor: pointer;
-    z-index: 10;
-    transition: background-color 0.3s;
-}
 
-.arrow:hover:not(.disabled) {
-    background-color: rgba(0,0,0,0.7);
-}
-
-.arrow.left {
-    left: 20px;
-}
-
-.arrow.right {
-    right: 20px;
-}
-
-.arrow.disabled {
-    opacity: 0.3;
-    cursor: not-allowed;
-}
-
-/* Dots */
 .dots-container {
     position: absolute;
     bottom: 20px;
@@ -96,4 +57,14 @@
     width: 18px;
     height: 18px;
     background-color: #fff;
+}
+
+
+/* Transicion*/
+.container-images ul {
+    transition: transform 0.8s cubic-bezier(0.4, 0.0, 0.2, 1);
+}
+
+.container-images li {
+    flex-shrink: 0;
 }
