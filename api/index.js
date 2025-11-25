@@ -18,7 +18,7 @@ require('./models/Amigo');
 require('./models/indexModel');
 require('./models/Icono');
 require('./models/Banner');
-
+/// prueba
 
 const server = express();
 server.use(express.json());
