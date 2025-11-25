@@ -203,10 +203,24 @@ const getUser = async (req, res) => {
         const librosFavoritosIDs = parseArray(usuario.libros_favoritos);
         const librosLeidosIDs = parseArray(usuario.libros_leidos);
 
+        // Parsear listas (puede venir como string JSON o como objeto)
+        let listasObj = {};
+        if (usuario.listas) {
+            if (typeof usuario.listas === 'string') {
+                try { listasObj = JSON.parse(usuario.listas) || {}; } catch { listasObj = {}; }
+            } else if (typeof usuario.listas === 'object' && usuario.listas !== null) {
+                listasObj = usuario.listas;
+            }
+        }
+
+        // Obtener todos los IDs que necesitamos cargar de la BD
+        const idsFromListas = Object.values(listasObj).flat().map(x => Number(x)).filter(n => !Number.isNaN(n));
+
         const todosLosIDs = [
             ...librosEnLecturaIDs,
             ...librosFavoritosIDs,
-            ...librosLeidosIDs
+            ...librosLeidosIDs,
+            ...idsFromListas
         ];
 
         let librosBD = [];
@@ -310,12 +324,24 @@ const getUser = async (req, res) => {
         const librosMap = {};
         librosBD.forEach(libro => (librosMap[libro.id] = libro));
 
+        // Mapear listas a objetos de libro (si hay datos cargados)
+        const listasMapeadas = {};
+        for (const [nombre, arr] of Object.entries(listasObj)) {
+            if (!Array.isArray(arr)) continue;
+            listasMapeadas[nombre] = arr
+                .map(id => Number(id))
+                .filter(n => !Number.isNaN(n))
+                .map(id => librosMap[id])
+                .filter(Boolean);
+        }
+
         const usuarioData = {
             ...usuario.toJSON(),
 
             libros_en_lectura: librosEnLecturaIDs.map(id => librosMap[id]).filter(Boolean),
             libros_favoritos: librosFavoritosIDs.map(id => librosMap[id]).filter(Boolean),
             libros_leidos: librosLeidosIDs.map(id => librosMap[id]).filter(Boolean),
+            listas: listasMapeadas,
 
             // 🔥 NUEVO ATRIBUTO SIEMPRE STRING
             genero_top_leyente: generoMasLeido
@@ -448,6 +474,88 @@ const checkUsername = async (req, res) => {
     }
 };
 
+// ----------------------
+// LISTAS: CREAR Y AGREGAR LIBRO
+// ----------------------
+const crearLista = async (req, res) => {
+    try {
+        const userId = req.user.id;
+        const { nombre } = req.body;
+
+        if (!nombre || typeof nombre !== 'string' || !nombre.trim()) {
+            return res.status(400).json({ error: 'Nombre de lista inválido' });
+        }
+
+        const usuario = await User.findByPk(userId);
+        if (!usuario) return res.status(404).json({ error: 'Usuario no encontrado' });
+
+        let listasObj = {};
+        if (usuario.listas) {
+            if (typeof usuario.listas === 'string') {
+                try { listasObj = JSON.parse(usuario.listas) || {}; } catch { listasObj = {}; }
+            } else if (typeof usuario.listas === 'object' && usuario.listas !== null) {
+                listasObj = usuario.listas;
+            }
+        }
+
+        const key = nombre.trim();
+        if (listasObj[key]) {
+            return res.status(400).json({ error: 'Ya existe una lista con ese nombre' });
+        }
+
+        listasObj[key] = [];
+        usuario.listas = listasObj;
+        await usuario.save();
+
+        return res.json({ message: 'Lista creada correctamente', listas: listasObj });
+    } catch (error) {
+        console.error('Error en crearLista:', error);
+        return res.status(500).json({ error: 'Error al crear la lista' });
+    }
+};
+
+const agregarLibroAListaEnLista = async (req, res) => {
+    try {
+        const userId = req.user.id;
+        const { nombre, idLibro } = req.params;
+        const idNum = Number(idLibro);
+
+        if (!nombre) return res.status(400).json({ error: 'Falta el nombre de la lista' });
+        if (Number.isNaN(idNum)) return res.status(400).json({ error: 'ID de libro inválido' });
+
+        const usuario = await User.findByPk(userId);
+        if (!usuario) return res.status(404).json({ error: 'Usuario no encontrado' });
+
+        let listasObj = {};
+        if (usuario.listas) {
+            if (typeof usuario.listas === 'string') {
+                try { listasObj = JSON.parse(usuario.listas) || {}; } catch { listasObj = {}; }
+            } else if (typeof usuario.listas === 'object' && usuario.listas !== null) {
+                listasObj = usuario.listas;
+            }
+        }
+
+        const key = nombre.trim();
+        if (!listasObj[key]) return res.status(404).json({ error: 'Lista no encontrada' });
+
+        // Normalizar el array de IDs
+        const arr = Array.isArray(listasObj[key]) ? listasObj[key].map(x => Number(x)).filter(n => !Number.isNaN(n)) : [];
+
+        if (arr.includes(idNum)) return res.status(400).json({ message: 'El libro ya está en la lista' });
+
+        arr.push(idNum);
+        listasObj[key] = Array.from(new Set(arr));
+
+        usuario.listas = listasObj;
+        await usuario.save();
+
+        return res.json({ message: 'Libro agregado a la lista', lista: listasObj[key] });
+    } catch (error) {
+        console.error('Error en agregarLibroAListaEnLista:', error);
+        return res.status(500).json({ error: 'Error al agregar libro a la lista' });
+    }
+};
+
 module.exports = {
     agregarNotificacion,
     getAllUsers,
@@ -456,5 +564,7 @@ module.exports = {
     getUser,
     editarPerfil,
     checkEmail,
-    checkUsername
+    checkUsername,
+    crearLista,
+    agregarLibroAListaEnLista
 };

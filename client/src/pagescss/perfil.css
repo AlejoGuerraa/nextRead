@@ -243,3 +243,76 @@ body{font-family: Inter, "Segoe UI", Roboto, "Helvetica Neue", Arial; margin:0; 
 
 /* small tweaks */
 a{color:var(--secondary);text-decoration:underline}
+
+/* SECCIÓN DE LISTAS DE USUARIO */
+.user-lists-section {
+  margin: 30px 0;
+  padding: 20px;
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 8px 24px rgba(18,24,33,0.06);
+}
+
+.lists-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+  gap: 20px;
+}
+
+.lists-header h3 {
+  font-size: 1.3rem;
+  font-weight: 800;
+  color: var(--primary);
+  margin: 0;
+}
+
+.lists-header .btn {
+  background: var(--secondary);
+  color: white;
+  border: none;
+  padding: 10px 16px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 700;
+  transition: all 0.3s ease;
+}
+
+.lists-header .btn:hover {
+  background: var(--primary);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(26,55,77,0.2);
+}
+
+.user-list-block {
+  margin-bottom: 25px;
+  padding-bottom: 20px;
+  border-bottom: 1px solid #eee;
+}
+
+.user-list-block:last-child {
+  border-bottom: none;
+}
+
+.user-list-block .list-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 15px;
+}
+
+.user-list-block .list-header h4 {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--secondary);
+  margin: 0;
+}
+
+.user-list-block .list-meta {
+  font-size: 0.85rem;
+  color: #999;
+  background: #f5f5f5;
+  padding: 4px 10px;
+  border-radius: 12px;
+}

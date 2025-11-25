@@ -4,6 +4,7 @@ import axios from "axios";
 import { useNavigate } from "react-router-dom";
 
 import "../pagescss/perfil.css";
+import "../pagescss/modals.css";
 import iconoFallback from "../assets/libroIcono.png";
 
 import Header from "../components/header";
@@ -13,6 +14,7 @@ import Estadisticas from "../components/perfil/estadisticas";
 import ListaLogros from "../components/logros/listaLogros";
 import BookList from "../components/carrouselLibros";
 import Footer from "../components/footer";
+import CreateListModal from "../components/CreateListModal";
 
 const COLORS = {
   primary: "#1A374D",
@@ -25,6 +27,7 @@ export default function Perfil() {
   const navigate = useNavigate();
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [showCreateModal, setShowCreateModal] = useState(false);
 
   useEffect(() => {
     const token = JSON.parse(localStorage.getItem("user"))?.token;
@@ -49,6 +52,14 @@ export default function Perfil() {
         navigate("/acceso");
       });
   }, [navigate]);
+
+  const refreshUser = () => {
+    const token = JSON.parse(localStorage.getItem("user"))?.token;
+    if (!token) return;
+    axios.get("http://localhost:3000/nextread/user", { headers: { Authorization: `Bearer ${token}` } })
+      .then(res => setUser(res.data))
+      .catch(err => console.error('Error refrescando usuario', err));
+  };
 
   const handleLogout = () => {
     localStorage.removeItem("user");
@@ -226,7 +237,29 @@ export default function Perfil() {
           <SeccionAbout user={user} />
           <Estadisticas user={user} ratingGeneral={ratingGeneral} />
         </section>
+        <section className="user-lists-section">
+          <div className="lists-header">
+            <h3>Tus listas</h3>
+            <div>
+              <button className="btn" onClick={() => setShowCreateModal(true)}>Crear lista</button>
+            </div>
+          </div>
 
+          {(!user.listas || Object.keys(user.listas).length === 0) ? (
+            <div className="empty-list">No tienes listas creadas. Crea una para empezar.</div>
+          ) : (
+            Object.entries(user.listas).map(([name, books]) => (
+              <div className="user-list-block" key={name}>
+                <div className="list-header">
+                  <h4>{name}</h4>
+                  <span className="list-meta">{(books || []).length} libros</span>
+                </div>
+                <BookList libros={books || []} onBookClick={(id) => handleBookCardClick(id)} />
+              </div>
+            ))
+          )}
+
+        </section>
         {/* ESTADÍSTICAS CON BOTONES DE NAVEGACIÓN */}
         <section className="profile-stats enhanced-stats">
           <div className="stat-card">
@@ -310,6 +343,7 @@ export default function Perfil() {
       </main>
 
       <Footer />
+      <CreateListModal isOpen={showCreateModal} onClose={() => setShowCreateModal(false)} onCreated={() => { refreshUser(); }} />
     </div>
   );
 }

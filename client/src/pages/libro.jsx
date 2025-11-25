@@ -4,12 +4,14 @@ import { useParams } from "react-router-dom";
 import axios from "axios";
 
 import InfoLibro from "../components/infoLibro";
+import ChooseListModal from "../components/ChooseListModal";
 import Resenas from "../components/resenias";
 import Header from "../components/header";
 import Footer from "../components/footer";
 import RestrictionPopover from "../components/popOver";
 
 import "../pagescss/libro.css";
+import "../pagescss/modals.css";
 
 const API_BASE = "http://localhost:3000/nextread";
 
@@ -37,6 +39,8 @@ export default function Libro() {
     } catch { return null; }
   })();
   const [user, setUser] = useState(initialUser);
+  const [fullUser, setFullUser] = useState(null);
+  const [showChooseListModal, setShowChooseListModal] = useState(false);
 
   // ==== POPOVER ====
   const actionRef = useRef(null);         // donde está el botón que dispara la restricción
@@ -60,6 +64,15 @@ export default function Libro() {
         setUser(null);
       }
     }
+    // Si está logueado, obtener datos completos (listas)
+    try {
+      const token = JSON.parse(localStorage.getItem('user'))?.token;
+      if (token) {
+        axios.get(`${API_BASE}/user`, { headers: { Authorization: `Bearer ${token}` } })
+          .then(res => setFullUser(res.data))
+          .catch(err => console.error('Error fetching full user', err));
+      }
+    } catch (err) { }
   }, []);
 
   // cerrar popover al click fuera
@@ -110,6 +123,7 @@ export default function Libro() {
           libro={libro}
           onRestrictedAction={handleRestrictedAction}
           actionRef={actionRef}
+          onOpenChooseList={() => setShowChooseListModal(true)}
         />
 
         {/* ==== POPOVER POSICIONADO COMO EN PRINCIPAL PERO ARRIBA Y DERECHA ==== */}
@@ -132,6 +146,15 @@ export default function Libro() {
 
         <Resenas />
       </div>
+      <ChooseListModal isOpen={showChooseListModal} onClose={() => setShowChooseListModal(false)} listas={fullUser?.listas || {}} bookId={id} onAdded={(name, lista) => {
+        // refrescar datos de usuario
+        const token = JSON.parse(localStorage.getItem('user'))?.token;
+        if (token) {
+          axios.get(`${API_BASE}/user`, { headers: { Authorization: `Bearer ${token}` } })
+            .then(res => setFullUser(res.data))
+            .catch(err => console.error('Error refrescando usuario', err));
+        }
+      }} />
 
       <Footer />
     </div>

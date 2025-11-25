@@ -5,7 +5,7 @@ import { useParams } from "react-router-dom";
 import axios from "axios";
 import { Bookmark, Heart, Clock, PlusCircle, Book } from "lucide-react"; // iconos más lindos
 
-export default function InfoLibro({ libro, onRestrictedAction, actionRef }) {
+export default function InfoLibro({ libro, onRestrictedAction, actionRef, onOpenChooseList }) {
     const { id } = useParams();
     const { titulo, Autor, portada, generos, anio, tipo, descripcion, ranking } = libro;
     const autorNombre = Autor?.nombre || "Autor Desconocido";
@@ -92,7 +92,7 @@ export default function InfoLibro({ libro, onRestrictedAction, actionRef }) {
                     <button className="btn" onClick={() => handleAddToList("enLectura")}><Book /> En lectura</button>
                     <button className="btn" onClick={() => handleAddToList("favoritos")}><Heart /> Favorito</button>
                     <button className="btn" onClick={() => handleAddToList("paraLeer")}><Clock /> Para leer</button>
-                    <button className="btn" onClick={() => handleAddToList("lista")}><PlusCircle /> Añadir a lista</button>
+                    <button className="btn" onClick={() => { if (onOpenChooseList) onOpenChooseList(); else handleAddToList("lista"); }}><PlusCircle /> Añadir a lista</button>
                     <button className="btn" onClick={() => handleAddToList("leido")}><Bookmark /> Leído</button>
                 </div>
 

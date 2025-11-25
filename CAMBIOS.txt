@@ -1,6 +1,6 @@
 Los cambios que se realizaron del documento original están listados en este documento extra (parte de sofi)
 
-ULTIMA MODIFICACIÓN: 23/11/2025
+ULTIMA MODIFICACIÓN: 25/11/2025 - Se agregaron 4 manuales de usuario y documentación técnica
 
 ==============================================================================================================================
 
@@ -35,33 +35,58 @@ DE PARTE DEL FRONTEND:
 
 1. Se agregó un nuevo botón "leído", que guarda en la base de datos el ID del libro seleccionado en el campo "libros_leidos".
 
-2. Si un usuario invitado (no registrado/logueado) intenta apretar alguna de las funcionalidades mostradas, aparecerá en pantalla el popover de la página principal,
-  indicando al usuario que primero necesita iniciar sesión o registrarse para cumplir con esas funciones.
+2. Si un usuario invitado (no registrado/logueado) intenta apretar alguna de las func mostradas, aparecerá en pantalla el popover de la página principal,
+  indicando al usuario que primero necesita iniciar sesión o registrarse para cumplir con esas 
+Las estrellas ahora son funcionales, guardando los datos gracias al endpoint explicado anteriormente (guardarPuntuacion).
 
-3. Las estrellas ahora son funcionales, guardando los datos gracias al endpoint explicado anteriormente (guardarPuntuacion).
+- NUEVAS RUTAS EN EL MAIN: Ya en esta sección, se aplicaron las nuevas rutas para ir a las páginas de seguidores y seguidos en el perfil (también se modificó "perfie==============================================================================================================================
 
-- NUEVAS RUTAS EN EL MAIN: Ya en esta sección, se aplicaron las nuevas rutas para ir a las páginas de seguidores y seguidos en el perfil (también se modificó "perfil.jsx"
-  para que llegue a estas rutas correctamente).
+==============================================================================================================================
+
+NUEVA DOCUMENTACIÓN AGREGADA (25/11/2025):
+
+- MANUAL_USUARIO.md: Guía completa para usuarios finales con problemas comunes y soluciones (35+ problemas)
+- MANUAL_TECNICO.md: Guía técnica para desarrolladores con errores comunes, debugging y pruebas (20+ errores)
+- README_DOCUMENTACION.md: Índice general, estructura del proyecto y guía de uso de la documentación
+- GUIA_RAPIDA.md: Referencia rápida (30 segundos) para problemas más frecuentes
+
+==============================================================================================================================
+
+SISTEMA DE LISTAS PERSONALIZADO (25/11/2025):
+
+BACKEND:
+✅ Endpoint POST /nextread/listas - Crear una lista para el usuario
+✅ Endpoint POST /nextread/listas/:nombre/libro/:idLibro - Agregar libro a una lista nombrada
+✅ Actualizado getUser para retornar listas como objetos con libros mapeados (no solo IDs)
+✅ Funciones crearLista y agregarLibroAListaEnLista en peticionesUsuario.js
+
+FRONTEND:
+✅ CreateListModal.jsx - Modal para crear listas desde el perfil
+✅ ChooseListModal.jsx - Modal para elegir lista y agregar libro (muestra portada del primer libro)
+✅ Integración en perfil.jsx - Botón "Crear lista" y sección "Tus listas"
+✅ Integración en libro.jsx - Botón "Añadir a lista" abre modal de selección
+✅ modals.css - Estilos completos y responsivos para todos los modales
+✅ Estilos en perfil.css para sección de listas del usuario
+
+RECUPERACIÓN DE CONTRASEÑA:
+✅ Actualizado components/acceso/modalLogin.jsx con formulario de recuperación
+✅ Integración con endpoint /api/forgot-password
+✅ UI mejorada con botón "¿Olvidaste tu contraseña?"
+✅ Toasts de éxito/error para mejor UX
+
+ESTRUCTURA DE LISTAS EN BD:
+- Usuario.listas = { "Nombre de lista": [id1, id2, id3], "Otra lista": [id4, id5], ... }
+- Flexible: permite agregar/eliminar listas dinámicamente
+- Parseo seguro en getUser para retornar objetos Libro completos
 
 ==============================================================================================================================
 
 COSAS QUE FALTAN IMPLEMENTAR:
 
-- Que el registro se vincule a las tablas de icono y banner para guardar y crear en la base de datos la opción elegida.
-
-- Mostrar otros datos en el perfil, como el banner elegido, los nombres de los libros leídos, favoritos y más.
-
-- Implementar funcionalidades de seguidores y seguidos.
-
-- Agregar un sistema de mail para notificar al usuario ciertos cambios (marcos me mandó el código, falta hacerlo funcional en nuestra página)
-
 - Agregar funcionalidades para las notificaciones.
-
-- Conectar la tabla "Resena" con el frontend.
-
-- Hacer carrousel de libros (que sea funcional y que se divida en categorías distintas).
-
-Hacer modal de crear lista y añadir a lista
+- Opción de eliminar/editar nombres de listas
+- Opción de eliminar libros de las listas
+- Tests automatizados para endpoints de listas
 Terminar el manual
 
 
@@ -77,3 +102,5 @@ Terminar el manual
 4	/iconos/LogoDefault4.png
 5	/iconos/LogoDefault5.png
 6	/iconos/LogoDefault6.png
+
+

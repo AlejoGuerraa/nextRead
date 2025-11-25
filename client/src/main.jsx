@@ -10,6 +10,7 @@ import EditarPerfil from './pages/editarPerfil';
 import Seguidores from './pages/seguidores';
 import Seguidos from './pages/seguidos';
 import Configuracion from './pages/configuracion';
+import ResetPassword from './pages/ResetPassword';
 
 import { useEffect } from "react";
 import { useLocation } from "react-router-dom";
@@ -40,6 +41,8 @@ function TitleManager() {
       document.title = "NextRead - Seguidos";
     } else if (path === "/") {
       document.title = "NextRead - Inicio";
+    } else if (path === "/reset-password") {
+      document.title = "NextRead - Restablecer Contraseña";
     } else {
       document.title = "NextRead 📚";
     }
@@ -60,6 +63,7 @@ const router = createBrowserRouter([
       { path: "/seguidores", element: <Seguidores /> },
       { path: "/seguidos", element: <Seguidos /> },
       { path: "/configuracion", element: <Configuracion /> },
+      { path: "/reset-password", element: <ResetPassword /> },
     ]
   }
 ]);

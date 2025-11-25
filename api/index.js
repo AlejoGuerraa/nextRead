@@ -1,9 +1,11 @@
 const express = require('express');
 
 const { agregarNotificacion, getAllUsers, register, login, getUser, editarPerfil, checkEmail, checkUsername } = require('./controller/peticionesUsuario');
+const { crearLista, agregarLibroAListaEnLista } = require('./controller/peticionesUsuario');
 const { buscar, getTendencias, getMasDeAutor, getLibroById } = require('./controller/busqueda');
 const { getAllBooks, agregarLibroALista, guardarPuntuacion, obtenerResenas } = require('./controller/peticionesLibros');
 const { getAllBanners, getAllIconos } = require('./controller/banners');
+const { enviarEnlaceRecuperacion, resetearPassword } = require('./controller/recoveryController');
 
 const isAuth = require('./middlewares/isAuth');
 
@@ -72,6 +74,12 @@ server.get('/nextread/libros', getAllBooks);
 server.post('/nextread/usuario/:tipo/:idLibro', isAuth, agregarLibroALista);
 server.post('/nextread/resena/:idLibro', isAuth, guardarPuntuacion);
 server.get('/nextread/resenas/:idLibro', obtenerResenas);
+// Rutas para listas nombradas
+server.post('/nextread/listas', isAuth, crearLista);
+server.post('/nextread/listas/:nombre/libro/:idLibro', isAuth, agregarLibroAListaEnLista);
+
+server.post('/api/forgot-password', enviarEnlaceRecuperacion);
+server.post('/api/reset-password', resetearPassword);
 
 server.listen(3000, '0.0.0.0', async () => {
   try {
