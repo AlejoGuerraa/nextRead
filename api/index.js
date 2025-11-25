@@ -2,7 +2,7 @@ const express = require('express');
 
 const { agregarNotificacion, getAllUsers, register, login, getUser, editarPerfil, checkEmail, checkUsername } = require('./controller/peticionesUsuario');
 const { crearLista, agregarLibroAListaEnLista } = require('./controller/peticionesUsuario');
-const { buscar, getTendencias, getMasDeAutor, getLibroById } = require('./controller/busqueda');
+const { buscar, getTendencias, getLibrosPorDecada, getMasDeAutor, getLibroById } = require('./controller/busqueda');
 const { getAllBooks, agregarLibroALista, guardarPuntuacion, obtenerResenas } = require('./controller/peticionesLibros');
 const { getAllBanners, getAllIconos } = require('./controller/banners');
 const { enviarEnlaceRecuperacion, resetearPassword } = require('./controller/recoveryController');
@@ -67,6 +67,21 @@ server.post('/nextread/notificacion/:idUsuario', async (req, res) => {
 // Endpoints de búsqueda
 server.get('/nextread/buscar', buscar);
 server.get('/nextread/tendencias', getTendencias);
+server.get("/nextread/libros/por-decada", async (req, res) => {
+    try {
+        const libros = await Libro.findAll({
+            attributes: ["id", "titulo", "anio", "url_portada", "generos"]
+        });
+
+        const grupos = await getLibrosPorDecada(libros.map(l => l.toJSON()));
+
+        res.json(grupos);
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: "Error obteniendo libros por década" });
+    }
+});
+
 server.post('/nextread/autorMasLeido', getMasDeAutor);
 server.get('/nextread/libro/:id', getLibroById);
 server.get('/nextread/libros', getAllBooks);

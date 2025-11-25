@@ -193,6 +193,37 @@ const getMasDeAutor = async (req, res) => {
     }
 };
 
+// Agrupa libros por década (ej: "60s", "70s", "80s", "90s", "2000s")
+async function getLibrosPorDecada(libros) {
+    if (!Array.isArray(libros)) return {};
+
+    const grupos = {};
+
+    libros.forEach((libro) => {
+        if (!libro.anio || isNaN(libro.anio)) return;
+
+        // Década base
+        const decadaBase = Math.floor(libro.anio / 10) * 10;
+
+        // Etiqueta bonita
+        const etiqueta =
+            decadaBase >= 2000
+                ? `${decadaBase}s`
+                : `${String(decadaBase).slice(2)}s`;
+
+        // Si no existe el grupo, lo crea
+        if (!grupos[etiqueta]) {
+            grupos[etiqueta] = [];
+        }
+
+        // Agrega el libro
+        grupos[etiqueta].push(libro);
+    });
+
+    return grupos;
+}
+
+
 
 // =======================================================
 // 📘 LIBRO POR ID (con parseo de generos)
@@ -244,6 +275,7 @@ const getLibroById = async (req, res) => {
 module.exports = {
     buscar,
     getTendencias,
+    getLibrosPorDecada,
     getMasDeAutor,
     getLibroById
 };

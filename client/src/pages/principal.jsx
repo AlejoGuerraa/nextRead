@@ -33,6 +33,7 @@ export default function Principal() {
   const [librosTendencias, setLibrosTendencias] = useState([]); // Renombrado para claridad
   const [librosAutor, setLibrosAutor] = useState([]); // Nuevo estado para recomendaciones
   const [autorMasLeidoNombre, setAutorMasLeidoNombre] = useState(null); // Nuevo estado para el título
+  const [porDecada, setPorDecada] = useState({});
   const [generoSeleccionado, setGeneroSeleccionado] = useState("Género...");
   const [currentIndex, setCurrentIndex] = useState(0);
 
@@ -71,7 +72,7 @@ export default function Principal() {
         const params = {};
         if (generoSeleccionado && generoSeleccionado !== "Género...")
           params.genero = generoSeleccionado;
-        
+
         // El endpoint de tendencias no necesita el email
         const res = await axios.get("http://localhost:3000/nextread/tendencias", {
           params,
@@ -94,16 +95,16 @@ export default function Principal() {
         setAutorMasLeidoNombre("Inicia sesión para ver recomendaciones");
         return;
       }
-      
+
       setAutorMasLeidoNombre("Cargando recomendaciones...");
-      
+
       try {
         // Enviar el email en el cuerpo de la solicitud POST, ya que el controlador lo espera en req.body
         const res = await axios.post(
           "http://localhost:3000/nextread/autorMasLeido",
           { email: user.correo }
         );
-        
+
         // Si el servidor devuelve un mensaje y libros, los procesamos
         if (res.data && res.data.libros) {
           setLibrosAutor(res.data.libros);
@@ -115,7 +116,7 @@ export default function Principal() {
           setLibrosAutor([]);
           setAutorMasLeidoNombre(res.data.message || "No se encontraron más libros de tu autor preferido");
         }
-        
+
       } catch (e) {
         console.error("Error cargando libros del autor más leído:", e);
         setLibrosAutor([]);
@@ -127,8 +128,31 @@ export default function Principal() {
     if (user !== null) {
       fetchLibrosAutor();
     }
-    
+
   }, [user]); // Dependencia clave: user
+
+  // 3. FETCH AGRUPANDO POR DECADA
+  useEffect(() => {
+    const fetchDecadas = async () => {
+      try {
+        const res = await axios.get("http://localhost:3000/nextread/libros/por-decada");
+        setPorDecadas(res.data);
+      } catch (e) {
+        console.error(e);
+      }
+    };
+
+    fetchDecadas();
+  }, []);
+
+  useEffect(() => {
+    async function cargarTodo() {
+      const dataDecadas = await fetchLibrosPorDecada();
+      setPorDecada(dataDecadas);
+    }
+
+    cargarTodo();
+  }, []);
 
   // ... (Resto de las funciones para el Popover)
 
@@ -231,7 +255,7 @@ export default function Principal() {
           </h2>
           <BookList libros={librosTendencias} onBookClick={handleBookCardClick} />
         </section>
-        
+
         {/* SEGUNDA SECCIÓN: MÁS DE "AUTOR MÁS LEÍDO" (usa librosAutor) */}
         <section className="book-section">
           <h2
@@ -252,6 +276,29 @@ export default function Principal() {
 
         {/* Sección 3, 4, etc. que siguen usando los libros de tendencia por defecto, 
             pero podrías reemplazarlos con más lógica de recomendación */}
+
+        {/* CARRUSELES POR DÉCADA */}
+        {Object.keys(porDecada).map((decada) => (
+          <section className="book-section" key={decada}>
+            <h2
+              style={{
+                fontSize: "1.8rem",
+                fontWeight: "600",
+                marginBottom: "15px",
+                marginLeft: "20px",
+                color: "#222",
+              }}
+            >
+              Libros de los {decada}
+            </h2>
+
+            <BookList
+              libros={porDecada[decada]}
+              onBookClick={handleBookCardClick}
+            />
+          </section>
+        ))}
+
         <h2
           style={{
             fontSize: "1.8rem",
@@ -312,19 +359,7 @@ export default function Principal() {
           Novedades y Tendencias
         </h2>
         <BookList libros={librosTendencias} onBookClick={handleBookCardClick} />
-        <h2
-          style={{
-            fontSize: "1.8rem",
-            fontWeight: "600",
-            marginBottom: "15px",
-            marginLeft: "20px",
-            color: "#222",
-          }}
-        >
-          Novedades y Tendencias
-        </h2>
-        <BookList libros={librosTendencias} onBookClick={handleBookCardClick} />
-        
+
       </main>
 
       <Footer />

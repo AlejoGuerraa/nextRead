@@ -13,6 +13,7 @@ const Libro = sequelize.define('Libro', {
         allowNull: false
     },
 
+
     fecha_publicacion: {
         type: DataTypes.DATE,
         allowNull: false
@@ -25,7 +26,7 @@ const Libro = sequelize.define('Libro', {
     // Comentario: año de publicación del libro, extra para búsquedas rápidas
 
     tipo: {
-        type: DataTypes.ENUM('Novela','Cuento','Poesía','Manga','Ensayo','Biografía','Fábula','Teatro','Cómic','Epopeya','Filosófico','Ficción','Histórico'),
+        type: DataTypes.ENUM('Novela','Cuento','Poesía','Manga','Ensayo','Biografía','Fábula','Teatro','Cómic','Epopeya','Filosófico','Ficción','Histórico', 'Novela Corta', 'Reportaje','Memorias', 'Ensayo/Cuento', 'Cuento/Ensayo'),
         allowNull: false
     },
     // Comentario: tipo de libro (novela, cuento, poesía, manga, ensayo, etc.)
