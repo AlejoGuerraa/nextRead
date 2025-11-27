@@ -2,7 +2,7 @@ const express = require('express');
 
 const { agregarNotificacion, getAllUsers, register, login, getUser, editarPerfil, checkEmail, checkUsername } = require('./controller/peticionesUsuario');
 const { crearLista, agregarLibroAListaEnLista } = require('./controller/peticionesUsuario');
-const { buscar, getTendencias, getLibrosPorDecada, getMasDeAutor, getLibroById } = require('./controller/busqueda');
+const { buscar, getTendencias, getLibrosPorDecada, getMasDeAutor, getLibroById, getDecadasPersonalizadas } = require('./controller/busqueda');
 const { getAllBooks, agregarLibroALista, guardarPuntuacion, obtenerResenas } = require('./controller/peticionesLibros');
 const { getAllBanners, getAllIconos } = require('./controller/banners');
 const { enviarEnlaceRecuperacion, resetearPassword } = require('./controller/recoveryController');
@@ -71,6 +71,7 @@ server.get('/nextread/tendencias', getTendencias);
 server.get("/nextread/libros/por-decada", getLibrosPorDecada);
 
 server.post('/nextread/autorMasLeido', getMasDeAutor);
+server.post('/nextread/decadas-personalizadas', getDecadasPersonalizadas);
 server.get('/nextread/libro/:id', getLibroById);
 server.get('/nextread/libros', getAllBooks);
 

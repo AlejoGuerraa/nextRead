@@ -257,7 +257,50 @@ async function porDecada(libros) {
 
 const getLibrosPorDecada = async (req, res) => {
     try {
-        // Incluir autor para que el frontend tenga acceso al nombre y url
+        const { decade } = req.query;
+
+        // Si se proporciona una década específica, devolver solo los libros de esa década
+        if (decade) {
+            const decadaMatch = decade.match(/^(\d{4})s?$/);
+            if (!decadaMatch) {
+                return res.status(400).json({ 
+                    error: "Formato de década inválido. Use '1960s' o '1960'" 
+                });
+            }
+
+            const decadaBase = parseInt(decadaMatch[1]);
+            const startYear = decadaBase;
+            const endYear = decadaBase + 9;
+
+            const libros = await Libro.findAll({
+                where: {
+                    anio: {
+                        [Op.gte]: startYear,
+                        [Op.lte]: endYear,
+                    },
+                },
+                attributes: ["id", "titulo", "anio", "url_portada", "generos", "fecha_publicacion"],
+                order: [['fecha_publicacion', 'DESC']],
+                include: [
+                    {
+                        model: Autor,
+                        as: 'Autor',
+                        attributes: ['id', 'nombre', 'url_cara'],
+                        required: false,
+                    },
+                ],
+            });
+
+            return res.json({
+                decade: `${decadaBase}s`,
+                start: startYear,
+                end: endYear,
+                count: libros.length,
+                libros: libros,
+            });
+        }
+
+        // Si NO se proporciona década, devolver todas las décadas con sus libros (comportamiento original)
         const libros = await Libro.findAll({
             attributes: ["id", "titulo", "anio", "url_portada", "generos", "fecha_publicacion"],
             include: [
@@ -326,6 +369,167 @@ const getLibroById = async (req, res) => {
 
 
 // =======================================================
+// 📚 OBTENER DÉCADAS PERSONALIZADAS (basadas en gustos del usuario)
+// =======================================================
+const getDecadasPersonalizadas = async (req, res) => {
+    const { email } = req.body;
+
+    if (!email) {
+        return res.status(400).json({
+            message: 'Se requiere el correo electrónico (email) del usuario.'
+        });
+    }
+
+    try {
+        // Buscar usuario por correo
+        const usuario = await Usuario.findOne({
+            where: { correo: email },
+            attributes: ['id', 'libros_favoritos', 'libros_en_lectura', 'libros_leidos']
+        });
+
+        if (!usuario) {
+            return res.status(404).json({
+                message: 'Usuario no encontrado con ese correo electrónico.'
+            });
+        }
+
+        // Parsear arrays de libros del usuario
+        const parseArray = (value) => {
+            if (!value) return [];
+            if (Array.isArray(value)) return value;
+            try {
+                return JSON.parse(value);
+            } catch {
+                return [];
+            }
+        };
+
+        const librosFavoritos = parseArray(usuario.libros_favoritos);
+        const librosEnLectura = parseArray(usuario.libros_en_lectura);
+        const librosLeidos = parseArray(usuario.libros_leidos);
+
+        // Combinar todos los IDs y eliminar duplicados
+        const todosLosIds = [...new Set([...librosFavoritos, ...librosEnLectura, ...librosLeidos])];
+
+        if (todosLosIds.length === 0) {
+            // Si no tiene libros guardados, devolver todas las décadas disponibles (comportamiento por defecto)
+            const libros = await Libro.findAll({
+                attributes: ["id", "titulo", "anio", "url_portada", "generos", "fecha_publicacion"],
+                include: [
+                    {
+                        model: Autor,
+                        as: 'Autor',
+                        attributes: ['id', 'nombre', 'url_cara'],
+                        required: false,
+                    },
+                ],
+            });
+
+            const grupos = await porDecada(libros.map(l => l.toJSON()));
+            return res.json({
+                message: 'Sin preferencias de usuario. Mostrando todas las décadas.',
+                decades: grupos.slice(0, 5) // Limitar a 5 décadas
+            });
+        }
+
+        // Obtener información de los libros del usuario
+        const librosDelUsuario = await Libro.findAll({
+            where: { id: todosLosIds },
+            attributes: ['id', 'anio'],
+        });
+
+        // Contar las décadas más frecuentes
+        const decadaCounts = {};
+
+        librosDelUsuario.forEach((libro) => {
+            const year = Number(libro.anio);
+            if (!Number.isFinite(year) || year <= 0) return;
+
+            const decadaBase = Math.floor(year / 10) * 10;
+            const etiqueta = `${decadaBase}s`;
+
+            decadaCounts[etiqueta] = (decadaCounts[etiqueta] || 0) + 1;
+        });
+
+        // Ordenar décadas por frecuencia (descendente)
+        const decadasOrdenadas = Object.entries(decadaCounts)
+            .sort((a, b) => b[1] - a[1])
+            .slice(0, 5) // Tomar solo las 5 más frecuentes
+            .map(([decade]) => decade);
+
+        if (decadasOrdenadas.length === 0) {
+            return res.json({
+                message: 'No se pudo determinar las décadas preferidas del usuario.',
+                decades: []
+            });
+        }
+
+        // Obtener libros de las décadas personalizadas
+        const decadaRegex = decadasOrdenadas.map(d => {
+            const base = Number(d.replace('s', ''));
+            return { start: base, end: base + 9, decade: d };
+        });
+
+        // Construir query para obtener libros de las décadas personalizadas
+        const conditions = decadaRegex.map(d => ({
+            anio: { [Op.between]: [d.start, d.end] }
+        }));
+
+        const librosDecadas = await Libro.findAll({
+            where: { [Op.or]: conditions },
+            attributes: ["id", "titulo", "anio", "url_portada", "generos", "fecha_publicacion"],
+            order: [['fecha_publicacion', 'DESC']],
+            include: [
+                {
+                    model: Autor,
+                    as: 'Autor',
+                    attributes: ['id', 'nombre', 'url_cara'],
+                    required: false,
+                },
+            ],
+        });
+
+        // Agrupar por década
+        const gruposFinales = {};
+
+        decadaRegex.forEach(d => {
+            gruposFinales[d.decade] = {
+                decade: d.decade,
+                start: d.start,
+                end: d.end,
+                count: 0,
+                libros: []
+            };
+        });
+
+        librosDecadas.forEach((libro) => {
+            const year = Number(libro.anio);
+            if (!Number.isFinite(year)) return;
+
+            const decadaBase = Math.floor(year / 10) * 10;
+            const etiqueta = `${decadaBase}s`;
+
+            if (gruposFinales[etiqueta]) {
+                gruposFinales[etiqueta].libros.push(libro);
+                gruposFinales[etiqueta].count += 1;
+            }
+        });
+
+        // Convertir a array manteniendo el orden de preferencia
+        const decadaArray = decadasOrdenadas.map(d => gruposFinales[d]);
+
+        res.json({
+            message: 'Décadas personalizadas según los gustos del usuario',
+            decades: decadaArray
+        });
+
+    } catch (error) {
+        console.error('Error al obtener décadas personalizadas:', error);
+        res.status(500).json({ message: 'Error interno al procesar la solicitud de décadas personalizadas.' });
+    }
+};
+
+// =======================================================
 // EXPORTAR ENDPOINTS
 // =======================================================
 module.exports = {
@@ -333,5 +537,6 @@ module.exports = {
     getTendencias,
     getLibrosPorDecada,
     getMasDeAutor,
-    getLibroById
+    getLibroById,
+    getDecadasPersonalizadas
 };
