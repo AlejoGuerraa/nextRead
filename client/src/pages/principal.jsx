@@ -35,6 +35,7 @@ export default function Principal() {
   const [autorMasLeidoNombre, setAutorMasLeidoNombre] = useState(null); // Nuevo estado para el título
   const [generoSeleccionado, setGeneroSeleccionado] = useState("Género...");
   const [currentIndex, setCurrentIndex] = useState(0);
+  const [librosPorDecada, setLibrosPorDecada] = useState([]);
 
   // Popover / restricción
   const headerRightRef = useRef(null);
@@ -84,6 +85,20 @@ export default function Principal() {
     };
     fetchTendencias();
   }, [generoSeleccionado]);
+
+  // 3. FETCH LIBROS POR DÉCADA (para mostrar varios carruseles: 1960s, 1970s, ...)
+  useEffect(() => {
+    const fetchLibrosPorDecada = async () => {
+      try {
+        const res = await axios.get("http://localhost:3000/nextread/libros/por-decada");
+        setLibrosPorDecada(Array.isArray(res.data?.decades) ? res.data.decades : []);
+      } catch (e) {
+        console.error("Error cargando libros por década:", e);
+        setLibrosPorDecada([]);
+      }
+    };
+    fetchLibrosPorDecada();
+  }, []);
 
   // 2. FETCH LIBROS DEL AUTOR MÁS LEÍDO (SE EJECUTA SOLO SI HAY USUARIO)
   useEffect(() => {
@@ -249,6 +264,65 @@ export default function Principal() {
           {/* Usamos el nuevo estado librosAutor */}
           <BookList libros={librosAutor} onBookClick={handleBookCardClick} />
         </section>
+
+        {/* === EJEMPLO: PRIMER CARRUSEL POR DÉCADA ===
+            Mostramos solo el primer grupo si existe para que sirva como ejemplo
+        */}
+        {librosPorDecada && librosPorDecada.length > 0 && (
+          <section className="book-section">
+            <h2
+              style={{
+                fontSize: "1.8rem",
+                fontWeight: "600",
+                marginBottom: "15px",
+                marginLeft: "20px",
+                color: "#222",
+              }}
+            >
+              {/* Convertimos '1960s' a '60' para mostrar "Libros de los 60" */}
+              {(() => {
+                const g = librosPorDecada[0];
+                const raw = g?.decade || "";
+                let short = raw;
+                if (/^19/.test(raw)) short = raw.slice(2);
+                if (/^20/.test(raw)) short = raw; // 2000s -> '2000s'
+                return `Libros de los ${short}`;
+              })()}
+              {/* {librosPorDecada[0]?.count ? ` — ${librosPorDecada[0].count}` : ""} */}
+            </h2>
+
+            {/* Mostrar hasta 12 libros del primer grupo para el ejemplo */}
+            <BookList libros={(librosPorDecada[0].libros || []).slice(0, 12)} onBookClick={handleBookCardClick} />
+          </section>
+        )}
+
+        {librosPorDecada && librosPorDecada.length > 0 && (
+          <section className="book-section">
+            <h2
+              style={{
+                fontSize: "1.8rem",
+                fontWeight: "600",
+                marginBottom: "15px",
+                marginLeft: "20px",
+                color: "#222",
+              }}
+            >
+              {/* Convertimos '1960s' a '60' para mostrar "Libros de los 60" */}
+              {(() => {
+                const g = librosPorDecada[0];
+                const raw = g?.decade || "";
+                let short = raw;
+                if (/^19/.test(raw)) short = raw.slice(2);
+                if (/^20/.test(raw)) short = raw; // 2000s -> '2000s'
+                return `Libros de los ${short}`;
+              })()}
+              {/* {librosPorDecada[0]?.count ? ` — ${librosPorDecada[0].count}` : ""} */}
+            </h2>
+
+            {/* Mostrar hasta 12 libros del primer grupo para el ejemplo */}
+            <BookList libros={(librosPorDecada[0].libros || []).slice(0, 12)} onBookClick={handleBookCardClick} />
+          </section>
+        )}
 
         {/* Sección 3, 4, etc. que siguen usando los libros de tendencia por defecto, 
             pero podrías reemplazarlos con más lógica de recomendación */}

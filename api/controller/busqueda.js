@@ -193,45 +193,87 @@ const getMasDeAutor = async (req, res) => {
     }
 };
 
-// Agrupa libros por década (ej: "60s", "70s", "80s", "90s", "2000s")
+// Agrupa libros por década y devuelve un arreglo ordenado de grupos.
+// Cada grupo tendrá: { decade: '1960s', start: 1960, end: 1969, count, libros: [...] }
 async function porDecada(libros) {
-    if (!Array.isArray(libros)) return {};
+    if (!Array.isArray(libros)) return [];
 
     const grupos = {};
 
-    libros.forEach((libro) => {
-        if (!libro.anio || isNaN(libro.anio)) return;
+    libros.forEach((raw) => {
+        // Normalizar el libro: convertir a número el año y parsear géneros
+        const libro = { ...raw };
 
-        // Década base
-        const decadaBase = Math.floor(libro.anio / 10) * 10;
+        // anio puede venir como string — intentar parsear
+        const year = Number(libro.anio);
+        if (!Number.isFinite(year) || year <= 0) return;
 
-        // Etiqueta bonita
-        const etiqueta =
-            decadaBase >= 2000
-                ? `${decadaBase}s`
-                : `${String(decadaBase).slice(2)}s`;
+        libro.anio = Math.floor(year);
 
-        // Si no existe el grupo, lo crea
-        if (!grupos[etiqueta]) {
-            grupos[etiqueta] = [];
+        // parsear generos si vienen como string
+        if (typeof libro.generos === 'string') {
+            try {
+                libro.generos = JSON.parse(libro.generos);
+            } catch {
+                libro.generos = [];
+            }
         }
 
-        // Agrega el libro
+        // Calcular la década (ej. 1960)
+        const decadaBase = Math.floor(libro.anio / 10) * 10;
+        const etiqueta = `${decadaBase}s`; // p. ej. '1960s' o '2000s'
+
+        if (!grupos[etiqueta]) grupos[etiqueta] = [];
         grupos[etiqueta].push(libro);
     });
 
-    return grupos;
+    // Convertir a arreglo con metadatos y ordenar
+    const gruposArray = Object.keys(grupos).map((label) => {
+        const start = Number(label.replace('s', ''));
+        const end = start + 9;
+
+        // Ordenar libros por año descendente y/o por id como fallback
+        const librosOrdenados = grupos[label].sort((a, b) => {
+            const ay = Number(a.anio) || 0;
+            const by = Number(b.anio) || 0;
+            if (by !== ay) return by - ay;
+            return (b.id || 0) - (a.id || 0);
+        });
+
+        return {
+            decade: label,
+            start,
+            end,
+            count: librosOrdenados.length,
+            libros: librosOrdenados,
+        };
+    });
+
+    // Orden descendente por década (más recientes primero)
+    gruposArray.sort((a, b) => b.start - a.start);
+
+    return gruposArray;
 }
 
 const getLibrosPorDecada = async (req, res) => {
     try {
+        // Incluir autor para que el frontend tenga acceso al nombre y url
         const libros = await Libro.findAll({
-            attributes: ["id", "titulo", "anio", "url_portada", "generos"]
+            attributes: ["id", "titulo", "anio", "url_portada", "generos", "fecha_publicacion"],
+            include: [
+                {
+                    model: Autor,
+                    as: 'Autor',
+                    attributes: ['id', 'nombre', 'url_cara'],
+                    required: false,
+                },
+            ],
         });
 
         const grupos = await porDecada(libros.map(l => l.toJSON()));
 
-        res.json(grupos);
+        // Retornamos la lista de décadas como arreglo — más fácil de iterar en el frontend
+        res.json({ decades: grupos });
     } catch (error) {
         console.error(error);
         res.status(500).json({ error: "Error obteniendo libros por década" });
