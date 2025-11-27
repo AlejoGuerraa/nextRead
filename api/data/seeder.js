@@ -2,49 +2,66 @@ const db = require('../config/db.js');
 
 const Autor = require('../models/Autor.js'); 
 const Libro = require('../models/Libro.js'); 
+const Icono = require('../models/Icono.js'); 
+const Banner = require('../models/Banner.js'); 
 
 const autoresData = require('./autores.json');
 const librosData = require('./libros.json');
+const iconosData = require('./iconos.json');
+const bannersData = require('./banners.json');
 
-
-// Se definen las relaciones
+// Relaciones
 Autor.hasMany(Libro, { foreignKey: 'id_autor' });
 Libro.belongsTo(Autor, { foreignKey: 'id_autor' });
 
 async function seedDatabase() {
   try {
-        console.log('Sincronizando la base de datos...');
-        
-        // 1. DESACTIVAR CHEQUEOS DE LLAVE FORANEA (SOLO MySQL)
-        await db.query('SET FOREIGN_KEY_CHECKS = 0', null, { raw: true }); 
+    console.log('Sincronizando la base de datos...');
 
-        // 2. SINCRONIZAR (Elimina las tablas en cualquier orden sin conflicto)
-        await db.sync({ force: true }); 
+    // 1. DESACTIVAR CHEQUEOS DE LLAVE FORANEA (MySQL)
+    await db.query('SET FOREIGN_KEY_CHECKS = 0', null, { raw: true });
 
-        // 3. REACTIVAR CHEQUEOS DE LLAVE FORÁNEA
-        await db.query('SET FOREIGN_KEY_CHECKS = 1', null, { raw: true }); 
-        
-        console.log('Base de datos sincronizada y limpia.');
+    // 2. REINICIAR TABLAS
+    await db.sync({ force: true });
 
-    // Cargar Autores (Tabla "Autor")
-    console.log('Iniciando carga de autores...');
-    // 'Autor' ahora es el modelo de Sequelize, por lo que '.bulkCreate()' va a funcionar.
+    // 3. REACTIVAR CHEQUEOS
+    await db.query('SET FOREIGN_KEY_CHECKS = 1', null, { raw: true });
+
+    console.log('Base de datos sincronizada y limpia.');
+
+    // ------------------------------
+    // Cargar ICONOS
+    // ------------------------------
+    console.log('Cargando iconos...');
+    const iconosCreados = await Icono.bulkCreate(iconosData);
+    console.log(`✔ ${iconosCreados.length} iconos cargados.`);
+
+    // ------------------------------
+    // Cargar BANNERS
+    // ------------------------------
+    console.log('Cargando banners...');
+    const bannersCreados = await Banner.bulkCreate(bannersData);
+    console.log(`✔ ${bannersCreados.length} banners cargados.`);
+
+    // ------------------------------
+    // Cargar AUTORES
+    // ------------------------------
+    console.log('Cargando autores...');
     const autoresCreados = await Autor.bulkCreate(autoresData);
-    console.log(`${autoresCreados.length} autores cargados con éxito.`);
+    console.log(`✔ ${autoresCreados.length} autores cargados.`);
 
-    // Cargar Libros (Tabla "Libro")
-    console.log('Iniciando carga de libros...');
+    // ------------------------------
+    // Cargar LIBROS
+    // ------------------------------
+    console.log('Cargando libros...');
     const librosCreados = await Libro.bulkCreate(librosData);
-    console.log(`✅ ${librosCreados.length} libros cargados con éxito.`);
+    console.log(`✔ ${librosCreados.length} libros cargados.`);
 
-    console.log('Proceso de Seeding finalizado con exito.');
+    console.log('Seeding completado con éxito.');
   } catch (error) {
-    console.error('Error durante el seeding de la base de datos:', error);
+    console.error('❌ Error durante el seeding:', error);
   } finally {
-
-    if (db) {
-        await db.close();
-    }
+    if (db) await db.close();
   }
 }
 

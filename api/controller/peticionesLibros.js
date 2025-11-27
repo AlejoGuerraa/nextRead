@@ -50,40 +50,37 @@ const agregarLibroALista = async (req, res) => {
         .filter(x => typeof x === "number");
     };
 
-    // Normalizamos todos los campos del usuario
+    // Normalizamos todos los campos del usuario EXCEPTO las listas nombradas
     let leidos = normalizarLista(usuario.libros_leidos);
     let favoritos = normalizarLista(usuario.libros_favoritos);
     let enLectura = normalizarLista(usuario.libros_en_lectura);
     let paraLeer = normalizarLista(usuario.libros_para_leer);
-    let listas = normalizarLista(usuario.listas);
 
     // Map para elegir el campo objetivo según tipo
     const mapaTipos = {
       favoritos: { campo: "libros_favoritos", arr: favoritos },
       enLectura: { campo: "libros_en_lectura", arr: enLectura },
       paraLeer: { campo: "libros_para_leer", arr: paraLeer },
-      lista: { campo: "listas", arr: listas },
       leido: { campo: "libros_leidos", arr: leidos }
     };
 
     const entry = mapaTipos[tipo];
-    if (!entry) return res.status(400).json({ error: "Tipo de lista inválido" });
+    if (!entry) return res.status(400).json({ error: "Tipo de lista inválido. Para listas nombradas use el endpoint /listas/:nombre/libro/:idLibro" });
 
     // Si ya está en la lista objetivo -> 400 (evita duplicados)
     if (entry.arr.includes(idNum)) {
       return res.status(400).json({ message: `El libro ya está en ${tipo}` });
     }
 
-    // Lógica específica: si añadimos a enLectura/paraLeer/lista -> quitar de leidos
-    if (["enLectura", "paraLeer", "lista"].includes(tipo)) {
+    // Lógica específica: si añadimos a enLectura/paraLeer -> quitar de leidos
+    if (["enLectura", "paraLeer"].includes(tipo)) {
       leidos = leidos.filter(x => x !== idNum);
     }
 
-    // Si añadimos como 'leido' -> quitar de enLectura/paraLeer/listas
+    // Si añadimos como 'leido' -> quitar de enLectura/paraLeer
     if (tipo === "leido") {
       enLectura = enLectura.filter(x => x !== idNum);
       paraLeer = paraLeer.filter(x => x !== idNum);
-      listas = listas.filter(x => x !== idNum);
     }
 
     // Finalmente, añadir al array objetivo
@@ -94,7 +91,6 @@ const agregarLibroALista = async (req, res) => {
     usuario.libros_favoritos = [...new Set(favoritos)];
     usuario.libros_en_lectura = [...new Set(enLectura)];
     usuario.libros_para_leer = [...new Set(paraLeer)];
-    usuario.listas = [...new Set(listas)];
 
     usuario[entry.campo] = [...new Set(entry.arr)];
 

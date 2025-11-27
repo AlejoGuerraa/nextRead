@@ -2,7 +2,7 @@ const express = require('express');
 
 const { agregarNotificacion, getAllUsers, register, login, getUser, editarPerfil, checkEmail, checkUsername } = require('./controller/peticionesUsuario');
 const { crearLista, agregarLibroAListaEnLista } = require('./controller/peticionesUsuario');
-const { buscar, getTendencias, getMasDeAutor, getLibroById } = require('./controller/busqueda');
+const { buscar, getTendencias, getLibrosPorDecada, getMasDeAutor, getLibroById } = require('./controller/busqueda');
 const { getAllBooks, agregarLibroALista, guardarPuntuacion, obtenerResenas } = require('./controller/peticionesLibros');
 const { getAllBanners, getAllIconos } = require('./controller/banners');
 const { enviarEnlaceRecuperacion, resetearPassword } = require('./controller/recoveryController');
@@ -14,6 +14,7 @@ const sequelize = require('./config/db');
 const { FORCE } = require('sequelize/lib/index-hints');
 
 require('./models/Usuario');
+require('./models/Libro');
 require('./models/Logro');
 require('./models/Resena');
 require('./models/Usuario_Logro');
@@ -67,6 +68,8 @@ server.post('/nextread/notificacion/:idUsuario', async (req, res) => {
 // Endpoints de búsqueda
 server.get('/nextread/buscar', buscar);
 server.get('/nextread/tendencias', getTendencias);
+server.get("/nextread/libros/por-decada", getLibrosPorDecada);
+
 server.post('/nextread/autorMasLeido', getMasDeAutor);
 server.get('/nextread/libro/:id', getLibroById);
 server.get('/nextread/libros', getAllBooks);
