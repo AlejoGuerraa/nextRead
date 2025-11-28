@@ -1,7 +1,6 @@
 const express = require('express');
 
-const { agregarNotificacion, getAllUsers, register, login, getUser, editarPerfil, checkEmail, checkUsername } = require('./controller/peticionesUsuario');
-const { crearLista, agregarLibroAListaEnLista } = require('./controller/peticionesUsuario');
+const { agregarNotificacion, getAllUsers, register, login, getUser, editarPerfil, checkEmail, checkUsername, buscarUsuario, crearLista, agregarLibroAListaEnLista, enviarSolicitudSeguimiento, responderSolicitud, listarSeguidores, listarSeguidos, cancelarSeguido } = require('./controller/peticionesUsuario');
 const { buscar, getTendencias, getLibrosPorDecada, getMasDeAutor, getLibroById, getDecadasPersonalizadas } = require('./controller/busqueda');
 const { getAllBooks, agregarLibroALista, guardarPuntuacion, obtenerResenas } = require('./controller/peticionesLibros');
 const { getAllBanners, getAllIconos } = require('./controller/banners');
@@ -18,11 +17,10 @@ require('./models/Libro');
 require('./models/Logro');
 require('./models/Resena');
 require('./models/Usuario_Logro');
-require('./models/Amigo');
+require('./models/Seguidos_seguidores');
 require('./models/indexModel');
 require('./models/Icono');
 require('./models/Banner');
-/// prueba
 
 const server = express();
 server.use(express.json());
@@ -41,6 +39,15 @@ server.get('/nextread/banners', getAllBanners);
 server.get('/nextread/iconos', getAllIconos);
 server.get('/nextread/check-email', checkEmail);
 server.get('/nextread/check-username', checkUsername);
+
+// Endpoint para búsqueda de usuarios por término (query ?q=valor ó ?termino=valor)
+server.get('/nextread/buscar-usuario', buscarUsuario);
+// Seguimientos / follow
+server.post('/nextread/follow/request/:targetId', isAuth, enviarSolicitudSeguimiento);
+server.patch('/nextread/follow/:requestId', isAuth, responderSolicitud);
+server.get('/nextread/user/:id/seguidores', listarSeguidores);
+server.get('/nextread/user/:id/seguidos', listarSeguidos);
+server.delete('/nextread/unfollow/:targetId', isAuth, cancelarSeguido);
 server.post('/nextread/register', register);
 server.post('/nextread/login', login);
 server.patch('/nextread/user/editar', isAuth, editarPerfil);
