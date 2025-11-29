@@ -719,7 +719,8 @@ const listarSeguidores = async (req, res) => {
             order: [['id', 'DESC']]
         });
 
-        const seguidores = relaciones.map(r => ({ estado: r.estado, usuario: r.Remitente }));
+        // incluir el id de la relación para poder aceptar/rechazar (requestId)
+        const seguidores = relaciones.map(r => ({ id: r.id, estado: r.estado, usuario: r.Remitente }));
 
         return res.json({ count: seguidores.length, seguidores });
     } catch (err) {
@@ -745,7 +746,8 @@ const listarSeguidos = async (req, res) => {
             order: [['id', 'DESC']]
         });
 
-        const seguidos = relaciones.map(r => ({ estado: r.estado, usuario: r.Destinatario }));
+        // incluir el id de la relación para obtener requestId desde el frontend
+        const seguidos = relaciones.map(r => ({ id: r.id, estado: r.estado, usuario: r.Destinatario }));
 
         return res.json({ count: seguidos.length, seguidos });
     } catch (err) {

@@ -14,6 +14,7 @@ export default function UserFollowList({ mode }) {
   const [loading, setLoading] = useState(true);
   const [searchLoading, setSearchLoading] = useState(false);
   const [searchResults, setSearchResults] = useState([]);
+  const [actionLoading, setActionLoading] = useState(false);
 
   const storedUser = JSON.parse(localStorage.getItem("user")) || {};
   const token = storedUser?.token;
@@ -36,6 +37,10 @@ export default function UserFollowList({ mode }) {
     if (mode === "seguidores") {
       endpoint = `http://localhost:3000/nextread/user/${profileUserId}/seguidores`;
       pageTitle = "Seguidores";
+    } else if (mode === 'solicitudes') {
+      // pending incoming follow requests for this user
+      endpoint = `http://localhost:3000/nextread/user/${profileUserId}/seguidores?estado=enviado`;
+      pageTitle = "Solicitudes";
     } else {
       endpoint = `http://localhost:3000/nextread/user/${profileUserId}/seguidos`;
       pageTitle = "Seguidos";
@@ -61,7 +66,9 @@ export default function UserFollowList({ mode }) {
 
         // normalize to simple user objects
         const normalized = items.map((entry) => {
+          // entry may be { id, estado, usuario } (for seguidores) or a plain user object
           const userObj = entry.usuario || entry;
+          const requestId = entry.id || null; // relation id when showing requests
           return {
             id: userObj.id,
             nombre: userObj.nombre,
@@ -70,7 +77,8 @@ export default function UserFollowList({ mode }) {
             icono: userObj.icono || null,
             idIcono: userObj.idIcono ?? null,
             // teSigo = true if current user is following this listed user
-            teSigo: mySeguidosIds.has(userObj.id)
+            teSigo: mySeguidosIds.has(userObj.id),
+            requestId
           };
         });
 
@@ -79,6 +87,62 @@ export default function UserFollowList({ mode }) {
         .catch((err) => console.error("Error:", err))
       .finally(() => setLoading(false));
   }, [mode]);
+
+  // ------------------------
+  // ACCIONES PARA SOLICITUDES
+  // ------------------------
+  const acceptRequest = async (requestId) => {
+    if (!requestId) return;
+    try {
+      setActionLoading(true);
+      await axios.patch(
+        `http://localhost:3000/nextread/follow/${requestId}`,
+        { accion: 'aceptar' },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+
+      // remove request from lists
+      setList(prev => prev.filter(u => u.requestId !== requestId));
+      setSearchResults(prev => prev.filter(u => u.requestId !== requestId));
+
+      // update perfil counts in localStorage (recipient gained 1 follower)
+      try {
+        const user = JSON.parse(localStorage.getItem('user')) || {};
+        if (user?.stats) {
+          user.stats.seguidores = (user.stats.seguidores || 0) + 1;
+          localStorage.setItem('user', JSON.stringify(user));
+        }
+      } catch (_) {}
+
+    } catch (err) {
+      console.error('Error aceptando solicitud', err);
+      alert(err.response?.data?.error || 'Error aceptando solicitud');
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  const rejectRequest = async (requestId) => {
+    if (!requestId) return;
+    try {
+      setActionLoading(true);
+      await axios.patch(
+        `http://localhost:3000/nextread/follow/${requestId}`,
+        { accion: 'rechazar' },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+
+      // remove request from lists
+      setList(prev => prev.filter(u => u.requestId !== requestId));
+      setSearchResults(prev => prev.filter(u => u.requestId !== requestId));
+
+    } catch (err) {
+      console.error('Error rechazando solicitud', err);
+      alert(err.response?.data?.error || 'Error rechazando solicitud');
+    } finally {
+      setActionLoading(false);
+    }
+  };
 
   // ------------------------
   // LIVE SEARCH (debounced)
@@ -244,17 +308,24 @@ export default function UserFollowList({ mode }) {
                     <span>{u.usuario ? `@${u.usuario}` : ""}</span>
                   </div>
 
-                  {/* BOTÓN SEGUIR / DEJAR DE SEGUIR */}
-                  <button
-                    className={
-                      u.teSigo
-                        ? "btn-unfollow"
-                        : "btn-follow"
-                    }
-                    onClick={() => toggleFollow(u.id, u.teSigo)}
-                  >
-                    {u.teSigo ? "Dejar de seguir" : "Seguir"}
-                  </button>
+                  {/* Acciones para solicitudes (si corresponde) */}
+                  {mode === 'solicitudes' ? (
+                    <div className="requests-actions">
+                      <button className="btn-accept" disabled={actionLoading} onClick={() => acceptRequest(u.requestId)}>Aceptar</button>
+                      <button className="btn-reject" disabled={actionLoading} onClick={() => rejectRequest(u.requestId)}>Rechazar</button>
+                    </div>
+                  ) : (
+                    <button
+                      className={
+                        u.teSigo
+                          ? "btn-unfollow"
+                          : "btn-follow"
+                      }
+                      onClick={() => toggleFollow(u.id, u.teSigo)}
+                    >
+                      {u.teSigo ? "Dejar de seguir" : "Seguir"}
+                    </button>
+                  )}
                 </div>
                 ))
               )
@@ -274,17 +345,24 @@ export default function UserFollowList({ mode }) {
                     <span>{u.usuario ? `@${u.usuario}` : ""}</span>
                   </div>
 
-                  {/* BOTÓN SEGUIR / DEJAR DE SEGUIR */}
-                  <button
-                    className={
-                      u.teSigo
-                        ? "btn-unfollow"
-                        : "btn-follow"
-                    }
-                    onClick={() => toggleFollow(u.id, u.teSigo)}
-                  >
-                    {u.teSigo ? "Dejar de seguir" : "Seguir"}
-                  </button>
+                  {/* Acciones para solicitudes (si corresponde) */}
+                  {mode === 'solicitudes' ? (
+                    <div className="requests-actions">
+                      <button className="btn-accept" disabled={actionLoading} onClick={() => acceptRequest(u.requestId)}>Aceptar</button>
+                      <button className="btn-reject" disabled={actionLoading} onClick={() => rejectRequest(u.requestId)}>Rechazar</button>
+                    </div>
+                  ) : (
+                    <button
+                      className={
+                        u.teSigo
+                          ? "btn-unfollow"
+                          : "btn-follow"
+                      }
+                      onClick={() => toggleFollow(u.id, u.teSigo)}
+                    >
+                      {u.teSigo ? "Dejar de seguir" : "Seguir"}
+                    </button>
+                  )}
                 </div>
               )))
             )}
