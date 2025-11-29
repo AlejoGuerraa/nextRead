@@ -12,8 +12,12 @@ export default function UserFollowList({ mode }) {
   const [search, setSearch] = useState("");
   const [title, setTitle] = useState("");
   const [loading, setLoading] = useState(true);
+  const [searchLoading, setSearchLoading] = useState(false);
+  const [searchResults, setSearchResults] = useState([]);
 
-  const token = JSON.parse(localStorage.getItem("user"))?.token;
+  const storedUser = JSON.parse(localStorage.getItem("user")) || {};
+  const token = storedUser?.token;
+  const currentUserId = storedUser?.id;
 
   // ----------------------------------------
   // CARGA DE DATOS
@@ -27,26 +31,112 @@ export default function UserFollowList({ mode }) {
     let endpoint = "";
     let pageTitle = "";
 
+    const profileUserId = currentUserId; // by now this view shows the logged-in user's lists
+
     if (mode === "seguidores") {
-      endpoint = "http://localhost:3000/nextread/seguidores";
+      endpoint = `http://localhost:3000/nextread/user/${profileUserId}/seguidores`;
       pageTitle = "Seguidores";
     } else {
-      endpoint = "http://localhost:3000/nextread/seguidos";
+      endpoint = `http://localhost:3000/nextread/user/${profileUserId}/seguidos`;
       pageTitle = "Seguidos";
     }
 
     setTitle(pageTitle);
 
-    axios
-      .get(endpoint, {
-        headers: { Authorization: `Bearer ${token}` },
+    // Also fetch the current user's seguidos (to compute if we "teSigo")
+    const mySeguidosEndpoint = `http://localhost:3000/nextread/user/${currentUserId}/seguidos`;
+
+    Promise.all([
+      axios.get(endpoint, { headers: { Authorization: `Bearer ${token}` } }),
+      axios.get(mySeguidosEndpoint, { headers: { Authorization: `Bearer ${token}` } }).catch(() => ({ data: { seguidos: [] } }))
+    ])
+      .then(([listRes, mineRes]) => {
+        // mineRes.data.seguidos -> array of { estado, usuario }
+        const mine = (mineRes.data && (mineRes.data.seguidos || [])) || [];
+        const mySeguidosIds = new Set(mine.map((r) => r.usuario?.id).filter(Boolean));
+
+        // listRes may return { seguidores: [...] } or { seguidos: [...] }
+        const payload = listRes.data || {};
+        const items = payload.seguidores || payload.seguidos || [];
+
+        // normalize to simple user objects
+        const normalized = items.map((entry) => {
+          const userObj = entry.usuario || entry;
+          return {
+            id: userObj.id,
+            nombre: userObj.nombre,
+            apellido: userObj.apellido,
+            usuario: userObj.usuario,
+            icono: userObj.icono || null,
+            idIcono: userObj.idIcono ?? null,
+            // teSigo = true if current user is following this listed user
+            teSigo: mySeguidosIds.has(userObj.id)
+          };
+        });
+
+        setList(normalized);
       })
-      .then((res) => {
-        setList(res.data || []);
-      })
-      .catch((err) => console.error("Error:", err))
+        .catch((err) => console.error("Error:", err))
       .finally(() => setLoading(false));
   }, [mode]);
+
+  // ------------------------
+  // LIVE SEARCH (debounced)
+  // ------------------------
+  useEffect(() => {
+    // don't perform search for tiny strings
+    const q = (search || '').trim();
+    if (q.length < 2) {
+      // clear search results when user clears or types very small query
+      setSearchResults([]);
+      setSearchLoading(false);
+      return;
+    }
+
+    let cancelled = false;
+    setSearchLoading(true);
+
+    const timer = setTimeout(async () => {
+      try {
+        const res = await axios.get('http://localhost:3000/nextread/buscar-usuario', {
+          params: { q },
+          headers: { Authorization: `Bearer ${token}` }
+        });
+
+        if (cancelled) return;
+
+        const results = (res.data && res.data.results) || [];
+
+        // Compute teSigo using current user's seguidos
+        // We will fetch the current user's seguidos once (reuse existing logic)
+        const mineRes = await axios.get(`http://localhost:3000/nextread/user/${currentUserId}/seguidos`, { headers: { Authorization: `Bearer ${token}` } }).catch(() => ({ data: { seguidos: [] } }));
+        const mine = (mineRes.data && (mineRes.data.seguidos || [])) || [];
+        const mySeguidosIds = new Set(mine.map((r) => r.usuario?.id).filter(Boolean));
+
+        const normalized = results.map((u) => ({
+          id: u.id,
+          nombre: u.nombre,
+          apellido: u.apellido,
+          usuario: u.usuario,
+          icono: (u.iconoData && u.iconoData.simbolo) || null,
+          idIcono: u.idIcono ?? null,
+          teSigo: mySeguidosIds.has(u.id)
+        }));
+
+        setSearchResults(normalized);
+      } catch (err) {
+        console.error('Search error:', err);
+        setSearchResults([]);
+      } finally {
+        if (!cancelled) setSearchLoading(false);
+      }
+    }, 300);
+
+    return () => {
+      cancelled = true;
+      clearTimeout(timer);
+    };
+  }, [search, token, currentUserId]);
 
   // ----------------------------------------
   // ACCIONES: SEGUIR / DEJAR DE SEGUIR
@@ -61,16 +151,30 @@ export default function UserFollowList({ mode }) {
           }
         );
 
-        // Actualiza inmediatamente la lista sin recargar
-        setList((prev) => prev.filter((u) => u.id !== userId));
+        // Si estamos en la lista de seguidos, eliminar del listado; si es la lista de seguidores
+        // solo actualizamos la bandera teSigo a false
+        if (mode === 'seguidos') {
+          setList((prev) => prev.filter((u) => u.id !== userId));
+        } else {
+          setList((prev) => prev.map((u) => (u.id === userId ? { ...u, teSigo: false } : u)));
+        }
+
+        // update searchResults as well if present
+        setSearchResults((prev) => prev.map((u) => (u.id === userId ? { ...u, teSigo: false } : u)));
 
         updateProfileStats(-1); // resta uno
       } else {
+
+        // Use the new API for follow request
         await axios.post(
-          `http://localhost:3000/nextread/follow/${userId}`,
+          `http://localhost:3000/nextread/follow/request/${userId}`,
           {},
           { headers: { Authorization: `Bearer ${token}` } }
         );
+
+        // Mark the user as followed locally (optimistic)
+        setList((prev) => prev.map((u) => (u.id === userId ? { ...u, teSigo: true } : u)));
+        setSearchResults((prev) => prev.map((u) => (u.id === userId ? { ...u, teSigo: true } : u)));
 
         updateProfileStats(+1); // suma uno
       }
@@ -87,11 +191,8 @@ export default function UserFollowList({ mode }) {
 
     if (!user?.stats) return;
 
-    if (mode === "seguidos") {
-      user.stats.seguidos += diff;
-    } else {
-      user.stats.seguidores += diff;
-    }
+    // A follow/unfollow action siempre afecta el contador de 'seguidos' (a quién sigo)
+    user.stats.seguidos += diff;
 
     localStorage.setItem("user", JSON.stringify(user));
   };
@@ -124,10 +225,14 @@ export default function UserFollowList({ mode }) {
           </div>
         ) : (
           <div className="follow-list">
-            {filteredList.length === 0 ? (
-              <p className="empty-msg">No se encontraron resultados.</p>
-            ) : (
-              filteredList.map((u) => (
+            {/* If there's an active search (>=2 chars) show searchResults */}
+            {search.length >= 2 ? (
+              searchLoading ? (
+                <div className="loader-container"><div className="spinner"/></div>
+              ) : searchResults.length === 0 ? (
+                <p className="empty-msg">No se encontraron resultados.</p>
+              ) : (
+                searchResults.map((u) => (
                 <div key={u.id} className="follow-card">
                   <img
                     src={u.icono || "/default.png"}
@@ -136,7 +241,7 @@ export default function UserFollowList({ mode }) {
 
                   <div className="follow-user-info">
                     <strong>{u.nombre}</strong>
-                    <span>{u.username ? `@${u.username}` : ""}</span>
+                    <span>{u.usuario ? `@${u.usuario}` : ""}</span>
                   </div>
 
                   {/* BOTÓN SEGUIR / DEJAR DE SEGUIR */}
@@ -151,7 +256,37 @@ export default function UserFollowList({ mode }) {
                     {u.teSigo ? "Dejar de seguir" : "Seguir"}
                   </button>
                 </div>
-              ))
+                ))
+              )
+            ) : (
+              filteredList.length === 0 ? (
+                <p className="empty-msg">No se encontraron resultados.</p>
+              ) : (
+                filteredList.map((u) => (
+                <div key={u.id} className="follow-card">
+                  <img
+                    src={u.icono || "/default.png"}
+                    className="follow-avatar"
+                  />
+
+                  <div className="follow-user-info">
+                    <strong>{u.nombre}</strong>
+                    <span>{u.usuario ? `@${u.usuario}` : ""}</span>
+                  </div>
+
+                  {/* BOTÓN SEGUIR / DEJAR DE SEGUIR */}
+                  <button
+                    className={
+                      u.teSigo
+                        ? "btn-unfollow"
+                        : "btn-follow"
+                    }
+                    onClick={() => toggleFollow(u.id, u.teSigo)}
+                  >
+                    {u.teSigo ? "Dejar de seguir" : "Seguir"}
+                  </button>
+                </div>
+              )))
             )}
           </div>
         )}

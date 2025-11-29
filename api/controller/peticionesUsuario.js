@@ -165,6 +165,19 @@ const login = async (req, res) => {
         const userData = user.get({ plain: true });
         delete userData.contrasena;
 
+        // Añadir contadores de seguimiento (seguidores/seguidos) para que el frontend los muestre inmediatamente
+        try {
+            const seguidosCount = await Seguidos.count({ where: { id_remitente: user.id, estado: 'aceptado' } });
+            const seguidoresCount = await Seguidos.count({ where: { id_destinatario: user.id, estado: 'aceptado' } });
+            userData.seguidos = seguidosCount;
+            userData.seguidores = seguidoresCount;
+        } catch (e) {
+            // ignore counting errors — sigue devolviendo el user
+            console.error('Error calculando contadores en login:', e);
+            userData.seguidos = userData.seguidos || 0;
+            userData.seguidores = userData.seguidores || 0;
+        }
+
         return res.status(200).json({ token, ...userData });
     } catch (err) {
         console.error("Error en login:", err);
@@ -375,6 +388,19 @@ const getUser = async (req, res) => {
                     (ratings.reduce((a, b) => a + b, 0) / ratings.length) * 10
                 ) / 10;
             }
+        }
+
+        // calcular contadores de seguidores / seguidos (solo aceptados)
+        try {
+            const seguidosCount = await Seguidos.count({ where: { id_remitente: usuario.id, estado: 'aceptado' } });
+            const seguidoresCount = await Seguidos.count({ where: { id_destinatario: usuario.id, estado: 'aceptado' } });
+
+            usuarioData.seguidos = seguidosCount;
+            usuarioData.seguidores = seguidoresCount;
+        } catch (e) {
+            console.error('Error calculando contadores de seguimiento:', e);
+            usuarioData.seguidos = usuarioData.seguidos || 0;
+            usuarioData.seguidores = usuarioData.seguidores || 0;
         }
 
         return res.json(usuarioData);
