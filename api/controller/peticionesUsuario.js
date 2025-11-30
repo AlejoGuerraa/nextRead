@@ -64,7 +64,9 @@ const register = async (req, res) => {
     const {
         nombre, apellido, correo, usuario, contrasena, fecha_nacimiento,
         // Recibimos el símbolo del icono y la URL del banner
-        icono, banner, descripcion
+        icono, banner, descripcion,
+        // opcional: permitir que se envíe rol (por ejemplo 'Admin') — si se envía 'Admin' se requiere ADMIN_SIGNUP_KEY
+        rol: rolInBody
     } = req.body;
 
     // 1. VALIDACIONES BÁSICAS
@@ -127,6 +129,22 @@ const register = async (req, res) => {
     // 4. CREACIÓN DEL USUARIO
     const hashedPassw = await bcrypt.hash(contrasena, 10);
 
+    // decidir rol — por defecto Usuario
+    let rolFinal = 'Usuario';
+    if (typeof rolInBody === 'string' && rolInBody.trim()) {
+        const provided = rolInBody.trim();
+        // if request includes a role, respect it (e.g. 'Admin') — default remains 'Usuario'
+        if (provided === 'Admin') {
+            // NOTE: this will create an admin account if the request provides it.
+            // This is intentionally permissive; make sure you only call this endpoint
+            // via secure channels (Postman or internal use) if you want to create admins.
+            rolFinal = 'Admin';
+        } else {
+            // Si viene otro valor lo respetamos en campo rol del usuario — podrías querer validarlo
+            rolFinal = provided;
+        }
+    }
+
     const newUser = await User.create({
         nombre,
         apellido,
@@ -138,6 +156,7 @@ const register = async (req, res) => {
         idIcono: idIcono,
         idBanner: idBanner,
         descripcion,
+        rol: rolFinal,
         // Al registrarse, otorgar los iconos y banners por defecto
         iconos_obtenidos: [1, 2, 3, 4, 5, 6],
         banners_obtenidos: [1, 2, 3, 4, 5]

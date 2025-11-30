@@ -1,12 +1,14 @@
 const express = require('express');
 
 const { agregarNotificacion, getAllUsers, register, login, getUser, editarPerfil, checkEmail, checkUsername, buscarUsuario, crearLista, agregarLibroAListaEnLista, enviarSolicitudSeguimiento, responderSolicitud, listarSeguidores, listarSeguidos, cancelarSeguido } = require('./controller/peticionesUsuario');
+const { banearUsuario, eliminarComentario } = require('./controller/peticionesAdmin');
 const { buscar, getTendencias, getLibrosPorDecada, getMasDeAutor, getLibroById, getDecadasPersonalizadas } = require('./controller/busqueda');
 const { getAllBooks, agregarLibroALista, guardarPuntuacion, obtenerResenas } = require('./controller/peticionesLibros');
 const { getAllBanners, getAllIconos } = require('./controller/banners');
 const { enviarEnlaceRecuperacion, resetearPassword } = require('./controller/recoveryController');
 
 const isAuth = require('./middlewares/isAuth');
+const isAdmin = require('./middlewares/isAdmin');
 
 const sequelize = require('./config/db');
 
@@ -42,12 +44,19 @@ server.get('/nextread/check-username', checkUsername);
 
 // Endpoint para búsqueda de usuarios por término (query ?q=valor ó ?termino=valor)
 server.get('/nextread/buscar-usuario', buscarUsuario);
+
 // Seguimientos / follow
 server.post('/nextread/follow/request/:targetId', isAuth, enviarSolicitudSeguimiento);
 server.patch('/nextread/follow/:requestId', isAuth, responderSolicitud);
 server.get('/nextread/user/:id/seguidores', listarSeguidores);
 server.get('/nextread/user/:id/seguidos', listarSeguidos);
 server.delete('/nextread/unfollow/:targetId', isAuth, cancelarSeguido);
+
+// Admin-only routes
+server.patch('/nextread/admin/ban/:id', isAuth, isAdmin, banearUsuario);
+server.delete('/nextread/admin/resena/:id', isAuth, isAdmin, eliminarComentario);
+
+// Autenticación y registro
 server.post('/nextread/register', register);
 server.post('/nextread/login', login);
 server.patch('/nextread/user/editar', isAuth, editarPerfil);
