@@ -46,25 +46,48 @@ const banearUsuario = async (req, res) => {
 
 // Eliminar comentario/resena por id
 const eliminarComentario = async (req, res) => {
-  try {
-    const { id } = req.params; // id de la resena
+    // El ID del usuario administrador que realiza la acción se adjunta en el middleware
+    const adminId = req.user.id; 
 
-    if (!id || Number.isNaN(Number(id))) return res.status(400).json({ error: 'ID inválido' });
+    try {
+        const { id } = req.params; // ID de la reseña/comentario (que corresponde a Resena.id)
 
-    const resena = await Resena.findByPk(id);
-    if (!resena) return res.status(404).json({ error: 'Reseña/comentario no encontrado' });
+        if (!id || Number.isNaN(Number(id))) {
+            return res.status(400).json({ error: 'ID de reseña/comentario inválido' });
+        }
 
-    const autorId = resena.usuario_id;
+        const resena = await Resena.findByPk(id);
+        if (!resena) {
+            return res.status(404).json({ error: 'Reseña/comentario no encontrado' });
+        }
 
-    await resena.destroy();
+        const autorId = resena.usuario_id;
+        // Capturamos el comentario para usarlo en la notificación
+        const contenidoComentario = resena.comentario ? resena.comentario.substring(0, 50) + '...' : 'Comentario sin contenido.';
+        
+        // 1. ELIMINAR LA RESEÑA/COMENTARIO
+        await resena.destroy();
 
-    try { if (agregarNotificacion) await agregarNotificacion(autorId, 'Tu comentario ha sido eliminado por un administrador.', 'Moderación'); } catch (_) {}
+        // 2. ENVIAR NOTIFICACIÓN AL AUTOR (si la función está disponible)
+        try { 
+            if (typeof agregarNotificacion === 'function') {
+                const mensaje = `Tu reseña/comentario: "${contenidoComentario}" ha sido eliminado por un administrador (ID Admin: ${adminId}).`;
+                // NOTA: Asegúrate de que agregarNotificacion se importe correctamente
+                await agregarNotificacion(autorId, mensaje, 'Moderación'); 
+            } else {
+                // Esto es solo una advertencia de desarrollo, no bloquea la eliminación
+                console.warn("Advertencia: La función 'agregarNotificacion' no está definida o accesible.");
+            }
+        } catch (notifError) {
+             // Si falla el envío de notificación, se registra, pero la eliminación continúa
+            console.error('Error al enviar notificación de moderación:', notifError); 
+        }
 
-    return res.json({ message: 'Reseña/comentario eliminado correctamente' });
-  } catch (err) {
-    console.error('Error eliminando comentario:', err);
-    return res.status(500).json({ error: 'Error en el servidor' });
-  }
+        return res.json({ message: '✅ Reseña/comentario eliminado correctamente' });
+    } catch (err) {
+        console.error('Error eliminando comentario:', err);
+        return res.status(500).json({ error: 'Error en el servidor al intentar eliminar el comentario' });
+    }
 };
 
 module.exports = { banearUsuario, eliminarComentario };
