@@ -17,7 +17,7 @@ const claveSecreta = 'AdminLibros';
 // -------------------------------------------------
 // HELPER: AGREGAR NOTIFICACIÓN AL USUARIO
 // -------------------------------------------------
-async function agregarNotificacion(userId, mensaje, nombre = "Sistema") {
+async function agregarNotificacion(userId, mensaje, nombre = "Sistema", meta = null) {
     try {
         const usuario = await User.findByPk(userId);
 
@@ -25,22 +25,31 @@ async function agregarNotificacion(userId, mensaje, nombre = "Sistema") {
 
         let notis = [];
 
+        // `notificaciones` is stored as JSON in the DB. Sequelize may return it already parsed
+        // (as an array) or as a string depending on driver/config. Handle both cases safely.
         if (usuario.notificaciones) {
-            try {
-                notis = JSON.parse(usuario.notificaciones);
-            } catch (_) { notis = []; }
+            if (Array.isArray(usuario.notificaciones)) {
+                notis = usuario.notificaciones;
+            } else if (typeof usuario.notificaciones === 'string') {
+                try { notis = JSON.parse(usuario.notificaciones); } catch (_) { notis = []; }
+            } else {
+                // unknown format -> start fresh
+                notis = [];
+            }
         }
 
         const nueva = {
             id: Date.now(),
             nombre,
             mensaje,
-            fecha: new Date().toISOString()
+            fecha: new Date().toISOString(),
+            meta
         };
 
         notis.unshift(nueva);
 
-        usuario.notificaciones = JSON.stringify(notis);
+        // Save as native JS array; Sequelize will persist JSON column correctly.
+        usuario.notificaciones = notis;
         await usuario.save();
     } catch (err) {
         console.log("Error guardando notificación:", err);
@@ -662,7 +671,7 @@ const enviarSolicitudSeguimiento = async (req, res) => {
         // Buscar si ya existe relación entre ambos
         const existente = await Seguidos.findOne({ where: { id_remitente: remitenteId, id_destinatario: targetId } });
 
-        if (existente) {
+            if (existente) {
             if (existente.estado === 'enviado') return res.status(400).json({ error: 'Solicitud ya enviada' });
             if (existente.estado === 'aceptado') return res.status(400).json({ error: 'Ya sigues a este usuario' });
             // si estaba rechazado, la reapertura la marcamos como enviado otra vez
@@ -671,7 +680,7 @@ const enviarSolicitudSeguimiento = async (req, res) => {
 
             // notificar al destinatario que se re-envió la solicitud
             const remitente = await User.findByPk(remitenteId);
-            await agregarNotificacion(targetId, `${remitente.usuario} te ha vuelto a enviar una solicitud para seguirte.`, remitente.usuario);
+            await agregarNotificacion(targetId, `${remitente.usuario} te ha vuelto a enviar una solicitud para seguirte.`, remitente.usuario, { type: 'follow_request', requestId: existente.id, fromUser: remitenteId });
 
             return res.json({ message: 'Solicitud reenviada', data: existente });
         }
@@ -679,7 +688,7 @@ const enviarSolicitudSeguimiento = async (req, res) => {
         const registro = await Seguidos.create({ id_remitente: remitenteId, id_destinatario: targetId, estado: 'enviado' });
 
         const remitente = await User.findByPk(remitenteId);
-        await agregarNotificacion(targetId, `${remitente.usuario} te ha enviado una solicitud para seguirte.`, remitente.usuario);
+        await agregarNotificacion(targetId, `${remitente.usuario} te ha enviado una solicitud para seguirte.`, remitente.usuario, { type: 'follow_request', requestId: registro.id, fromUser: remitenteId });
 
         return res.status(201).json({ message: 'Solicitud enviada', data: registro });
     } catch (err) {
@@ -711,7 +720,7 @@ const responderSolicitud = async (req, res) => {
         const remitente = await User.findByPk(solicitud.id_remitente);
         const destinatario = await User.findByPk(solicitud.id_destinatario);
 
-        await agregarNotificacion(remitente.id, `${destinatario.usuario} ha ${solicitud.estado} tu solicitud.`, destinatario.usuario);
+        await agregarNotificacion(remitente.id, `${destinatario.usuario} ha ${solicitud.estado} tu solicitud.`, destinatario.usuario, { type: 'follow_response', requestId: solicitud.id, status: solicitud.estado, fromUser: destinatario.id });
 
         return res.json({ message: `Solicitud ${solicitud.estado}`, data: solicitud });
     } catch (err) {
@@ -788,7 +797,7 @@ const cancelarSeguido = async (req, res) => {
 
         await relacion.destroy();
 
-        await agregarNotificacion(targetId, `@${req.user.usuario} ha dejado de seguirte.`, req.user.usuario);
+        await agregarNotificacion(targetId, `@${req.user.usuario} ha dejado de seguirte.`, req.user.usuario, { type: 'unfollow', fromUser: req.user.id });
 
         return res.json({ message: 'Se ha cancelado la relación de seguimiento' });
     } catch (err) {
