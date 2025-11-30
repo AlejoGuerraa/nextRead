@@ -103,8 +103,16 @@ export default function Perfil() {
 
   const seguirLeyendo = Array.isArray(user.libros_en_lectura) ? user.libros_en_lectura : [];
   const favoritos = Array.isArray(user.libros_favoritos) ? user.libros_favoritos : [];
-  const librosPorLeer = Array.isArray(user.libros_para_leer) ? user.libros_para_leer : [];
+  const librosLeidos = Array.isArray(user.libros_leidos)
+    ? user.libros_leidos
+    : [];
+
+  const paraLeer = Array.isArray(user.libros_para_leer)
+    ? user.libros_para_leer
+    : [];
+
   const userLists = user.listas || {};
+
 
   const stats = {
     libros_leidos: librosLeidosCount ?? 0,
@@ -260,6 +268,8 @@ export default function Perfil() {
             ))
           )}
 
+
+
         </section>
         {/* ESTADÍSTICAS CON BOTONES DE NAVEGACIÓN */}
         <section className="profile-stats enhanced-stats">
@@ -310,6 +320,30 @@ export default function Perfil() {
         <section className="lists-section">
           <div className="list-block">
             <div className="list-header">
+              <h3>Leídos</h3>
+              <span className="list-meta">{librosLeidos.length} libros</span>
+            </div>
+
+            <BookList
+              libros={normalizeBooks(librosLeidos)}
+              onBookClick={(id) => handleBookCardClick(id)}
+            />
+          </div>
+
+          <div className="list-block">
+            <div className="list-header">
+              <h3>Para leer</h3>
+              <span className="list-meta">{paraLeer.length} libros</span>
+            </div>
+
+            <BookList
+              libros={normalizeBooks(paraLeer)}
+              onBookClick={(id) => handleBookCardClick(id)}
+            />
+          </div>
+
+          <div className="list-block">
+            <div className="list-header">
               <h3>Seguir leyendo</h3>
               <span className="list-meta">{seguirLeyendo.length} libros</span>
             </div>
@@ -318,21 +352,7 @@ export default function Perfil() {
               libros={normalizeBooks(seguirLeyendo)}
               onBookClick={(id) => handleBookCardClick(id)}
             />
-
           </div>
-
-          <div className="list-block">
-            <div className="list-header">
-              <h3>Ver más tarde</h3>
-              <span className="list-meta">{librosPorLeer.length} libros</span>
-            </div>
-
-            <BookList
-              libros={normalizeBooks(librosPorLeer)}
-              onBookClick={(id) => handleBookCardClick(id)}
-            />
-          </div>
-
 
           <div className="list-block">
             <div className="list-header">
