@@ -247,6 +247,7 @@ export default function Header({ user, onRestrictedAction, headerRightRef }) {
       <NotificacionesModal
         open={openNotif}
         close={() => setOpenNotif(false)}
+        data={currentUser?.id}
       />
     </>
   );
