@@ -183,6 +183,12 @@ const login = async (req, res) => {
 
         if (!user) return res.status(400).json({ error: "Usuario no encontrado" });
 
+        // 1. VERIFICACIÓN DE ESTADO ACTIVO (Baneo)
+        if (user.activo === 0) {
+            return res.status(403).json({ error: "Su cuenta ha sido deshabilitada o baneada." });
+        }
+        // ------------------------------------------
+
         const comparacion = await bcrypt.compare(contrasena, user.contrasena);
         if (!comparacion) {
             return res.status(400).json({ error: "Su email o contraseña incorrectos" });
@@ -193,7 +199,7 @@ const login = async (req, res) => {
         const userData = user.get({ plain: true });
         delete userData.contrasena;
 
-        // Añadir contadores de seguimiento (seguidores/seguidos) para que el frontend los muestre inmediatamente
+        // Añadir contadores de seguimiento (seguidores/seguidos)
         try {
             const seguidosCount = await Seguidos.count({ where: { id_remitente: user.id, estado: 'aceptado' } });
             const seguidoresCount = await Seguidos.count({ where: { id_destinatario: user.id, estado: 'aceptado' } });
