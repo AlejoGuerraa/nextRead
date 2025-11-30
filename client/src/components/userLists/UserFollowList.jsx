@@ -12,9 +12,8 @@ export default function UserFollowList({ mode }) {
   const [search, setSearch] = useState("");
   const [title, setTitle] = useState("");
   const [loading, setLoading] = useState(true);
-  const [searchLoading, setSearchLoading] = useState(false);
-  const [searchResults, setSearchResults] = useState([]);
   const [actionLoading, setActionLoading] = useState(false);
+  const [iconosMap, setIconosMap] = useState({});
 
   const storedUser = JSON.parse(localStorage.getItem("user")) || {};
   const token = storedUser?.token;
@@ -83,6 +82,13 @@ export default function UserFollowList({ mode }) {
         });
 
         setList(normalized);
+
+        // fetch iconos mapping (id -> simbolo) so we can resolve avatars when only idIcono is present
+        axios.get('http://localhost:3000/nextread/iconos').then(r => {
+          const map = {};
+          (r.data || []).forEach(i => { map[i.id] = i.simbolo; });
+          setIconosMap(map);
+        }).catch(() => {});
       })
         .catch((err) => console.error("Error:", err))
       .finally(() => setLoading(false));
@@ -147,12 +153,50 @@ export default function UserFollowList({ mode }) {
   // ------------------------
   // LIVE SEARCH (debounced)
   // ------------------------
-  // ...existing code...
+  // No remote live-search — this component filters the already-fetched list locally.
 
   // ----------------------------------------
   // ACCIONES: SEGUIR / DEJAR DE SEGUIR
   // ----------------------------------------
-  // ...existing code...
+  const toggleFollow = async (userId, currentlyFollowing) => {
+    try {
+      if (currentlyFollowing) {
+        await axios.delete(
+          `http://localhost:3000/nextread/unfollow/${userId}`,
+          {
+            headers: { Authorization: `Bearer ${token}` },
+          }
+        );
+
+        // Si estamos en la lista de seguidos, eliminar del listado; si es la lista de seguidores
+        // solo actualizamos la bandera teSigo a false
+        if (mode === 'seguidos') {
+          setList((prev) => prev.filter((u) => u.id !== userId));
+        } else {
+          setList((prev) => prev.map((u) => (u.id === userId ? { ...u, teSigo: false } : u)));
+        }
+
+        // (no remote search state) — only update the main list
+
+        updateProfileStats(-1); // resta uno
+      } else {
+
+        // Use the new API for follow request
+        await axios.post(
+          `http://localhost:3000/nextread/follow/request/${userId}`,
+          {},
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
+
+        // Mark the user as followed locally (optimistic)
+        setList((prev) => prev.map((u) => (u.id === userId ? { ...u, teSigo: true } : u)));
+
+        updateProfileStats(+1); // suma uno
+      }
+    } catch (err) {
+      console.error(err);
+    }
+  };
 
   // ----------------------------------------
   // ACTUALIZAR CONTADOR DEL PERFIL
@@ -171,9 +215,11 @@ export default function UserFollowList({ mode }) {
   // ----------------------------------------
   // FILTRO DE BÚSQUEDA
   // ----------------------------------------
-  const filteredList = list.filter((user) =>
-    user.nombre.toLowerCase().includes(search.toLowerCase())
-  );
+  // local filter — search within currently loaded list
+  const qLocal = (search || '').trim().toLowerCase();
+  const filteredList = qLocal.length > 0
+    ? list.filter((user) => [user.nombre, user.apellido, user.usuario].join(' ').toLowerCase().includes(qLocal))
+    : list;
 
   return (
     <>
@@ -196,18 +242,17 @@ export default function UserFollowList({ mode }) {
           </div>
         ) : (
           <div className="follow-list">
-            {/* If there's an active search (>=2 chars) show searchResults */}
-            {search.length >= 2 ? (
-              searchLoading ? (
-                <div className="loader-container"><div className="spinner"/></div>
-              ) : searchResults.length === 0 ? (
+            {/* Filtered list: we always filter locally — show results or empty message */}
+            {filteredList.length === 0 ? (
                 <p className="empty-msg">No se encontraron resultados.</p>
               ) : (
-                searchResults.map((u) => (
+                filteredList.map((u) => (
                 <div key={u.id} className="follow-card">
                   <img
-                    src={u.icono || "/default.png"}
+                    src={u.icono || (u.idIcono ? iconosMap[u.idIcono] : "/iconos/LogoDefault1.jpg")}
                     className="follow-avatar"
+                    alt={`${u.nombre} ${u.apellido}`}
+                    onError={(e) => { e.target.src = '/iconos/LogoDefault1.jpg'; }}
                   />
 
                   <div className="follow-user-info">
@@ -236,43 +281,8 @@ export default function UserFollowList({ mode }) {
                 </div>
                 ))
               )
-            ) : (
-              filteredList.length === 0 ? (
-                <p className="empty-msg">No se encontraron resultados.</p>
-              ) : (
-                filteredList.map((u) => (
-                <div key={u.id} className="follow-card">
-                  <img
-                    src={u.icono || "/default.png"}
-                    className="follow-avatar"
-                  />
-
-                  <div className="follow-user-info">
-                    <strong>{u.nombre}</strong>
-                    <span>{u.usuario ? `@${u.usuario}` : ""}</span>
-                  </div>
-
-                  {/* Acciones para solicitudes (si corresponde) */}
-                  {mode === 'solicitudes' ? (
-                    <div className="requests-actions">
-                      <button className="btn-accept" disabled={actionLoading} onClick={() => acceptRequest(u.requestId)}>Aceptar</button>
-                      <button className="btn-reject" disabled={actionLoading} onClick={() => rejectRequest(u.requestId)}>Rechazar</button>
-                    </div>
-                  ) : (
-                    <button
-                      className={
-                        u.teSigo
-                          ? "btn-unfollow"
-                          : "btn-follow"
-                      }
-                      onClick={() => toggleFollow(u.id, u.teSigo)}
-                    >
-                      {u.teSigo ? "Dejar de seguir" : "Seguir"}
-                    </button>
-                  )}
-                </div>
-              )))
-            )}
+              
+            }
           </div>
         )}
       </div>

@@ -244,6 +244,7 @@ const getUser = async (req, res) => {
 
         const librosEnLecturaIDs = parseArray(usuario.libros_en_lectura);
         const librosFavoritosIDs = parseArray(usuario.libros_favoritos);
+        const librosParaLeerIDs = parseArray(usuario.libros_para_leer);
         const librosLeidosIDs = parseArray(usuario.libros_leidos);
 
         // Parsear listas (puede venir como string JSON o como objeto)
@@ -262,6 +263,7 @@ const getUser = async (req, res) => {
         const todosLosIDs = [
             ...librosEnLecturaIDs,
             ...librosFavoritosIDs,
+            ...librosParaLeerIDs,
             ...librosLeidosIDs,
             ...idsFromListas
         ];
@@ -386,6 +388,7 @@ const getUser = async (req, res) => {
 
             libros_en_lectura: librosEnLecturaIDs.map(id => librosMap[id]).filter(Boolean),
             libros_favoritos: librosFavoritosIDs.map(id => librosMap[id]).filter(Boolean),
+            libros_para_leer: librosParaLeerIDs.map(id => librosMap[id]).filter(Boolean),
             libros_leidos: librosLeidosIDs.map(id => librosMap[id]).filter(Boolean),
             listas: listasMapeadas,
 

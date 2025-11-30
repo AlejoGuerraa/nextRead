@@ -103,6 +103,7 @@ export default function Perfil() {
 
   const seguirLeyendo = Array.isArray(user.libros_en_lectura) ? user.libros_en_lectura : [];
   const favoritos = Array.isArray(user.libros_favoritos) ? user.libros_favoritos : [];
+  const librosPorLeer = Array.isArray(user.libros_para_leer) ? user.libros_para_leer : [];
   const userLists = user.listas || {};
 
   const stats = {
@@ -320,6 +321,18 @@ export default function Perfil() {
 
           </div>
 
+          <div className="list-block">
+            <div className="list-header">
+              <h3>Ver más tarde</h3>
+              <span className="list-meta">{librosPorLeer.length} libros</span>
+            </div>
+
+            <BookList
+              libros={normalizeBooks(librosPorLeer)}
+              onBookClick={(id) => handleBookCardClick(id)}
+            />
+          </div>
+
 
           <div className="list-block">
             <div className="list-header">
@@ -331,7 +344,6 @@ export default function Perfil() {
               libros={normalizeBooks(favoritos)}
               onBookClick={(id) => handleBookCardClick(id)}
             />
-
           </div>
 
         </section>
