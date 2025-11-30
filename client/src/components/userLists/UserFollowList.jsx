@@ -147,105 +147,12 @@ export default function UserFollowList({ mode }) {
   // ------------------------
   // LIVE SEARCH (debounced)
   // ------------------------
-  useEffect(() => {
-    // don't perform search for tiny strings
-    const q = (search || '').trim();
-    if (q.length < 2) {
-      // clear search results when user clears or types very small query
-      setSearchResults([]);
-      setSearchLoading(false);
-      return;
-    }
-
-    let cancelled = false;
-    setSearchLoading(true);
-
-    const timer = setTimeout(async () => {
-      try {
-        const res = await axios.get('http://localhost:3000/nextread/buscar-usuario', {
-          params: { q },
-          headers: { Authorization: `Bearer ${token}` }
-        });
-
-        if (cancelled) return;
-
-        const results = (res.data && res.data.results) || [];
-
-        // Compute teSigo using current user's seguidos
-        // We will fetch the current user's seguidos once (reuse existing logic)
-        const mineRes = await axios.get(`http://localhost:3000/nextread/user/${currentUserId}/seguidos`, { headers: { Authorization: `Bearer ${token}` } }).catch(() => ({ data: { seguidos: [] } }));
-        const mine = (mineRes.data && (mineRes.data.seguidos || [])) || [];
-        const mySeguidosIds = new Set(mine.map((r) => r.usuario?.id).filter(Boolean));
-
-        const normalized = results.map((u) => ({
-          id: u.id,
-          nombre: u.nombre,
-          apellido: u.apellido,
-          usuario: u.usuario,
-          icono: (u.iconoData && u.iconoData.simbolo) || null,
-          idIcono: u.idIcono ?? null,
-          teSigo: mySeguidosIds.has(u.id)
-        }));
-
-        setSearchResults(normalized);
-      } catch (err) {
-        console.error('Search error:', err);
-        setSearchResults([]);
-      } finally {
-        if (!cancelled) setSearchLoading(false);
-      }
-    }, 300);
-
-    return () => {
-      cancelled = true;
-      clearTimeout(timer);
-    };
-  }, [search, token, currentUserId]);
+  // ...existing code...
 
   // ----------------------------------------
   // ACCIONES: SEGUIR / DEJAR DE SEGUIR
   // ----------------------------------------
-  const toggleFollow = async (userId, currentlyFollowing) => {
-    try {
-      if (currentlyFollowing) {
-        await axios.delete(
-          `http://localhost:3000/nextread/unfollow/${userId}`,
-          {
-            headers: { Authorization: `Bearer ${token}` },
-          }
-        );
-
-        // Si estamos en la lista de seguidos, eliminar del listado; si es la lista de seguidores
-        // solo actualizamos la bandera teSigo a false
-        if (mode === 'seguidos') {
-          setList((prev) => prev.filter((u) => u.id !== userId));
-        } else {
-          setList((prev) => prev.map((u) => (u.id === userId ? { ...u, teSigo: false } : u)));
-        }
-
-        // update searchResults as well if present
-        setSearchResults((prev) => prev.map((u) => (u.id === userId ? { ...u, teSigo: false } : u)));
-
-        updateProfileStats(-1); // resta uno
-      } else {
-
-        // Use the new API for follow request
-        await axios.post(
-          `http://localhost:3000/nextread/follow/request/${userId}`,
-          {},
-          { headers: { Authorization: `Bearer ${token}` } }
-        );
-
-        // Mark the user as followed locally (optimistic)
-        setList((prev) => prev.map((u) => (u.id === userId ? { ...u, teSigo: true } : u)));
-        setSearchResults((prev) => prev.map((u) => (u.id === userId ? { ...u, teSigo: true } : u)));
-
-        updateProfileStats(+1); // suma uno
-      }
-    } catch (err) {
-      console.error(err);
-    }
-  };
+  // ...existing code...
 
   // ----------------------------------------
   // ACTUALIZAR CONTADOR DEL PERFIL
