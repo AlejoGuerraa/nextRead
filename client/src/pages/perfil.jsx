@@ -30,7 +30,7 @@ export default function Perfil() {
   const [showCreateModal, setShowCreateModal] = useState(false);
 
   useEffect(() => {
-    const token = JSON.parse(localStorage.getItem("user"))?.token;
+    const token = localStorage.getItem("token");
 
     if (!token) {
       navigate("/");
@@ -54,7 +54,7 @@ export default function Perfil() {
   }, [navigate]);
 
   const refreshUser = () => {
-    const token = JSON.parse(localStorage.getItem("user"))?.token;
+    const token = localStorage.getItem("token");
     if (!token) return;
     axios.get("http://localhost:3000/nextread/user", { headers: { Authorization: `Bearer ${token}` } })
       .then(res => setUser(res.data))

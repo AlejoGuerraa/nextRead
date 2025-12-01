@@ -12,9 +12,7 @@ export default function ChooseListModal({ isOpen, onClose, listas = {}, bookId, 
   if (!isOpen) return null;
 
   const handleAdd = async (listName) => {
-    const raw = localStorage.getItem('user');
-    if (!raw) { toast?.push('Debes iniciar sesión', 'error'); return; }
-    const token = JSON.parse(raw)?.token;
+    const token = localStorage.getItem('token');
     if (!token) { toast?.push('Debes iniciar sesión', 'error'); return; }
 
     setLoading(true);

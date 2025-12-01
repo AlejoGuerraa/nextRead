@@ -13,9 +13,8 @@ export default function CreateListModal({ isOpen, onClose, onCreated }) {
   if (!isOpen) return null;
 
   const handleCreate = async () => {
-    const raw = localStorage.getItem('user');
-    if (!raw) { toast?.push('Debes iniciar sesión', 'error'); return; }
-    const token = JSON.parse(raw)?.token;
+    const token = localStorage.getItem('token');
+    if (!token) { toast?.push('Debes iniciar sesión', 'error'); return; }
     if (!nombre || !nombre.trim()) return toast?.push('Ingrese un nombre válido', 'error');
 
     setLoading(true);

@@ -10,7 +10,7 @@ export default function NotificacionesModal({ open, close, data, onRefresh }) {
     // Asumiendo que obtienes la URL base de tu aplicación de alguna manera
     const BASE_URL = 'http://localhost:3000/nextread'; 
 
-    const token = (() => { try { const s = localStorage.getItem('user'); return s ? JSON.parse(s).token : null; } catch { return null; } })();
+    const token = localStorage.getItem('token');
   
     const handleRespond = async (requestId, accion) => {
         if (!token || !requestId) return;

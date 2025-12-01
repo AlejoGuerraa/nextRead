@@ -25,8 +25,8 @@ export default function SearchBar() {
     function FollowButton({ user }) {
         const [state, setState] = useState("idle");
 
+        const token = localStorage.getItem("token");
         const storedUser = JSON.parse(localStorage.getItem("user") || "null");
-        const token = storedUser?.token;
         const currentId = storedUser?.id;
 
         const disabledSelf = currentId && Number(currentId) === Number(user.id);

@@ -15,8 +15,8 @@ export default function UserFollowList({ mode }) {
   const [actionLoading, setActionLoading] = useState(false);
   const [iconosMap, setIconosMap] = useState({});
 
+  const token = localStorage.getItem("token");
   const storedUser = JSON.parse(localStorage.getItem("user")) || {};
-  const token = storedUser?.token;
   const currentUserId = storedUser?.id;
 
   // ----------------------------------------

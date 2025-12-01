@@ -66,7 +66,7 @@ export default function Libro() {
     }
     // Si está logueado, obtener datos completos (listas)
     try {
-      const token = JSON.parse(localStorage.getItem('user'))?.token;
+      const token = localStorage.getItem('token');
       if (token) {
         axios.get(`${API_BASE}/user`, { headers: { Authorization: `Bearer ${token}` } })
           .then(res => setFullUser(res.data))
@@ -148,7 +148,7 @@ export default function Libro() {
       </div>
       <ChooseListModal isOpen={showChooseListModal} onClose={() => setShowChooseListModal(false)} listas={fullUser?.listas || {}} bookId={id} onAdded={(name, lista) => {
         // refrescar datos de usuario
-        const token = JSON.parse(localStorage.getItem('user'))?.token;
+        const token = localStorage.getItem('token');
         if (token) {
           axios.get(`${API_BASE}/user`, { headers: { Authorization: `Bearer ${token}` } })
             .then(res => setFullUser(res.data))

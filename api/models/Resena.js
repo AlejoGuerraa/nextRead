@@ -23,6 +23,18 @@ const Resena = sequelize.define('Resena', {
         defaultValue: DataTypes.NOW
     },
 
+    likes: {
+        type: DataTypes.INTEGER,
+        allowNull: false,
+        defaultValue: 0
+    },
+
+    activo: {
+        type: DataTypes.INTEGER,
+        allowNull: false,
+        defaultValue: 1
+    },
+
     usuario_id: {
         type: DataTypes.INTEGER,
         allowNull: false

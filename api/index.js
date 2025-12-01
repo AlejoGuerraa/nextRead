@@ -3,8 +3,9 @@ const express = require('express');
 const { agregarNotificacion, getAllUsers, register, login, getUser, editarPerfil, checkEmail, checkUsername, buscarUsuario, crearLista, agregarLibroAListaEnLista, enviarSolicitudSeguimiento, responderSolicitud, listarSeguidores, listarSeguidos, cancelarSeguido } = require('./controller/peticionesUsuario');
 const { banearUsuario, eliminarComentario } = require('./controller/peticionesAdmin');
 const { buscar, getTendencias, getLibrosPorDecada, getMasDeAutor, getLibroById, getDecadasPersonalizadas } = require('./controller/busqueda');
-const { getAllBooks, agregarLibroALista, guardarPuntuacion, obtenerResenas } = require('./controller/peticionesLibros');
+const { getAllBooks, agregarLibroALista, guardarPuntuacion, obtenerResenas, likeResena } = require('./controller/peticionesLibros');
 const { getAllBanners, getAllIconos } = require('./controller/banners');
+const { getAllAutores } = require('./controller/autorController');
 const { enviarEnlaceRecuperacion, resetearPassword } = require('./controller/recoveryController');
 const { changePassword, changeEmailRequest, confirmEmailChange, deleteAccountRequest, deleteAccountConfirm } = require('./controller/configuracion');
 
@@ -17,8 +18,10 @@ const { FORCE } = require('sequelize/lib/index-hints');
 
 require('./models/Usuario');
 require('./models/Libro');
+require('./models/Autor');
 require('./models/Logro');
 require('./models/Resena');
+require('./models/ResenaLike');
 require('./models/Usuario_Logro');
 require('./models/Seguidos_seguidores');
 require('./models/indexModel');
@@ -40,6 +43,7 @@ server.get('/nextread/user',isAuth, getUser)
 server.get('/nextread/allUsers', getAllUsers);
 server.get('/nextread/banners', getAllBanners);
 server.get('/nextread/iconos', getAllIconos);
+server.get('/nextread/autores', getAllAutores);
 server.get('/nextread/check-email', checkEmail);
 server.get('/nextread/check-username', checkUsername);
 
@@ -56,6 +60,8 @@ server.delete('/nextread/unfollow/:targetId', isAuth, cancelarSeguido);
 // Admin-only routes
 server.patch('/nextread/admin/ban/:id', isAuth, isAdmin, banearUsuario);
 server.delete('/nextread/admin/resena/:id', isAuth, isAdmin, eliminarComentario);
+// Like de reseña (cualquier usuario autenticado puede sumar un like)
+server.post('/nextread/resena/:id/like', isAuth, likeResena);
 
 // Autenticación y registro
 server.post('/nextread/register', register);
@@ -115,8 +121,9 @@ server.post("/nextread/user/delete-account-confirm", deleteAccountConfirm);
 
 server.listen(3000, '0.0.0.0', async () => {
   try {
-    await sequelize.sync({ force: false })
-    console.log("Tablas alteradas correctamente");
+    // Use alter:true to update DB schema for new model fields (non-destructive)
+    await sequelize.sync({ force: false, alter: true })
+    console.log("Tablas sincronizadas correctamente (alter:true)");
     console.log("El server está corriendo en el puerto 3000");
   } catch (error) {
     console.error("Error al sincronizar las tablas:", error);

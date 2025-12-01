@@ -4,12 +4,19 @@ import { useNavigate } from "react-router-dom";
 import Header from "../components/header";
 import "../pagescss/editarPerfil.css";
 
+// Lista completa de géneros
+const GENEROS_DISPONIBLES = [
+  "Novela", "Existencialismo", "Ficción", "Experimental", "Cuento", "Surrealismo", "Absurdo", "Ficción Fantástica", "Fantástico", "Narrativa Breve", "Drama", "Novela Corta", "Música", "Jazz", "Aislamiento", "Psicológico", "Historia Argentina", "Apocalipsis", "Metafísico", "Romance", "Política", "Crítica Social", "Poesía", "Amor", "Realismo Mágico", "Periodismo", "Pobreza", "Reportaje", "Supervivencia", "No Ficción", "Crónica", "Matrimonio", "Clásico", "Sociedad", "Comedia", "Metafísica", "Filosófico", "Laberintos", "Ensayo/Cuento", "Creación", "Ensayo", "Crítica", "Cuento/Ensayo", "Sueños", "Alienación", "Burocracia", "Poder", "Investigación", "Policial", "Aventura", "Sobrenatural", "Gótico", "Dinosaurios", "Ciencia Ficción", "Enfermedad", "Alegoría", "Filosofía", "Guerra Civil", "Histórico", "Postguerra", "Fantasía", "Épico", "Misticismo", "Dictadura", "Feminismo", "Autobiografía", "Teatro", "Pasión", "Tragedia", "Cultura", "Represión", "Sátira", "Didáctico", "Memorias", "Horror", "Terror"
+];
+
 const EditarPerfil = () => {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [user, setUser] = useState(null);
   const [banners, setBanners] = useState([]);
   const [iconos, setIconos] = useState([]);
+  const [autores, setAutores] = useState([]);
+  const [libros, setLibros] = useState([]);
 
   const [formData, setFormData] = useState({
     nombre: "",
@@ -22,26 +29,44 @@ const EditarPerfil = () => {
     idIcono: null
   });
 
+  // Estados para sugerencias
+  const [sugerenciasAutor, setSugerenciasAutor] = useState([]);
+  const [sugerenciasGenero, setSugerenciasGenero] = useState([]);
+  const [sugerenciasTitulo, setSugerenciasTitulo] = useState([]);
+  const [mostrarSugerenciasAutor, setMostrarSugerenciasAutor] = useState(false);
+  const [mostrarSugerenciasGenero, setMostrarSugerenciasGenero] = useState(false);
+  const [mostrarSugerenciasTitulo, setMostrarSugerenciasTitulo] = useState(false);
+
+  // Rastrear si hay una selección válida para cada campo
+  const [seleccionValidaAutor, setSeleccionValidaAutor] = useState(false);
+  const [seleccionValidaGenero, setSeleccionValidaGenero] = useState(false);
+  const [seleccionValidaTitulo, setSeleccionValidaTitulo] = useState(false);
+  const [erroresValidacion, setErroresValidacion] = useState([]);
+
   useEffect(() => {
-    const token = JSON.parse(localStorage.getItem("user"))?.token;
+    const token = localStorage.getItem("token");
     if (!token) {
       navigate("/acceso");
       return;
     }
 
-    // Fetch user data, banners, and iconos in parallel
+    // Fetch user data, banners, iconos, autores, and libros in parallel
     Promise.all([
       axios.get("http://localhost:3000/nextread/user", {
         headers: { Authorization: `Bearer ${token}` },
       }),
       axios.get("http://localhost:3000/nextread/banners"),
-      axios.get("http://localhost:3000/nextread/iconos")
+      axios.get("http://localhost:3000/nextread/iconos"),
+      axios.get("http://localhost:3000/nextread/autores"),
+      axios.get("http://localhost:3000/nextread/libros")
     ])
-      .then(([userRes, bannersRes, iconosRes]) => {
+      .then(([userRes, bannersRes, iconosRes, autoresRes, librosRes]) => {
         const userData = userRes.data;
         setUser(userData);
         setBanners(bannersRes.data);
         setIconos(iconosRes.data);
+        setAutores(autoresRes.data);
+        setLibros(librosRes.data);
 
         // Parse JSON arrays safely
         const parseArray = (value) => {
@@ -77,7 +102,100 @@ const EditarPerfil = () => {
   }, [navigate]);
 
   const handleChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
+    const { name, value } = e.target;
+    setFormData({ ...formData, [name]: value });
+
+    // Filtrar sugerencias según el tipo de campo
+    if (name === "autor_preferido") {
+      setSeleccionValidaAutor(false); // marcar como no validada mientras escribe
+      if (value.trim().length > 0) {
+        const filtered = autores.filter(a =>
+          a.nombre.toLowerCase().includes(value.toLowerCase())
+        );
+        setSugerenciasAutor(filtered.slice(0, 8)); // máximo 8 sugerencias
+        setMostrarSugerenciasAutor(true);
+      } else {
+        setSugerenciasAutor([]);
+        setMostrarSugerenciasAutor(false);
+      }
+    } else if (name === "genero_preferido") {
+      setSeleccionValidaGenero(false); // marcar como no validada mientras escribe
+      if (value.trim().length > 0) {
+        const filtered = GENEROS_DISPONIBLES.filter(g =>
+          g.toLowerCase().includes(value.toLowerCase())
+        );
+        setSugerenciasGenero(filtered.slice(0, 8)); // máximo 8 sugerencias
+        setMostrarSugerenciasGenero(true);
+      } else {
+        setSugerenciasGenero([]);
+        setMostrarSugerenciasGenero(false);
+      }
+    } else if (name === "titulo_preferido") {
+      setSeleccionValidaTitulo(false); // marcar como no validada mientras escribe
+      if (value.trim().length > 0) {
+        const filtered = libros.filter(l =>
+          l.titulo.toLowerCase().includes(value.toLowerCase())
+        );
+        setSugerenciasTitulo(filtered.slice(0, 8)); // máximo 8 sugerencias
+        setMostrarSugerenciasTitulo(true);
+      } else {
+        setSugerenciasTitulo([]);
+        setMostrarSugerenciasTitulo(false);
+      }
+    }
+  };
+
+  const handleSelectSuggestion = (field, value) => {
+    // Actualizar el campo con el valor seleccionado
+    const updatedFormData = { ...formData, [field]: value };
+    setFormData(updatedFormData);
+    
+    if (field === "autor_preferido") {
+      setMostrarSugerenciasAutor(false);
+      setSeleccionValidaAutor(true); // marcar como validada
+    } else if (field === "genero_preferido") {
+      setMostrarSugerenciasGenero(false);
+      setSeleccionValidaGenero(true); // marcar como validada
+    } else if (field === "titulo_preferido") {
+      setMostrarSugerenciasTitulo(false);
+      setSeleccionValidaTitulo(true); // marcar como validada
+    }
+  };
+
+  const handleBlurAutor = () => {
+    setMostrarSugerenciasAutor(false);
+    // Si el texto no es válido, limpiar
+    if (!seleccionValidaAutor && formData.autor_preferido.trim().length > 0) {
+      const isValid = autores.some(a => a.nombre === formData.autor_preferido.trim());
+      if (!isValid) {
+        setFormData({ ...formData, autor_preferido: "" });
+        setErroresValidacion([]); // Limpiar errores al limpiar el campo
+      }
+    }
+  };
+
+  const handleBlurGenero = () => {
+    setMostrarSugerenciasGenero(false);
+    // Si el texto no es válido, limpiar
+    if (!seleccionValidaGenero && formData.genero_preferido.trim().length > 0) {
+      const isValid = GENEROS_DISPONIBLES.includes(formData.genero_preferido.trim());
+      if (!isValid) {
+        setFormData({ ...formData, genero_preferido: "" });
+        setErroresValidacion([]); // Limpiar errores al limpiar el campo
+      }
+    }
+  };
+
+  const handleBlurTitulo = () => {
+    setMostrarSugerenciasTitulo(false);
+    // Si el texto no es válido, limpiar
+    if (!seleccionValidaTitulo && formData.titulo_preferido.trim().length > 0) {
+      const isValid = libros.some(l => l.titulo === formData.titulo_preferido.trim());
+      if (!isValid) {
+        setFormData({ ...formData, titulo_preferido: "" });
+        setErroresValidacion([]); // Limpiar errores al limpiar el campo
+      }
+    }
   };
 
   const handleBannerSelect = (bannerId) => {
@@ -90,9 +208,43 @@ const EditarPerfil = () => {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    const token = JSON.parse(localStorage.getItem("user"))?.token;
+    
+    // Validar que los campos preferidos sean válidos (si están rellenos)
+    const errores = [];
 
-    // Build payload: include only idBanner and idIcono (server will ignore if null)
+    if (formData.autor_preferido.trim().length > 0) {
+      const isValid = autores.some(a => a.nombre === formData.autor_preferido.trim());
+      if (!isValid) {
+        errores.push("Debes elegir un autor válido de la lista de sugerencias");
+      }
+    }
+
+    if (formData.genero_preferido.trim().length > 0) {
+      const isValid = GENEROS_DISPONIBLES.includes(formData.genero_preferido.trim());
+      if (!isValid) {
+        errores.push("Debes elegir un género válido de la lista de sugerencias");
+      }
+    }
+
+    if (formData.titulo_preferido.trim().length > 0) {
+      const isValid = libros.some(l => l.titulo === formData.titulo_preferido.trim());
+      if (!isValid) {
+        errores.push("Debes elegir un título válido de la lista de sugerencias");
+      }
+    }
+
+    // Si hay errores, mostrarlos y no enviar
+    if (errores.length > 0) {
+      setErroresValidacion(errores);
+      return;
+    }
+
+    // Limpiar errores si todo es válido
+    setErroresValidacion([]);
+
+    const token = localStorage.getItem("token");
+
+    // Build payload
     const payload = {
       nombre: formData.nombre,
       apellido: formData.apellido,
@@ -101,10 +253,6 @@ const EditarPerfil = () => {
       genero_preferido: formData.genero_preferido,
       titulo_preferido: formData.titulo_preferido
     };
-
-    // Send banner and icon data directly as ids (server expects id references or URL/symbol)
-    // Actually, check the backend: it expects banner (URL) and icono (symbol path)
-    // So we need to map ids back to the URL/symbol values
 
     if (formData.idBanner) {
       const selectedBanner = banners.find(b => b.id === formData.idBanner);
@@ -125,12 +273,12 @@ const EditarPerfil = () => {
         headers: { Authorization: `Bearer ${token}` },
       })
       .then(() => {
-        alert("Perfil actualizado con éxito");
+        // No mostrar alert, solo navegar
         navigate("/perfil");
       })
       .catch((err) => {
         console.error("Error:", err);
-        alert("Hubo un error al actualizar el perfil.");
+        setErroresValidacion(["Hubo un error al actualizar el perfil."]);
       });
   };
 
@@ -161,6 +309,16 @@ const EditarPerfil = () => {
       <div className="editar-perfil-page">
         <h1>Editar Perfil</h1>
 
+        {erroresValidacion.length > 0 && (
+          <div className="error-box">
+            {erroresValidacion.map((error, index) => (
+              <div key={index} className="error-message">
+                ⚠️ {error}
+              </div>
+            ))}
+          </div>
+        )}
+
         <form onSubmit={handleSubmit} className="editar-form">
           
           {/* ====================== DATOS PERSONALES ====================== */}
@@ -189,17 +347,77 @@ const EditarPerfil = () => {
 
             <label>
               Autor preferido:
-              <input type="text" name="autor_preferido" value={formData.autor_preferido} onChange={handleChange} />
+              <input
+                type="text"
+                name="autor_preferido"
+                value={formData.autor_preferido}
+                onChange={handleChange}
+                onFocus={() => formData.autor_preferido.trim().length > 0 && setMostrarSugerenciasAutor(true)}
+                onBlur={handleBlurAutor}
+              />
+              {mostrarSugerenciasAutor && sugerenciasAutor.length > 0 && (
+                <div className="suggestions-dropdown">
+                  {sugerenciasAutor.map((autor) => (
+                    <div
+                      key={autor.id}
+                      className="suggestion-item"
+                      onMouseDown={() => handleSelectSuggestion("autor_preferido", autor.nombre)}
+                    >
+                      {autor.nombre}
+                    </div>
+                  ))}
+                </div>
+              )}
             </label>
 
             <label>
               Género preferido:
-              <input type="text" name="genero_preferido" value={formData.genero_preferido} onChange={handleChange} />
+              <input
+                type="text"
+                name="genero_preferido"
+                value={formData.genero_preferido}
+                onChange={handleChange}
+                onFocus={() => formData.genero_preferido.trim().length > 0 && setMostrarSugerenciasGenero(true)}
+                onBlur={handleBlurGenero}
+              />
+              {mostrarSugerenciasGenero && sugerenciasGenero.length > 0 && (
+                <div className="suggestions-dropdown">
+                  {sugerenciasGenero.map((genero, index) => (
+                    <div
+                      key={index}
+                      className="suggestion-item"
+                      onMouseDown={() => handleSelectSuggestion("genero_preferido", genero)}
+                    >
+                      {genero}
+                    </div>
+                  ))}
+                </div>
+              )}
             </label>
 
             <label>
               Título preferido:
-              <input type="text" name="titulo_preferido" value={formData.titulo_preferido} onChange={handleChange} />
+              <input
+                type="text"
+                name="titulo_preferido"
+                value={formData.titulo_preferido}
+                onChange={handleChange}
+                onFocus={() => formData.titulo_preferido.trim().length > 0 && setMostrarSugerenciasTitulo(true)}
+                onBlur={handleBlurTitulo}
+              />
+              {mostrarSugerenciasTitulo && sugerenciasTitulo.length > 0 && (
+                <div className="suggestions-dropdown">
+                  {sugerenciasTitulo.map((libro) => (
+                    <div
+                      key={libro.id}
+                      className="suggestion-item"
+                      onMouseDown={() => handleSelectSuggestion("titulo_preferido", libro.titulo)}
+                    >
+                      {libro.titulo}
+                    </div>
+                  ))}
+                </div>
+              )}
             </label>
           </fieldset>
 

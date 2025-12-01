@@ -198,13 +198,14 @@ const obtenerResenas = async (req, res) => {
     const libro = await Libro.findByPk(idLibro);
     if (!libro) return res.status(404).json({ error: "Libro no encontrado." });
 
+    // Ordenar por likes desc, luego por fecha desc. Mantener reseñas sin comentarios al final.
     const resenas = await Resena.findAll({
-      where: { libro_id: idLibro },
+      where: { libro_id: idLibro, activo: 1 },
       include: [
         {
           model: Usuario,
           as: 'Usuario',
-          attributes: ["id", "nombre", "apellido", "idIcono"],
+          attributes: ["id", "nombre", "apellido", "idIcono", "correo", "rol"],
           include: [
             {
               model: Icono,
@@ -215,6 +216,7 @@ const obtenerResenas = async (req, res) => {
         }
       ],
       order: [
+        ["likes", "DESC"],
         [sequelize.literal("CASE WHEN comentario != '' THEN 0 ELSE 1 END"), "ASC"],
         ["fecha", "DESC"]
       ]
@@ -227,9 +229,45 @@ const obtenerResenas = async (req, res) => {
   }
 };
 
+// Incrementar likes de una reseña
+const ResenaLike = require('../models/ResenaLike');
+
+const likeResena = async (req, res) => {
+  try {
+    const userId = req.user?.id;
+    const { id } = req.params;
+
+    if (!userId) return res.status(401).json({ error: 'No autorizado' });
+    if (!id || Number.isNaN(Number(id))) return res.status(400).json({ error: 'ID de reseña inválido' });
+
+    const resena = await Resena.findByPk(id);
+    if (!resena) return res.status(404).json({ error: 'Reseña no encontrada' });
+
+    // Verificar si ya existe un like de este usuario para esta reseña
+    const existente = await ResenaLike.findOne({ where: { resena_id: id, usuario_id: userId } });
+    if (existente) return res.status(400).json({ error: 'Ya has dado like a esta reseña' });
+
+    // Crear registro de like y actualizar contador atómico
+    await ResenaLike.create({ resena_id: id, usuario_id: userId });
+
+    // Incrementar likes en la reseña
+    resena.likes = (resena.likes || 0) + 1;
+    await resena.save();
+
+    res.json({ message: 'Like contabilizado', likes: resena.likes });
+  } catch (err) {
+    console.error('Error en likeResena:', err);
+    if (err.name === 'SequelizeUniqueConstraintError') {
+      return res.status(400).json({ error: 'Ya has dado like a esta reseña' });
+    }
+    res.status(500).json({ error: 'Error al procesar like' });
+  }
+};
+
 module.exports = {
   getAllBooks,
   agregarLibroALista,
   guardarPuntuacion,
-  obtenerResenas
+  obtenerResenas,
+  likeResena
 }

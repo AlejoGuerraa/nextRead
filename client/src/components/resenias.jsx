@@ -21,6 +21,23 @@ export default function Resenas() {
     const [comment, setComment] = useState("");
     const [submitting, setSubmitting] = useState(false);
     const toast = useToast();
+    const [likedResenas, setLikedResenas] = useState(() => {
+        try {
+            const raw = localStorage.getItem('likedResenas');
+            return raw ? JSON.parse(raw) : [];
+        } catch (e) {
+            return [];
+        }
+    });
+    const [likingIds, setLikingIds] = useState([]);
+    const [currentUser, setCurrentUser] = useState(() => {
+        try { return JSON.parse(localStorage.getItem('user')) || {}; } catch { return {}; }
+    });
+
+    // Modal state for admin deletion
+    const [modalResenaId, setModalResenaId] = useState(null);
+    const [modalDescargo, setModalDescargo] = useState('');
+    const [modalLoading, setModalLoading] = useState(false);
 
     const fetchReviews = async () => {
         setLoading(true);
@@ -54,10 +71,28 @@ export default function Resenas() {
         return avatarSrc;
     };
 
+    // Ensure we have a fresh user object from the server when possible (avoids stale localStorage issues)
+    useEffect(() => {
+        const init = async () => {
+            try {
+                const token = localStorage.getItem('token');
+                if (!token) return;
+                const res = await axios.get(`${API_BASE}/user`, { headers: { Authorization: `Bearer ${token}` } });
+                if (res?.data) {
+                    setCurrentUser(res.data);
+                    // keep localStorage in sync
+                    try { localStorage.setItem('user', JSON.stringify(res.data)); } catch (_) {}
+                }
+            } catch (err) {
+                // ignore — we'll fall back to localStorage
+            }
+        };
+        init();
+    }, []);
+
     const handleSubmit = async (e) => {
         e.preventDefault();
-        const userData = JSON.parse(localStorage.getItem("user"));
-        const token = userData?.token;
+        const token = localStorage.getItem("token");
         if (!token) {
             toast?.push("Debes iniciar sesión para publicar una reseña.", 'error');
             return;
@@ -80,6 +115,83 @@ export default function Resenas() {
             toast?.push(err.response?.data?.error || "Error al enviar la reseña.", 'error');
         } finally {
             setSubmitting(false);
+        }
+    };
+
+    const handleLike = async (resenaId) => {
+        try {
+            const idNum = Number(resenaId);
+            // prevent double clicks / already liked
+            if (likedResenas.map(Number).includes(idNum) || likingIds.includes(idNum)) return;
+
+            const token = localStorage.getItem('token');
+            if (!token) {
+                toast?.push('Debes iniciar sesión para dar like', 'error');
+                return;
+            }
+
+            // optimistic: mark as in-flight and mark liked locally
+            setLikingIds(prev => [...prev, idNum]);
+            const newLiked = Array.from(new Set([...likedResenas.map(Number), idNum]));
+            setLikedResenas(newLiked);
+            localStorage.setItem('likedResenas', JSON.stringify(newLiked));
+
+            const res = await axios.post(`${API_BASE}/resena/${idNum}/like`, null, {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+
+            // update likes count in local reviews state
+            setReviews(prev => prev.map(r => r.id === idNum ? { ...r, likes: res.data.likes } : r));
+        } catch (err) {
+            console.error('Error al dar like:', err);
+            const msg = err.response?.data?.error || 'Error al dar like';
+            toast?.push(msg, 'error');
+            // if server rejected because already liked, ensure local state reflects that
+            if (err.response?.status === 400) {
+                const idNum = Number(resenaId);
+                setLikedResenas(prev => Array.from(new Set([...prev.map(Number), idNum])));
+                localStorage.setItem('likedResenas', JSON.stringify(Array.from(new Set([...likedResenas.map(Number), idNum]))));
+            }
+        } finally {
+            const idNum = Number(resenaId);
+            setLikingIds(prev => prev.filter(x => x !== idNum));
+        }
+    };
+
+    const openDeleteModal = (resenaId) => {
+        setModalResenaId(resenaId);
+        setModalDescargo('');
+    };
+
+    const closeDeleteModal = () => {
+        setModalResenaId(null);
+        setModalDescargo('');
+    };
+
+    const confirmDeleteAsAdmin = async () => {
+        if (!modalResenaId) return;
+        setModalLoading(true);
+        try {
+            const token = localStorage.getItem('token');
+            if (!token) {
+                toast?.push('No estás autenticado', 'error');
+                setModalLoading(false);
+                return;
+            }
+
+            await axios.delete(`${API_BASE}/admin/resena/${modalResenaId}`, {
+                headers: { Authorization: `Bearer ${token}` },
+                data: { descargo: modalDescargo }
+            });
+
+            toast?.push('Reseña eliminada y usuario suspendido', 'success');
+            closeDeleteModal();
+            await fetchReviews();
+        } catch (err) {
+            console.error('Error eliminando reseña como admin:', err);
+            toast?.push(err.response?.data?.error || 'Error al eliminar reseña', 'error');
+        } finally {
+            setModalLoading(false);
         }
     };
 
@@ -170,11 +282,58 @@ export default function Resenas() {
                                 ) : (
                                     <p className="comentario-texto" style={{ margin: 0, color: '#777', fontStyle: 'italic' }}>Sin comentario</p>
                                 )}
+
+                                {/* Likes / acciones */}
+                                <div style={{ marginTop: 8, display: 'flex', alignItems: 'center', gap: 8 }}>
+                                    <button
+                                        type="button"
+                                        onClick={() => handleLike(r.id)}
+                                        style={{
+                                            background: 'none',
+                                            border: 'none',
+                                            cursor: 'pointer',
+                                            color: likedResenas.includes(r.id) ? '#e74c3c' : '#999',
+                                            fontSize: 20
+                                        }}
+                                        aria-label="Me gusta"
+                                    >
+                                        ♥
+                                    </button>
+
+                                    <span style={{ color: '#666' }}>{r.likes || 0}</span>
+
+                                    {/* Si el usuario es admin mostrar triángulo para eliminar */}
+                                    {(currentUser?.rol && String(currentUser.rol).toLowerCase() === 'admin') && (
+                                        <button
+                                            type="button"
+                                            title="Eliminar reseña y suspender usuario"
+                                            onClick={() => openDeleteModal(r.id)}
+                                            style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#ffcc00' }}
+                                        >
+                                            ⚠️
+                                        </button>
+                                    )}
+                                </div>
                             </div>
                         </div>
                     );
                 })}
             </div>
+
+            {/* Modal simple para confirmación de admin */}
+            {modalResenaId && (
+                <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 2000 }}>
+                    <div style={{ background: '#fff', padding: 18, borderRadius: 8, width: 480, maxWidth: '90%' }}>
+                        <h4 style={{ marginTop: 0 }}>Confirmar eliminación de reseña</h4>
+                        <p>Estás por eliminar una reseña y suspender la cuenta del autor. Escribe aquí el descargo que se enviará por email:</p>
+                        <textarea value={modalDescargo} onChange={(e) => setModalDescargo(e.target.value)} rows={5} style={{ width: '100%', marginBottom: 8 }} />
+                        <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8 }}>
+                            <button onClick={closeDeleteModal} className="btn-outline">Cancelar</button>
+                            <button onClick={confirmDeleteAsAdmin} className="btn-primary" disabled={modalLoading}>{modalLoading ? 'Procesando...' : 'Confirmar y suspender'}</button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }

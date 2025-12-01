@@ -39,17 +39,13 @@ export function ModalGustos({ open, close, onFinish, onBack }) {
 
     // Intentar guardar en backend si hay token
     try {
-      const stored = localStorage.getItem("user");
-      if (stored) {
-        const parsed = JSON.parse(stored);
-        const token = parsed.token;
-        if (token && finalBanner) {
-          await axios.patch(
-            "http://localhost:3000/nextread/user/editar",
-            { banner: finalBannerUrl },
-            { headers: { Authorization: `Bearer ${token}` } }
-          );
-        }
+      const token = localStorage.getItem("token");
+      if (token && finalBanner) {
+        await axios.patch(
+          "http://localhost:3000/nextread/user/editar",
+          { banner: finalBannerUrl },
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
       }
     } catch (err) {
       console.error("Error guardando banner en el servidor:", err);

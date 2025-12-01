@@ -18,8 +18,8 @@ export default function InfoLibro({ libro, onRestrictedAction, actionRef, onOpen
     const API_BASE = "http://localhost:3000/nextread";
 
     const validarToken = () => {
+        const token = localStorage.getItem("token");
         const userData = JSON.parse(localStorage.getItem("user"));
-        const token = userData?.token;
         const userId = userData?.id;
 
         if (!token || !userId) {

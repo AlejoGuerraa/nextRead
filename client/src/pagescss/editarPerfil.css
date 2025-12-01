@@ -17,6 +17,26 @@
   letter-spacing: 0.5px;
 }
 
+.error-box {
+  background-color: rgba(255, 69, 69, 0.1);
+  border-left: 4px solid #ff4545;
+  border-radius: 8px;
+  padding: 16px;
+  margin-bottom: 20px;
+  border: 1px solid rgba(255, 69, 69, 0.3);
+}
+
+.error-message {
+  color: #ff6b6b;
+  font-size: 14px;
+  margin-bottom: 8px;
+  font-weight: 500;
+}
+
+.error-message:last-child {
+  margin-bottom: 0;
+}
+
 .editar-form {
   display: flex;
   flex-direction: column;
@@ -43,6 +63,7 @@
   font-weight: 500;
   color: #d4d4d4; /* gris claro */
   margin-bottom: 16px; /* separación extra */
+  position: relative;
 }
 
 .form-section input[type="text"],
@@ -160,4 +181,38 @@
   color: #a0a0a0;
   font-size: 14px;
   margin-bottom: 16px;
+}
+
+/* Estilos para el dropdown de sugerencias */
+.suggestions-dropdown {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  background-color: #406882;
+  border: 1px solid #6998AB;
+  border-top: none;
+  border-radius: 0 0 10px 10px;
+  max-height: 200px;
+  overflow-y: auto;
+  z-index: 1000;
+  margin-top: -4px;
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.3);
+}
+
+.suggestion-item {
+  padding: 12px 14px;
+  color: #e0e0e0;
+  cursor: pointer;
+  transition: all 0.15s;
+  border-bottom: 1px solid rgba(105, 152, 171, 0.2);
+}
+
+.suggestion-item:last-child {
+  border-bottom: none;
+}
+
+.suggestion-item:hover {
+  background-color: #6998AB;
+  padding-left: 18px;
 }
