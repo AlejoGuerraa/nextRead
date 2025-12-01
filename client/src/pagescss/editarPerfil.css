@@ -1,0 +1,218 @@
+.editar-perfil-page {
+  max-width: 800px;
+  margin: 40px auto;
+  padding: 30px 25px;
+  background-color: #1A374D;
+  border-radius: 16px;
+  box-shadow: 0 12px 28px rgba(0,0,0,0.12);
+  font-family: 'Arial', sans-serif;
+  color: #e0e0e0;
+}
+
+.editar-perfil-page h1 {
+  text-align: center;
+  margin-bottom: 30px;
+  color: #ffffff;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+}
+
+.error-box {
+  background-color: rgba(255, 69, 69, 0.1);
+  border-left: 4px solid #ff4545;
+  border-radius: 8px;
+  padding: 16px;
+  margin-bottom: 20px;
+  border: 1px solid rgba(255, 69, 69, 0.3);
+}
+
+.error-message {
+  color: #ff6b6b;
+  font-size: 14px;
+  margin-bottom: 8px;
+  font-weight: 500;
+}
+
+.error-message:last-child {
+  margin-bottom: 0;
+}
+
+.editar-form {
+  display: flex;
+  flex-direction: column;
+  gap: 24px; /* más separación entre inputs */
+}
+
+.form-section {
+  padding: 20px;
+  border-radius: 12px;
+  background-color: #1A374D;
+  border: 1px solid #406882;
+  box-shadow: 0 6px 16px rgba(0,0,0,0.08);
+}
+
+.form-section legend {
+  font-weight: 700;
+  color: #ffffff;
+  margin-bottom: 12px;
+}
+
+.form-section label {
+  display: flex;
+  flex-direction: column;
+  font-weight: 500;
+  color: #d4d4d4; /* gris claro */
+  margin-bottom: 16px; /* separación extra */
+  position: relative;
+}
+
+.form-section input[type="text"],
+.form-section input[type="color"],
+.form-section textarea {
+  margin-top: 6px;
+  padding: 12px 14px;
+  border: 1px solid #406882;
+  border-radius: 10px;
+  font-size: 14px;
+  color: #e0e0e0; /* texto dentro input */
+  background-color: #406882; /* azul suave */
+  transition: all 0.2s;
+}
+
+.form-section input:focus,
+.form-section textarea:focus {
+  outline: none;
+  border: 1px solid #6998AB;
+  box-shadow: 0 0 8px rgba(105,152,171,0.5);
+}
+
+.form-section textarea {
+  resize: vertical;
+  min-height: 90px;
+}
+
+.form-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  margin-top: 10px;
+}
+
+.btn-primary {
+  background: linear-gradient(135deg, #406882, #6998AB);
+  color: #ffffff;
+  padding: 12px 24px;
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  font-weight: 600;
+  transition: all 0.25s;
+}
+
+.btn-primary:hover {
+  background: linear-gradient(135deg, #6998AB, #406882);
+  transform: translateY(-2px);
+}
+
+.btn-outline {
+  background-color: transparent;
+  color: #ffffff;
+  border: 2px solid #ffffff;
+  padding: 12px 24px;
+  border-radius: 10px;
+  cursor: pointer;
+  font-weight: 600;
+  transition: all 0.25s;
+}
+
+.btn-outline:hover {
+  background-color: #ffffff;
+  color: #1A374D;
+  transform: translateY(-2px);
+}
+
+.center {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 200px;
+  font-size: 16px;
+  color: #e0e0e0;
+}
+
+.avatar-selector, .banner-selector {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 16px;
+}
+
+.avatar-option {
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid transparent;
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+.selected-avatar {
+  border-color: #ffffff;
+  box-shadow: 0 0 10px rgba(255,255,255,0.6);
+}
+
+.banner-option {
+  width: 130px;
+  height: 60px;
+  object-fit: cover;
+  border-radius: 8px;
+  cursor: pointer;
+  border: 2px solid transparent;
+  transition: 0.2s;
+}
+
+.selected-banner {
+  border-color: #ffffff;
+  box-shadow: 0 0 10px rgba(255,255,255,0.6);
+}
+
+.no-items {
+  color: #a0a0a0;
+  font-size: 14px;
+  margin-bottom: 16px;
+}
+
+/* Estilos para el dropdown de sugerencias */
+.suggestions-dropdown {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  background-color: #406882;
+  border: 1px solid #6998AB;
+  border-top: none;
+  border-radius: 0 0 10px 10px;
+  max-height: 200px;
+  overflow-y: auto;
+  z-index: 1000;
+  margin-top: -4px;
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.3);
+}
+
+.suggestion-item {
+  padding: 12px 14px;
+  color: #e0e0e0;
+  cursor: pointer;
+  transition: all 0.15s;
+  border-bottom: 1px solid rgba(105, 152, 171, 0.2);
+}
+
+.suggestion-item:last-child {
+  border-bottom: none;
+}
+
+.suggestion-item:hover {
+  background-color: #6998AB;
+  padding-left: 18px;
+}

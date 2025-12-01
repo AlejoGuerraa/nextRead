@@ -1,0 +1,113 @@
+/* --- CONTENEDOR GENERAL --- */
+.userprofile-container {
+  display: flex;
+  justify-content: center;
+  padding: 40px 20px;
+  background: #f4f7fb;
+}
+
+/* --- CARD PRINCIPAL --- */
+.userprofile-card {
+  width: 650px;
+  background: white;
+  border-radius: 22px;
+  padding: 0 0 40px 0;
+  box-shadow: 0 6px 28px rgba(0,0,0,0.08);
+  text-align: center;
+  position: relative;
+}
+
+/* BANNER */
+.userprofile-banner {
+  width: 100%;
+  height: 220px;
+  object-fit: cover;
+  border-radius: 22px 22px 0 0;
+}
+
+/* AVATAR */
+.userprofile-avatar {
+  width: 140px;
+  height: 140px;
+  border-radius: 50%;
+  object-fit: cover;
+  position: relative;
+  margin-top: -70px;
+  border: 5px solid white;
+  box-shadow: 0 4px 14px rgba(0,0,0,0.15);
+}
+
+/* USERNAME */
+.userprofile-username {
+  font-size: 2rem;
+  font-weight: 800;
+  color: var(--primary);
+  margin-top: 10px;
+}
+
+/* BOTÓN SEGUIR */
+.follow-btn {
+  margin-top: 12px;
+  padding: 10px 26px;
+  font-size: 1rem;
+  font-weight: 700;
+  background: var(--accent);
+  border: none;
+  border-radius: 12px;
+  color: white;
+  cursor: pointer;
+  transition: 0.25s;
+}
+
+.follow-btn:hover {
+  transform: translateY(-2px);
+}
+
+.unfollow {
+  background: #d9534f;
+}
+
+/* BIO */
+.userprofile-bio {
+  font-style: italic;
+  margin: 14px 0 24px;
+  color: #555;
+}
+
+/* STATS ROW */
+.stats-row {
+  display: flex;
+  justify-content: center;
+  gap: 18px;
+  margin: 25px 0;
+}
+
+.stat-box {
+  background: #f6f9fc;
+  padding: 14px 20px;
+  border-radius: 14px;
+  min-width: 110px;
+  box-shadow: 0 3px 10px rgba(0,0,0,0.06);
+}
+
+.stat-box strong {
+  display: block;
+  font-size: 1.2rem;
+}
+
+.stat-box span {
+  color: #555;
+}
+
+/* SECCIÓN INFO */
+.userprofile-section {
+  text-align: left;
+  padding: 25px 35px;
+}
+
+.userprofile-section-title {
+  font-size: 1.4rem;
+  font-weight: 800;
+  color: var(--primary);
+  margin-bottom: 12px;
+}
