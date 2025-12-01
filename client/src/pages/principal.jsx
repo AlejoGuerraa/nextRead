@@ -313,6 +313,15 @@ export default function Principal() {
           <BookList libros={librosAutor} onBookClick={handleBookCardClick} />
         </section>
 
+        
+        {/* RECOMENDACIONES POR LIBRO */}
+        {librosRecomendados.length > 0 && ultimoLibroObj && (
+          <section className="book-section">
+            <h2 className="titulo-section">Porque leíste {ultimoLibroObj.titulo}</h2>
+            <BookList libros={librosRecomendados} onBookClick={handleBookCardClick} />
+          </section>
+        )}
+
         {/* CARRUSELES POR DÉCADA */}
         {librosPorDecada?.map((group) => (
           <section className="book-section" key={group.decade}>
@@ -329,15 +338,6 @@ export default function Principal() {
           <h2 className="titulo-section">{generoActual.titulo}</h2>
           <BookList libros={librosGenero} onBookClick={handleBookCardClick} />
         </section>
-
-        {/* RECOMENDACIONES POR LIBRO */}
-        {librosRecomendados.length > 0 && ultimoLibroObj && (
-          <section className="book-section">
-            <h2 className="titulo-section">Porque leíste {ultimoLibroObj.titulo}</h2>
-            <BookList libros={librosRecomendados} onBookClick={handleBookCardClick} />
-          </section>
-        )}
-
       </main>
 
       <Footer />
