@@ -263,8 +263,8 @@ const getLibrosPorDecada = async (req, res) => {
         if (decade) {
             const decadaMatch = decade.match(/^(\d{4})s?$/);
             if (!decadaMatch) {
-                return res.status(400).json({ 
-                    error: "Formato de década inválido. Use '1960s' o '1960'" 
+                return res.status(400).json({
+                    error: "Formato de década inválido. Use '1960s' o '1960'"
                 });
             }
 
@@ -531,36 +531,148 @@ const getDecadasPersonalizadas = async (req, res) => {
 
 
 const getLibrosPorGenero = async (req, res) => {
-  try {
-    const genero = req.query.genero;
-    if (!genero) return res.status(400).json({ message: "Debes enviar un género en la query (?genero=...)" });
+    try {
+        const genero = req.query.genero;
+        if (!genero) return res.status(400).json({ message: "Debes enviar un género en la query (?genero=...)" });
 
-    // JSON_CONTAINS(target, candidate) -> candidate para string debe ser '"valor"'
-    const candidate = JSON.stringify(genero); // -> '"Fantasia"'
+        // JSON_CONTAINS(target, candidate) -> candidate para string debe ser '"valor"'
+        const candidate = JSON.stringify(genero); // -> '"Fantasia"'
 
-    const libros = await Libro.findAll({
-      where: Sequelize.where(
-        // JSON_CONTAINS(generos, '"Fantasia"') = 1 cuando contiene
-        Sequelize.fn("JSON_CONTAINS", Sequelize.col("generos"), candidate),
-        1
-      ),
-      order: [
-        ["ranking", "DESC"],
-        ["fecha_publicacion", "DESC"]
-      ],
-      limit: 20,
-      include: [
-        { model: Autor, as: "Autor", attributes: ["id", "nombre", "url_cara"] }
-      ]
-    });
+        const libros = await Libro.findAll({
+            where: Sequelize.where(
+                // JSON_CONTAINS(generos, '"Fantasia"') = 1 cuando contiene
+                Sequelize.fn("JSON_CONTAINS", Sequelize.col("generos"), candidate),
+                1
+            ),
+            order: [
+                ["ranking", "DESC"],
+                ["fecha_publicacion", "DESC"]
+            ],
+            limit: 20,
+            include: [
+                { model: Autor, as: "Autor", attributes: ["id", "nombre", "url_cara"] }
+            ]
+        });
 
-    return res.json({ genero, libros });
-  } catch (error) {
-    console.error("Error obteniendo libros por género:", error);
-    return res.status(500).json({ message: "Error obteniendo libros por género" });
-  }
+        return res.json({ genero, libros });
+    } catch (error) {
+        console.error("Error obteniendo libros por género:", error);
+        return res.status(500).json({ message: "Error obteniendo libros por género" });
+    }
 };
 
+function fixGeneros(input) {
+    if (!input) return [];
+
+    if (Array.isArray(input)) return input;
+
+    if (typeof input === "string") {
+        try {
+            const parsed = JSON.parse(input);
+            if (Array.isArray(parsed)) return parsed;
+        } catch {}
+
+        return input
+            .replace(/[\[\]"]+/g, "")
+            .split(",")
+            .map(s => s.trim())
+            .filter(Boolean);
+    }
+
+    return [];
+}
+
+const getRecomendacionesPorLibro = async (req, res) => {
+    try {
+        const idUsuario = Number(req.params.idUsuario);
+        const idLibro = Number(req.params.idLibro);
+
+        if (!Number.isInteger(idUsuario) || !Number.isInteger(idLibro)) {
+            return res.status(400).json({ message: "ID inválidos." });
+        }
+
+        const usuario = await Usuario.findByPk(idUsuario);
+        if (!usuario) return res.status(404).json({ message: "Usuario no encontrado" });
+
+        const libroBase = await Libro.findByPk(idLibro);
+        if (!libroBase) return res.status(404).json({ message: "Libro no encontrado" });
+
+        // Normalizar generos
+        const generos = fixGeneros(libroBase.generos);
+
+        // Normalizar libros leídos
+        let librosLeidos = usuario.libros_leidos || [];
+        if (typeof librosLeidos === "string") {
+            try { librosLeidos = JSON.parse(librosLeidos); } catch { librosLeidos = []; }
+        }
+        if (!Array.isArray(librosLeidos)) librosLeidos = [];
+        librosLeidos = librosLeidos.map(id => Number(id)).filter(Number.isInteger);
+
+        // Autor base
+        const autorId = libroBase.id_autor || null;
+
+        // Condiciones por género usando JSON_CONTAINS
+        const generoConditions = generos.map(g =>
+            Sequelize.where(
+                Sequelize.fn("JSON_CONTAINS", Sequelize.col("generos"), JSON.stringify(g)),
+                1
+            )
+        );
+
+        // Exclusiones
+        const baseExcludes = {
+            id: {
+                [Op.and]: [
+                    { [Op.ne]: idLibro },
+                    ...(librosLeidos.length ? [{ [Op.notIn]: librosLeidos }] : [])
+                ]
+            }
+        };
+
+        // OR (autor + géneros)
+        const orConditions = [];
+        if (autorId) orConditions.push({ id_autor: autorId });
+        if (generoConditions.length > 0) orConditions.push(...generoConditions);
+
+        let recomendaciones;
+
+        if (orConditions.length > 0) {
+            recomendaciones = await Libro.findAll({
+                where: {
+                    ...baseExcludes,
+                    [Op.or]: orConditions
+                },
+                include: [{ model: Autor, as: "Autor", attributes: ["id", "nombre", "url_cara"] }],
+                order: [["ranking", "DESC"], ["fecha_publicacion", "DESC"]],
+                limit: 20
+            });
+        }
+
+        // Fallback si quedó vacío
+        if (!recomendaciones || recomendaciones.length === 0) {
+            recomendaciones = await Libro.findAll({
+                where: baseExcludes,
+                include: [{ model: Autor, as: "Autor", attributes: ["id", "nombre", "url_cara"] }],
+                order: [["ranking", "DESC"], ["fecha_publicacion", "DESC"]],
+                limit: 20
+            });
+        }
+
+        return res.json({
+            base: {
+                id: libroBase.id,
+                titulo: libroBase.titulo,
+                generos,
+                id_autor: autorId
+            },
+            libros: recomendaciones
+        });
+
+    } catch (error) {
+        console.error("Error cargando recomendaciones:", error);
+        return res.status(500).json({ message: "Error cargando recomendaciones" });
+    }
+};
 
 // =======================================================
 // EXPORTAR ENDPOINTS
@@ -572,5 +684,6 @@ module.exports = {
     getMasDeAutor,
     getLibroById,
     getDecadasPersonalizadas,
-    getLibrosPorGenero
+    getLibrosPorGenero,
+    getRecomendacionesPorLibro
 };

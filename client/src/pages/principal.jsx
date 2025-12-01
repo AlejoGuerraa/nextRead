@@ -32,9 +32,10 @@ export default function Principal() {
   const [librosTendencias, setLibrosTendencias] = useState([]);
   const [librosAutor, setLibrosAutor] = useState([]);
   const [autorMasLeidoNombre, setAutorMasLeidoNombre] = useState(null);
-
   const [librosGenero, setLibrosGenero] = useState([]);
   const [generoSeleccionado, setGeneroSeleccionado] = useState("Género...");
+  const [librosRecomendados, setLibrosRecomendados] = useState([]);
+  const [ultimoLibroObj, setUltimoLibroObj] = useState(null);
 
   const [currentIndex, setCurrentIndex] = useState(0);
   const [librosPorDecada, setLibrosPorDecada] = useState([]);
@@ -195,6 +196,39 @@ export default function Principal() {
     fetchLibrosPorGenero();
   }, [generoActual]); // se ejecuta solo si generoActual cambia
 
+  // 5. FETCH RECOMENDACIONES POR LIBRO
+  useEffect(() => {
+    const fetchRecomendaciones = async () => {
+      try {
+        if (!user?.id) {
+          setLibrosRecomendados([]);
+          return;
+        }
+
+        const leidos = user.libros_leidos;
+        if (!Array.isArray(leidos) || leidos.length === 0) {
+          setLibrosRecomendados([]);
+          return;
+        }
+
+        const ultimoLibro = leidos[leidos.length - 1];
+        setUltimoLibroObj(ultimoLibro); // ← LO GUARDAMOS
+
+        const res = await axios.get(
+          `http://localhost:3000/nextread/libros/recomendaciones/${user.id}/${ultimoLibro.id}`
+        );
+
+        setLibrosRecomendados(Array.isArray(res.data?.libros) ? res.data.libros : []);
+      } catch (e) {
+        console.error("Error cargando recomendaciones:", e);
+        setLibrosRecomendados([]);
+      }
+    };
+
+    fetchRecomendaciones();
+  }, [user]);
+
+
   // POPUP + 🟣 handler
 
   const showRestrictionPopover = () => {
@@ -295,6 +329,15 @@ export default function Principal() {
           <h2 className="titulo-section">{generoActual.titulo}</h2>
           <BookList libros={librosGenero} onBookClick={handleBookCardClick} />
         </section>
+
+        {/* RECOMENDACIONES POR LIBRO */}
+        {librosRecomendados.length > 0 && ultimoLibroObj && (
+          <section className="book-section">
+            <h2 className="titulo-section">Porque leíste {ultimoLibroObj.titulo}</h2>
+            <BookList libros={librosRecomendados} onBookClick={handleBookCardClick} />
+          </section>
+        )}
+
       </main>
 
       <Footer />
