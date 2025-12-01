@@ -1,4 +1,3 @@
-// src/pages/perfil.jsx
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
@@ -86,12 +85,12 @@ export default function Perfil() {
   const librosLeidosCount = (() => {
     if (!user.libros_leidos) return 0;
 
-    // Caso array real
+
     if (Array.isArray(user.libros_leidos)) {
       return user.libros_leidos.length;
     }
 
-    // Caso JSON string
+
     try {
       const arr = JSON.parse(user.libros_leidos);
       return Array.isArray(arr) ? arr.length : 0;
@@ -103,7 +102,16 @@ export default function Perfil() {
 
   const seguirLeyendo = Array.isArray(user.libros_en_lectura) ? user.libros_en_lectura : [];
   const favoritos = Array.isArray(user.libros_favoritos) ? user.libros_favoritos : [];
+  const librosLeidos = Array.isArray(user.libros_leidos)
+    ? user.libros_leidos
+    : [];
+
+  const paraLeer = Array.isArray(user.libros_para_leer)
+    ? user.libros_para_leer
+    : [];
+
   const userLists = user.listas || {};
+
 
   const stats = {
     libros_leidos: librosLeidosCount ?? 0,
@@ -140,7 +148,6 @@ export default function Perfil() {
       book?.nombre_autor ||
       "Autor desconocido";
 
-    // ⭐ En Perfil quiero mostrar SOLO la puntuación del usuario
     const userRating =
       book?.puntuacion_usuario ??
       book?.puntuacion ??
@@ -196,7 +203,6 @@ export default function Perfil() {
       return null;
     }
 
-    // Tomamos SOLO los libros leídos
     const ratings = user.libros_leidos
       .map((libro) =>
         libro?.puntuacion_usuario ??  // puntuación que el usuario le dio
@@ -259,8 +265,10 @@ export default function Perfil() {
             ))
           )}
 
+
+
         </section>
-        {/* ESTADÍSTICAS CON BOTONES DE NAVEGACIÓN */}
+
         <section className="profile-stats enhanced-stats">
           <div className="stat-card">
             <div className="stat-label">Libros Leídos</div>
@@ -290,7 +298,6 @@ export default function Perfil() {
             </div>
           </div>
 
-          {/* 👇 ESTOS DOS SON LOS NUEVOS BOTONES 👇 */}
           <div className="stat-card clickable" onClick={() => navigate("/seguidos")}>
             <div className="stat-label">Seguidos</div>
             <div className="stat-top">
@@ -309,6 +316,30 @@ export default function Perfil() {
         <section className="lists-section">
           <div className="list-block">
             <div className="list-header">
+              <h3>Leídos</h3>
+              <span className="list-meta">{librosLeidos.length} libros</span>
+            </div>
+
+            <BookList
+              libros={normalizeBooks(librosLeidos)}
+              onBookClick={(id) => handleBookCardClick(id)}
+            />
+          </div>
+
+          <div className="list-block">
+            <div className="list-header">
+              <h3>Para leer</h3>
+              <span className="list-meta">{paraLeer.length} libros</span>
+            </div>
+
+            <BookList
+              libros={normalizeBooks(paraLeer)}
+              onBookClick={(id) => handleBookCardClick(id)}
+            />
+          </div>
+
+          <div className="list-block">
+            <div className="list-header">
               <h3>Seguir leyendo</h3>
               <span className="list-meta">{seguirLeyendo.length} libros</span>
             </div>
@@ -317,9 +348,7 @@ export default function Perfil() {
               libros={normalizeBooks(seguirLeyendo)}
               onBookClick={(id) => handleBookCardClick(id)}
             />
-
           </div>
-
 
           <div className="list-block">
             <div className="list-header">
@@ -331,7 +360,6 @@ export default function Perfil() {
               libros={normalizeBooks(favoritos)}
               onBookClick={(id) => handleBookCardClick(id)}
             />
-
           </div>
 
         </section>

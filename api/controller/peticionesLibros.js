@@ -22,21 +22,24 @@ const agregarLibroALista = async (req, res) => {
   try {
     const { tipo, idLibro } = req.params;
     const userId = req.user.id;
-    const idNum = Number(idLibro);
+    const idNum = Number(idLibro); // ID del libro como número
 
     if (!tipo) return res.status(400).json({ error: "Falta el parámetro 'tipo' en la URL" });
-    if (Number.isNaN(idNum)) return res.status(400).json({ error: "ID de libro inválido" });
+    if (Number.isNaN(idNum) || idNum <= 0) return res.status(400).json({ error: "ID de libro inválido" });
 
     const usuario = await Usuario.findByPk(userId);
     if (!usuario) return res.status(404).json({ error: "Usuario no encontrado" });
 
     // Helper: normalizar cualquier campo (string JSON, array, objetos, strings)
     const normalizarLista = (lista) => {
+      // Intenta parsear si es un string (esto maneja el caso de DataTypes.JSON)
       if (typeof lista === "string") {
         try { lista = JSON.parse(lista); } catch { lista = []; }
       }
+      // Asegura que sea un array
       if (!Array.isArray(lista)) lista = [];
 
+      // Mapea y filtra para asegurar que solo haya números (IDs de libros)
       return lista
         .map(item => {
           if (typeof item === "number") return item;
@@ -45,12 +48,13 @@ const agregarLibroALista = async (req, res) => {
             if ("id" in item) return Number(item.id);
           }
           const n = Number(item);
-          return Number.isNaN(n) ? null : n;
+          // Solo retorna números válidos (no NaN y mayores a 0)
+          return Number.isNaN(n) || n <= 0 ? null : n;
         })
         .filter(x => typeof x === "number");
     };
 
-    // Normalizamos todos los campos del usuario EXCEPTO las listas nombradas
+    // Normalizamos todos los campos del usuario
     let leidos = normalizarLista(usuario.libros_leidos);
     let favoritos = normalizarLista(usuario.libros_favoritos);
     let enLectura = normalizarLista(usuario.libros_en_lectura);
@@ -65,40 +69,58 @@ const agregarLibroALista = async (req, res) => {
     };
 
     const entry = mapaTipos[tipo];
-    if (!entry) return res.status(400).json({ error: "Tipo de lista inválido. Para listas nombradas use el endpoint /listas/:nombre/libro/:idLibro" });
+    if (!entry) return res.status(400).json({ error: "Tipo de lista inválido." });
 
-    // Si ya está en la lista objetivo -> 400 (evita duplicados)
-    if (entry.arr.includes(idNum)) {
-      return res.status(400).json({ message: `El libro ya está en ${tipo}` });
-    }
+    // --- Lógica de actualización para "leido", "enLectura" y "paraLeer" ---
+    let listaActualizada = entry.arr;
 
-    // Lógica específica: si añadimos a enLectura/paraLeer -> quitar de leidos
-    if (["enLectura", "paraLeer"].includes(tipo)) {
+    if (["leido", "enLectura", "paraLeer"].includes(tipo)) {
+      
+      // 1. Quitar el libro de todas las listas de estado para asegurar exclusividad
+      // Esto cumple con: "Se borra el id del libro en los atributos libros_en_lectura y libros_para_leer."
       leidos = leidos.filter(x => x !== idNum);
-    }
-
-    // Si añadimos como 'leido' -> quitar de enLectura/paraLeer
-    if (tipo === "leido") {
       enLectura = enLectura.filter(x => x !== idNum);
       paraLeer = paraLeer.filter(x => x !== idNum);
+
+      // 2. Si el libro ya estaba en la lista objetivo, lo consideramos como un error 400
+      // o simplemente no hacemos nada más, pero el requisito es agregarlo si no está.
+      if (entry.arr.includes(idNum)) {
+         return res.status(400).json({ message: `El libro ya está en ${tipo}` });
+      }
+
+      // 3. Agregar el libro a la lista objetivo
+      if (tipo === "leido") {
+        leidos.push(idNum);
+        listaActualizada = leidos;
+      } else if (tipo === "enLectura") {
+        enLectura.push(idNum);
+        listaActualizada = enLectura;
+      } else if (tipo === "paraLeer") {
+        paraLeer.push(idNum);
+        listaActualizada = paraLeer;
+      }
+
+      // 4. Utilizar el método `set` de Sequelize para forzar la actualización de las propiedades JSON
+      usuario.set('libros_leidos', [...new Set(leidos)]);
+      usuario.set('libros_en_lectura', [...new Set(enLectura)]);
+      usuario.set('libros_para_leer', [...new Set(paraLeer)]);
+      
+    } else if (tipo === "favoritos") {
+      // Lógica para 'favoritos' (no excluyente)
+      if (entry.arr.includes(idNum)) {
+         return res.status(400).json({ message: `El libro ya está en ${tipo}` });
+      }
+      entry.arr.push(idNum);
+      listaActualizada = entry.arr;
+      usuario.set('libros_favoritos', [...new Set(favoritos)]);
     }
 
-    // Finalmente, añadir al array objetivo
-    entry.arr.push(idNum);
-
-    // Asignar arrays actualizados al usuario antes de guardar
-    usuario.libros_leidos = [...new Set(leidos)];
-    usuario.libros_favoritos = [...new Set(favoritos)];
-    usuario.libros_en_lectura = [...new Set(enLectura)];
-    usuario.libros_para_leer = [...new Set(paraLeer)];
-
-    usuario[entry.campo] = [...new Set(entry.arr)];
-
+    // Guardar los cambios en la base de datos
     await usuario.save();
 
     return res.json({
       message: `✅ Libro agregado a ${tipo}`,
-      [entry.campo]: usuario[entry.campo]
+      [entry.campo]: listaActualizada // Usamos la lista actualizada local para la respuesta
     });
 
   } catch (error) {

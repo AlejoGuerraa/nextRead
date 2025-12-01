@@ -1,27 +1,27 @@
 [
   {
     "nombre": "Julio Cortázar",
-    "url_cara": "01.jpg"
+    "url_cara": ""
   },
   {
     "nombre": "Ernesto Sabato",
-    "url_cara": "02.jpg"
+    "url_cara": ""
   },
   {
     "nombre": "Mario Benedetti",
-    "url_cara": "03.jpg"
+    "url_cara": ""
   },
   {
     "nombre": "Gabriel García Márquez",
-    "url_cara": "04.jpg"
+    "url_cara": ""
   },
   {
     "nombre": "Jane Austen",
-    "url_cara": "05.jpg"
+    "url_cara": ""
   },
   {
     "nombre": "Jorge Luis Borges",
-    "url_cara": "06.jpg"
+    "url_cara": ""
   },
   {
     "nombre": "Franz Kafka",
@@ -29,254 +29,298 @@
   },
   {
     "nombre": "Arthur Conan Doyle",
-    "url_cara": "08.jpg"
+    "url_cara": ""
   },
   {
     "nombre": "Albert Camus",
-    "url_cara": "09.jpg"
+    "url_cara": ""
   },
   {
     "nombre": "Ana María Matute",
-    "url_cara": "10.jpg"
+    "url_cara": ""
   },
   {
     "nombre": "Isabel Allende",
-    "url_cara": "11.jpg"
+    "url_cara": ""
   },
   {
     "nombre": "Federico García Lorca",
-    "url_cara": "12.jpg"
+    "url_cara": ""
   },
   {
     "nombre": "Miguel de Cervantes",
-    "url_cara": "13.jpg"
+    "url_cara": ""
   },
   {
     "nombre": "William Shakespeare",
-    "url_cara": "14.jpg"
+    "url_cara": ""
   },
   {
     "nombre": "Virginia Woolf",
-    "url_cara": "15.jpg"
+    "url_cara": ""
   },
   {
     "nombre": "Charles Dickens",
-    "url_cara": "16.jpg"
+    "url_cara": ""
   },
   {
     "nombre": "Herman Melville",
-    "url_cara": "17.jpg"
+    "url_cara": ""
   },
   {
     "nombre": "Oscar Wilde",
-    "url_cara": "18.jpg"
+    "url_cara": ""
   },
   {
     "nombre": "Alejandra Pizarnik",
-    "url_cara": "19.jpg"
+    "url_cara": ""
   },
   {
     "nombre": "Clarice Lispector",
-    "url_cara": "20.jpg"
+    "url_cara": ""
   },
   {
     "nombre": "Edgar Allan Poe",
-    "url_cara": "21.jpg"
+    "url_cara": ""
   },
   {
     "nombre": "Homer",
-    "url_cara": "22.jpg"
+    "url_cara": ""
   },
   {
     "nombre": "Dante Alighieri",
-    "url_cara": "23.jpg"
+    "url_cara": ""
   },
   {
     "nombre": "Leo Tolstoi",
-    "url_cara": "24.jpg"
+    "url_cara": ""
   },
   {
     "nombre": "Fiodor Dostoevski",
-    "url_cara": "25.jpg"
+    "url_cara": ""
   },
   {
     "nombre": "Pablo Neruda",
-    "url_cara": "26.jpg"
+    "url_cara": ""
   },
   {
     "nombre": "Octavio Paz",
-    "url_cara": "27.jpg"
+    "url_cara": ""
   },
   {
     "nombre": "José Saramago",
-    "url_cara": "28.jpg"
+    "url_cara": ""
   },
   {
     "nombre": "Elena Garro",
-    "url_cara": "29.jpg"
+    "url_cara": ""
   },
   {
     "nombre": "Juan Rulfo",
-    "url_cara": "30.jpg"
+    "url_cara": ""
   },
   {
     "nombre": "Laura Esquivel",
-    "url_cara": "31.jpg"
+    "url_cara": ""
   },
   {
     "nombre": "Toni Morrison",
-    "url_cara": "32.jpg"
+    "url_cara": ""
   },
   {
     "nombre": "J.R.R. Tolkien",
-    "url_cara": "33.jpg"
+    "url_cara": ""
   },
   {
     "nombre": "J.K. Rowling",
-    "url_cara": "34.jpg"
+    "url_cara": ""
   },
   {
     "nombre": "George Orwell",
-    "url_cara": "35.jpg"
+    "url_cara": ""
   },
   {
     "nombre": "Aldous Huxley",
-    "url_cara": "36.jpg"
+    "url_cara": ""
   },
   {
     "nombre": "Emily Dickinson",
-    "url_cara": "37.jpg"
+    "url_cara": ""
   },
   {
     "nombre": "Walt Whitman",
-    "url_cara": "38.jpg"
+    "url_cara": ""
   },
   {
     "nombre": "Haruki Murakami",
-    "url_cara": "39.jpg"
+    "url_cara": ""
   },
   {
     "nombre": "Umberto Eco",
-    "url_cara": "40.jpg"
+    "url_cara": ""
   },
   {
     "nombre": "Italo Calvino",
-    "url_cara": "41.jpg"
+    "url_cara": ""
   },
   {
     "nombre": "Agatha Christie",
-    "url_cara": "42.jpg"
+    "url_cara": ""
   },
   {
     "nombre": "Stephen King",
-    "url_cara": "43.jpg"
+    "url_cara": ""
   },
   {
     "nombre": "Ray Bradbury",
-    "url_cara": "44.jpg"
+    "url_cara": ""
   },
   {
     "nombre": "Mary Shelley",
-    "url_cara": "45.jpg"
+    "url_cara": ""
   },
   {
     "nombre": "Gabriel Miró",
-    "url_cara": "46.jpg"
+    "url_cara": ""
   },
   {
     "nombre": "Camilo José Cela",
-    "url_cara": "47.jpg"
+    "url_cara": ""
   },
   {
     "nombre": "Carmen Laforet",
-    "url_cara": "48.jpg"
+    "url_cara": ""
   },
   {
     "nombre": "Antonio Machado",
-    "url_cara": "49.jpg"
+    "url_cara": ""
   },
   {
     "nombre": "Pedro Calderón de la Barca",
-    "url_cara": "50.jpg"
+    "url_cara": ""
   },
   {
     "nombre": "Lope de Vega",
-    "url_cara": "51.jpg"
+    "url_cara": ""
   },
   {
     "nombre": "Simone de Beauvoir",
-    "url_cara": "52.jpg"
+    "url_cara": ""
   },
   {
     "nombre": "Jean-Paul Sartre",
-    "url_cara": "53.jpg"
+    "url_cara": ""
   },
   {
     "nombre": "F. Scott Fitzgerald",
-    "url_cara": "54.jpg"
+    "url_cara": ""
   },
   {
     "nombre": "Ernest Hemingway",
-    "url_cara": "55.jpg"
+    "url_cara": ""
   },
   {
     "nombre": "Mark Twain",
-    "url_cara": "56.jpg"
+    "url_cara": ""
   },
   {
     "nombre": "Louisa May Alcott",
-    "url_cara": "57.jpg"
+    "url_cara": ""
   },
   {
     "nombre": "H.G. Wells",
-    "url_cara": "58.jpg"
+    "url_cara": ""
   },
   {
     "nombre": "Jules Verne",
-    "url_cara": "59.jpg"
+    "url_cara": ""
   },
   {
     "nombre": "Ken Follett",
-    "url_cara": "60.jpg"
+    "url_cara": ""
   },
   {
     "nombre": "Dan Brown",
-    "url_cara": "61.jpg"
+    "url_cara": ""
   },
   {
     "nombre": "Paulo Coelho",
-    "url_cara": "62.jpg"
+    "url_cara": ""
   },
   {
     "nombre": "Suzanne Collins",
-    "url_cara": "63.jpg"
+    "url_cara": ""
   },
   {
     "nombre": "George R.R. Martin",
-    "url_cara": "64.jpg"
+    "url_cara": ""
   },
   {
     "nombre": "Patrick Rothfuss",
-    "url_cara": "65.jpg"
+    "url_cara": ""
   },
   {
     "nombre": "Neil Gaiman",
-    "url_cara": "66.jpg"
+    "url_cara": ""
   },
   {
     "nombre": "Roald Dahl",
-    "url_cara": "67.jpg"
+    "url_cara": ""
   },
   {
     "nombre": "C.S. Lewis",
-    "url_cara": "68.jpg"
+    "url_cara": ""
   },
   {
     "nombre": "Anaïs Nin",
-    "url_cara": "69.jpg"
+    "url_cara": ""
   },
   {
     "nombre": "Jorge Amado",
-    "url_cara": "70.jpg"
+    "url_cara": "70"
+  },
+  {
+    "nombre": "Dashiell Hammett",
+    "url_cara": ""
+  },
+  {
+    "nombre": "Hirohiko Araki",
+    "url_cara": "72"
+  },
+  {
+    "nombre": " Takehiko Inoue",
+    "url_cara": "73"
+  },
+  {
+    "nombre": "Tatsuki Fujimot",
+    "url_cara": ""
+  },
+  {
+    "nombre": "Makoto Shinkai",
+    "url_cara": ""
+  },
+  {
+    "nombre": "Yoshitoki Ōima",
+    "url_cara": ""
+  },
+  {
+    "nombre": "Tsugumi Ōba",
+    "url_cara": ""
+  },
+  {
+    "nombre": "Gege Akutami",
+    "url_cara": ""
+  },
+  {
+    "nombre": "Yukinobu Tatsu",
+    "url_cara": ""
+  },
+  {
+    "nombre": "Junji Ito",
+    "url_cara": ""
+  },
+  {
+    "nombre": "Inio Asano",
+    "url_cara": ""
   }
 ]

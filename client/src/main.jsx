@@ -12,6 +12,7 @@ import Seguidos from './pages/seguidos';
 import Configuracion from './pages/configuracion';
 import ResetPassword from './pages/ResetPassword';
 import Cookies from './pages/cookies';
+import SobreNosotros from './pages/sobreNosotros';
 
 import { useEffect } from "react";
 import { useLocation } from "react-router-dom";
@@ -46,7 +47,9 @@ function TitleManager() {
       document.title = "NextRead - Restablecer Contraseña";
     } else if (path === "/cookies") {
       document.title = "NextRead - Cookies";
-    } else {
+    } else if (path === "/nosotros"){
+      document.title = "NextRead - Sobre Nosotros";
+    }else {
       document.title = "NextRead 📚";
     }
   }, [location]);
@@ -68,6 +71,7 @@ const router = createBrowserRouter([
       { path: "/configuracion", element: <Configuracion /> },
       { path: "/reset-password", element: <ResetPassword /> },
       { path: "/cookies", element: <Cookies /> },
+      { path: "/nosotros", element: <SobreNosotros /> },
     ]
   }
 ]);

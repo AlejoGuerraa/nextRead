@@ -27,6 +27,12 @@ export default function Acceso() {
   const location = useLocation();
   const params = new URLSearchParams(location.search);
 
+  //Gestionar el Scroll al cargar la página
+  useEffect(() => {
+    // Esto fuerza al navegador a desplazarse a la posicion (0, 0) (arriba a la izquierda)
+    window.scrollTo(0, 0);
+  }, [location.pathname]); // El efecto se dispara cada vez que cambia el path (ruta)
+
   const [loginOpen, setLoginOpen] = useState(false);
   const [registerOpen, setRegisterOpen] = useState(false);
 
