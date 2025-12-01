@@ -2,7 +2,7 @@ const express = require('express');
 
 const { agregarNotificacion, getAllUsers, register, login, getUser, editarPerfil, checkEmail, checkUsername, buscarUsuario, crearLista, agregarLibroAListaEnLista, enviarSolicitudSeguimiento, responderSolicitud, listarSeguidores, listarSeguidos, cancelarSeguido } = require('./controller/peticionesUsuario');
 const { banearUsuario, eliminarComentario } = require('./controller/peticionesAdmin');
-const { buscar, getTendencias, getLibrosPorDecada, getMasDeAutor, getLibroById, getDecadasPersonalizadas } = require('./controller/busqueda');
+const { buscar, getTendencias, getLibrosPorDecada, getMasDeAutor, getLibroById, getDecadasPersonalizadas, getLibrosPorGenero } = require('./controller/busqueda');
 const { getAllBooks, agregarLibroALista, guardarPuntuacion, obtenerResenas, likeResena } = require('./controller/peticionesLibros');
 const { getAllBanners, getAllIconos } = require('./controller/banners');
 const { getAllAutores } = require('./controller/autorController');
@@ -96,6 +96,7 @@ server.get("/nextread/libros/por-decada", getLibrosPorDecada);
 // Carrouseles de libros (página principal)
 server.post('/nextread/autorMasLeido', getMasDeAutor);
 server.post('/nextread/decadas-personalizadas', getDecadasPersonalizadas);
+server.get("/nextread/libros/genero", getLibrosPorGenero);
 server.get('/nextread/libro/:id', getLibroById);
 server.get('/nextread/libros', getAllBooks);
 

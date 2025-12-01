@@ -1,7 +1,7 @@
 const Usuario = require("../models/Usuario")
 const Libro = require("../models/Libro");
 const Autor = require("../models/Autor");
-const { Op } = require("sequelize");
+const { Op, Sequelize } = require("sequelize");
 
 // =======================================================
 // 🔍 BUSCAR LIBROS + AUTOR RELEVANTE
@@ -529,6 +529,39 @@ const getDecadasPersonalizadas = async (req, res) => {
     }
 };
 
+
+const getLibrosPorGenero = async (req, res) => {
+  try {
+    const genero = req.query.genero;
+    if (!genero) return res.status(400).json({ message: "Debes enviar un género en la query (?genero=...)" });
+
+    // JSON_CONTAINS(target, candidate) -> candidate para string debe ser '"valor"'
+    const candidate = JSON.stringify(genero); // -> '"Fantasia"'
+
+    const libros = await Libro.findAll({
+      where: Sequelize.where(
+        // JSON_CONTAINS(generos, '"Fantasia"') = 1 cuando contiene
+        Sequelize.fn("JSON_CONTAINS", Sequelize.col("generos"), candidate),
+        1
+      ),
+      order: [
+        ["ranking", "DESC"],
+        ["fecha_publicacion", "DESC"]
+      ],
+      limit: 20,
+      include: [
+        { model: Autor, as: "Autor", attributes: ["id", "nombre", "url_cara"] }
+      ]
+    });
+
+    return res.json({ genero, libros });
+  } catch (error) {
+    console.error("Error obteniendo libros por género:", error);
+    return res.status(500).json({ message: "Error obteniendo libros por género" });
+  }
+};
+
+
 // =======================================================
 // EXPORTAR ENDPOINTS
 // =======================================================
@@ -538,5 +571,6 @@ module.exports = {
     getLibrosPorDecada,
     getMasDeAutor,
     getLibroById,
-    getDecadasPersonalizadas
+    getDecadasPersonalizadas,
+    getLibrosPorGenero
 };
