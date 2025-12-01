@@ -13,6 +13,9 @@ import Configuracion from './pages/configuracion';
 import ResetPassword from './pages/ResetPassword';
 import Cookies from './pages/cookies';
 
+// 👇 IMPORTAMOS LA NUEVA PÁGINA
+import UserProfile from './pages/UserProfile.jsx';
+
 import { useEffect } from "react";
 import { useLocation } from "react-router-dom";
 import { ToastProvider } from './components/ToastProvider';
@@ -40,6 +43,8 @@ function TitleManager() {
       document.title = "NextRead - Configuracion";
     } else if (path === "/seguidos") {
       document.title = "NextRead - Seguidos";
+    } else if (path.startsWith("/user/")) {
+      document.title = "NextRead - Perfil de usuario";
     } else if (path === "/") {
       document.title = "NextRead - Inicio";
     } else if (path === "/reset-password") {
@@ -68,6 +73,9 @@ const router = createBrowserRouter([
       { path: "/configuracion", element: <Configuracion /> },
       { path: "/reset-password", element: <ResetPassword /> },
       { path: "/cookies", element: <Cookies /> },
+
+      // 👇 **RUTA NUEVA PARA VER PERFILES DE USUARIOS**
+      { path: "/user/:username", element: <UserProfile /> },
     ]
   }
 ]);
