@@ -87,20 +87,9 @@ COSAS QUE FALTAN IMPLEMENTAR:
 - Opción de eliminar/editar nombres de listas
 - Opción de eliminar libros de las listas
 - Tests automatizados para endpoints de listas
-Terminar el manual
-
-
-1	/banners/bibliotecaAntigua.jpg
-2	/banners/cafeYlectura.jpg
-3	/banners/minimalistaAzul.jpg
-4	/banners/bosqueMagico.jpg
-5	/banners/cieloEstrellado.jpg
-
-1	/iconos/LogoDefault1.jpg
-2	/iconos/LogoDefault2.png
-3	/iconos/LogoDefault3.jpg
-4	/iconos/LogoDefault4.png
-5	/iconos/LogoDefault5.png
-6	/iconos/LogoDefault6.png
+- Que en modificar perfil haya un buscador para "genero favorito", "libro favorito" y "autor favorito"
+- Que no te ponga siempre el icono 1, aunque elijas otro al registrarte
+- Agregar listas "leidos" y "para leer" en el perfil
+- 
 
 
