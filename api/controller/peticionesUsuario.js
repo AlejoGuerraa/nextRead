@@ -5,19 +5,17 @@ const Autor = require("../models/Autor");
 const Resena = require("../models/Resena");
 const Icono = require("../models/Icono");
 const Banner = require("../models/Banner");
-const Seguidos = require('../models/Seguidos_seguidores');
 
 // Librerias
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
-const { Op } = require('sequelize');
 
 const claveSecreta = 'AdminLibros';
 
 // -------------------------------------------------
 // HELPER: AGREGAR NOTIFICACIÓN AL USUARIO
 // -------------------------------------------------
-async function agregarNotificacion(userId, mensaje, nombre = "Sistema", meta = null) {
+async function agregarNotificacion(userId, mensaje, nombre = "Sistema") {
     try {
         const usuario = await User.findByPk(userId);
 
@@ -25,31 +23,22 @@ async function agregarNotificacion(userId, mensaje, nombre = "Sistema", meta = n
 
         let notis = [];
 
-        // `notificaciones` is stored as JSON in the DB. Sequelize may return it already parsed
-        // (as an array) or as a string depending on driver/config. Handle both cases safely.
         if (usuario.notificaciones) {
-            if (Array.isArray(usuario.notificaciones)) {
-                notis = usuario.notificaciones;
-            } else if (typeof usuario.notificaciones === 'string') {
-                try { notis = JSON.parse(usuario.notificaciones); } catch (_) { notis = []; }
-            } else {
-                // unknown format -> start fresh
-                notis = [];
-            }
+            try {
+                notis = JSON.parse(usuario.notificaciones);
+            } catch (_) { notis = []; }
         }
 
         const nueva = {
             id: Date.now(),
             nombre,
             mensaje,
-            fecha: new Date().toISOString(),
-            meta
+            fecha: new Date().toISOString()
         };
 
         notis.unshift(nueva);
 
-        // Save as native JS array; Sequelize will persist JSON column correctly.
-        usuario.notificaciones = notis;
+        usuario.notificaciones = JSON.stringify(notis);
         await usuario.save();
     } catch (err) {
         console.log("Error guardando notificación:", err);
@@ -73,9 +62,7 @@ const register = async (req, res) => {
     const {
         nombre, apellido, correo, usuario, contrasena, fecha_nacimiento,
         // Recibimos el símbolo del icono y la URL del banner
-        icono, banner, descripcion,
-        // opcional: permitir que se envíe rol (por ejemplo 'Admin') — si se envía 'Admin' se requiere ADMIN_SIGNUP_KEY
-        rol: rolInBody
+        icono, banner, descripcion
     } = req.body;
 
     // 1. VALIDACIONES BÁSICAS
@@ -138,22 +125,6 @@ const register = async (req, res) => {
     // 4. CREACIÓN DEL USUARIO
     const hashedPassw = await bcrypt.hash(contrasena, 10);
 
-    // decidir rol — por defecto Usuario
-    let rolFinal = 'Usuario';
-    if (typeof rolInBody === 'string' && rolInBody.trim()) {
-        const provided = rolInBody.trim();
-        // if request includes a role, respect it (e.g. 'Admin') — default remains 'Usuario'
-        if (provided === 'Admin') {
-            // NOTE: this will create an admin account if the request provides it.
-            // This is intentionally permissive; make sure you only call this endpoint
-            // via secure channels (Postman or internal use) if you want to create admins.
-            rolFinal = 'Admin';
-        } else {
-            // Si viene otro valor lo respetamos en campo rol del usuario — podrías querer validarlo
-            rolFinal = provided;
-        }
-    }
-
     const newUser = await User.create({
         nombre,
         apellido,
@@ -165,7 +136,6 @@ const register = async (req, res) => {
         idIcono: idIcono,
         idBanner: idBanner,
         descripcion,
-        rol: rolFinal,
         // Al registrarse, otorgar los iconos y banners por defecto
         iconos_obtenidos: [1, 2, 3, 4, 5, 6],
         banners_obtenidos: [1, 2, 3, 4, 5]
@@ -183,12 +153,6 @@ const login = async (req, res) => {
 
         if (!user) return res.status(400).json({ error: "Usuario no encontrado" });
 
-        // 1. VERIFICACIÓN DE ESTADO ACTIVO (Baneo)
-        if (user.activo === 0) {
-            return res.status(403).json({ error: "Su cuenta ha sido deshabilitada o baneada." });
-        }
-        // ------------------------------------------
-
         const comparacion = await bcrypt.compare(contrasena, user.contrasena);
         if (!comparacion) {
             return res.status(400).json({ error: "Su email o contraseña incorrectos" });
@@ -198,19 +162,6 @@ const login = async (req, res) => {
 
         const userData = user.get({ plain: true });
         delete userData.contrasena;
-
-        // Añadir contadores de seguimiento (seguidores/seguidos)
-        try {
-            const seguidosCount = await Seguidos.count({ where: { id_remitente: user.id, estado: 'aceptado' } });
-            const seguidoresCount = await Seguidos.count({ where: { id_destinatario: user.id, estado: 'aceptado' } });
-            userData.seguidos = seguidosCount;
-            userData.seguidores = seguidoresCount;
-        } catch (e) {
-            // ignore counting errors — sigue devolviendo el user
-            console.error('Error calculando contadores en login:', e);
-            userData.seguidos = userData.seguidos || 0;
-            userData.seguidores = userData.seguidores || 0;
-        }
 
         return res.status(200).json({ token, ...userData });
     } catch (err) {
@@ -230,8 +181,7 @@ const getUser = async (req, res) => {
                 { model: Icono, as: "iconoData", attributes: ["simbolo"] },
                 { model: Banner, as: "bannerData", attributes: ["url"] }
             ],
-            // Aseguramos que la columna 'notificaciones' esté incluida
-            attributes: { exclude: ['contrasena'] } 
+            attributes: { exclude: ['contrasena'] }
         });
 
         if (!usuario) {
@@ -243,28 +193,20 @@ const getUser = async (req, res) => {
             if (!value) return [];
             if (Array.isArray(value)) return value;
             try {
-                // Si viene como string JSON, lo parsea
                 return JSON.parse(value);
             } catch {
                 return [];
             }
         };
 
-        // ** 🔥 NUEVA LÍNEA: Parsear notificaciones de manera segura 🔥 **
-        const notificacionesArray = parseArray(usuario.notificaciones);
-        // -------------------------------------------------------------
-
-
         const librosEnLecturaIDs = parseArray(usuario.libros_en_lectura);
         const librosFavoritosIDs = parseArray(usuario.libros_favoritos);
-        const librosParaLeerIDs = parseArray(usuario.libros_para_leer);
         const librosLeidosIDs = parseArray(usuario.libros_leidos);
 
         // Parsear listas (puede venir como string JSON o como objeto)
         let listasObj = {};
-        // ... (resto de la lógica de listas, que parece estar bien)
         if (usuario.listas) {
-             if (typeof usuario.listas === 'string') {
+            if (typeof usuario.listas === 'string') {
                 try { listasObj = JSON.parse(usuario.listas) || {}; } catch { listasObj = {}; }
             } else if (typeof usuario.listas === 'object' && usuario.listas !== null) {
                 listasObj = usuario.listas;
@@ -277,7 +219,6 @@ const getUser = async (req, res) => {
         const todosLosIDs = [
             ...librosEnLecturaIDs,
             ...librosFavoritosIDs,
-            ...librosParaLeerIDs,
             ...librosLeidosIDs,
             ...idsFromListas
         ];
@@ -285,16 +226,33 @@ const getUser = async (req, res) => {
         let librosBD = [];
 
         if (todosLosIDs.length > 0) {
-             // ... (lógica para cargar libros BD)
-             librosBD = await Libro.findAll({
+            librosBD = await Libro.findAll({
                 where: { id: todosLosIDs },
                 attributes: [
-                    "id", "titulo", "anio", "tipo", "descripcion", "tema", 
-                    "ranking", "generos", "url_portada", "id_autor"
+                    "id",
+                    "titulo",
+                    "anio",
+                    "tipo",
+                    "descripcion",
+                    "tema",
+                    "ranking",
+                    "generos",
+                    "url_portada",
+                    "id_autor"
                 ],
                 include: [
-                    { model: Autor, as: "Autor", attributes: ["id", "nombre", "url_cara"] },
-                    { model: Resena, as: "Resenas", required: false, where: { usuario_id: usuario.id }, attributes: ["puntuacion"] }
+                    {
+                        model: Autor,
+                        as: "Autor",
+                        attributes: ["id", "nombre", "url_cara"]
+                    },
+                    {
+                        model: Resena,
+                        as: "Resenas",
+                        required: false,
+                        where: { usuario_id: usuario.id },
+                        attributes: ["puntuacion"]
+                    }
                 ]
             });
         }
@@ -302,20 +260,66 @@ const getUser = async (req, res) => {
         // --- Aplanar datos de libros ---
         librosBD = librosBD.map(libro => {
             const json = libro.toJSON();
+
             return {
                 ...json,
                 nombre_autor: json.Autor ? json.Autor.nombre : "Desconocido",
-                puntuacion_usuario: json.Resenas && json.Resenas.length > 0 ? json.Resenas[0].puntuacion : null
+                puntuacion_usuario:
+                    json.Resenas && json.Resenas.length > 0
+                        ? json.Resenas[0].puntuacion
+                        : null
             };
         });
 
         // -----------------------------------
         // 🔥 CALCULAR GÉNERO MÁS LEÍDO
         // -----------------------------------
-        // ... (lógica de cálculo de género más leído)
-        const limpiarStringGenero = (str) => { /* ... */ };
+
+        const limpiarStringGenero = (str) => {
+            if (!str) return "";
+            return String(str)
+                .replace(/[\[\]"]+/g, "")   // elimina corchetes y comillas
+                .replace(/\\+/g, "")        // elimina backslashes
+                .trim();
+        };
+
         let generoMasLeido = "No definido";
-        // ... (cálculos)
+
+        try {
+            const generosContador = {};
+            const librosLeidos = librosBD.filter(lib => librosLeidosIDs.includes(lib.id));
+
+            for (const libro of librosLeidos) {
+                if (!libro.generos) continue;
+
+                let generosArray;
+
+                if (typeof libro.generos === "string") {
+                    generosArray = libro.generos.split(",").map(g => g.trim());
+                } else if (Array.isArray(libro.generos)) {
+                    generosArray = libro.generos;
+                }
+
+                if (generosArray) {
+                    for (const genero of generosArray) {
+                        generosContador[genero] = (generosContador[genero] || 0) + 1;
+                    }
+                }
+            }
+
+            const entries = Object.entries(generosContador);
+            if (entries.length > 0) {
+                generoMasLeido = limpiarStringGenero(entries.sort((a, b) => b[1] - a[1])[0][0]);
+            }
+
+        } catch (err) {
+            console.error("Error calculando género más leído:", err);
+        }
+
+
+        // ❗ Ya NO ponemos genero_preferido acá
+        // usuario.dataValues.genero_preferido = generoMasLeido;
+
 
         // ------------------------
         // Construir el JSON final
@@ -325,7 +329,6 @@ const getUser = async (req, res) => {
 
         // Mapear listas a objetos de libro (si hay datos cargados)
         const listasMapeadas = {};
-        // ... (lógica de mapeo de listas)
         for (const [nombre, arr] of Object.entries(listasObj)) {
             if (!Array.isArray(arr)) continue;
             listasMapeadas[nombre] = arr
@@ -340,39 +343,37 @@ const getUser = async (req, res) => {
 
             libros_en_lectura: librosEnLecturaIDs.map(id => librosMap[id]).filter(Boolean),
             libros_favoritos: librosFavoritosIDs.map(id => librosMap[id]).filter(Boolean),
-            libros_para_leer: librosParaLeerIDs.map(id => librosMap[id]).filter(Boolean),
             libros_leidos: librosLeidosIDs.map(id => librosMap[id]).filter(Boolean),
             listas: listasMapeadas,
 
-            // ** 🔥 AÑADIMOS LAS NOTIFICACIONES PARSEADAS AQUÍ 🔥 **
-            notificaciones: notificacionesArray,
-            // ---------------------------------------------------
-            
+            // 🔥 NUEVO ATRIBUTO SIEMPRE STRING
             genero_top_leyente: generoMasLeido
         };
 
 
-        // --------------------------------------
-        // 🔥 Calcular rating general y contadores
-        // --------------------------------------
-        // ... (lógica de cálculo de rating y contadores de seguimiento)
-        
-        // ... (Se asume que la lógica de rating y contadores de seguimiento está bien)
-        // ... (y que las variables de conteo se añaden a usuarioData)
-        
-        // calcular contadores de seguidores / seguidos (solo aceptados)
-        try {
-            const seguidosCount = await Seguidos.count({ where: { id_remitente: usuario.id, estado: 'aceptado' } });
-            const seguidoresCount = await Seguidos.count({ where: { id_destinatario: usuario.id, estado: 'aceptado' } });
 
-            usuarioData.seguidos = seguidosCount;
-            usuarioData.seguidores = seguidoresCount;
-        } catch (e) {
-            console.error('Error calculando contadores de seguimiento:', e);
-            usuarioData.seguidos = usuarioData.seguidos || 0;
-            usuarioData.seguidores = usuarioData.seguidores || 0;
+        // --------------------------------------
+        // 🔥 Calcular rating general
+        // --------------------------------------
+
+        let ratingGeneral = null;
+
+        const resenasUsuario = await Resena.findAll({
+            where: { usuario_id: usuario.id },
+            attributes: ["puntuacion"]
+        });
+
+        if (resenasUsuario.length > 0) {
+            const ratings = resenasUsuario
+                .map(r => r.puntuacion)
+                .filter(n => typeof n === "number");
+
+            if (ratings.length > 0) {
+                ratingGeneral = Math.round(
+                    (ratings.reduce((a, b) => a + b, 0) / ratings.length) * 10
+                ) / 10;
+            }
         }
-
 
         return res.json(usuarioData);
 
@@ -558,197 +559,6 @@ const agregarLibroAListaEnLista = async (req, res) => {
     }
 };
 
-// ----------------------
-// BUSCAR USUARIO (por query)
-// ----------------------
-const buscarUsuario = async (req, res) => {
-    try {
-        const { q, termino } = req.query;
-        const term = (q || termino || '').trim();
-
-        if (!term) return res.status(400).json({ error: 'Falta el término de búsqueda' });
-
-        const like = `%${term}%`;
-
-        const usuarios = await User.findAll({
-            where: {
-                [Op.or]: [
-                    { nombre: { [Op.like]: like } },
-                    { apellido: { [Op.like]: like } },
-                    { usuario: { [Op.like]: like } },
-                    { correo: { [Op.like]: like } }
-                ]
-            },
-            attributes: { exclude: ['contrasena'] },
-            include: [
-                { model: Icono, as: 'iconoData', attributes: ['simbolo'] },
-                { model: Banner, as: 'bannerData', attributes: ['url'] }
-            ],
-            order: [['nombre', 'ASC']],
-            limit: 50
-        });
-
-        return res.json({ count: usuarios.length, results: usuarios });
-    } catch (error) {
-        console.error('Error buscando usuarios:', error);
-        return res.status(500).json({ error: 'Error en el servidor' });
-    }
-};
-
-// ----------------------
-// SEGUIMIENTOS / SOLICITUDES
-// ----------------------
-
-// Enviar solicitud de seguimiento (remitente = req.user.id -> destinatario = :targetId)
-const enviarSolicitudSeguimiento = async (req, res) => {
-    try {
-        const remitenteId = req.user.id;
-        const targetId = Number(req.params.targetId || req.body.targetId);
-
-        if (!targetId || Number.isNaN(targetId)) return res.status(400).json({ error: 'ID de destinatario inválido' });
-        if (remitenteId === targetId) return res.status(400).json({ error: 'No te puedes seguir a ti mismo' });
-
-        const destinatario = await User.findByPk(targetId);
-        if (!destinatario) return res.status(404).json({ error: 'Usuario destinatario no encontrado' });
-
-        // Buscar si ya existe relación entre ambos
-        const existente = await Seguidos.findOne({ where: { id_remitente: remitenteId, id_destinatario: targetId } });
-
-            if (existente) {
-            if (existente.estado === 'enviado') return res.status(400).json({ error: 'Solicitud ya enviada' });
-            if (existente.estado === 'aceptado') return res.status(400).json({ error: 'Ya sigues a este usuario' });
-            // si estaba rechazado, la reapertura la marcamos como enviado otra vez
-            existente.estado = 'enviado';
-            await existente.save();
-
-            // notificar al destinatario que se re-envió la solicitud
-            const remitente = await User.findByPk(remitenteId);
-            await agregarNotificacion(targetId, `${remitente.usuario} te ha vuelto a enviar una solicitud para seguirte.`, remitente.usuario, { type: 'follow_request', requestId: existente.id, fromUser: remitenteId });
-
-            return res.json({ message: 'Solicitud reenviada', data: existente });
-        }
-
-        const registro = await Seguidos.create({ id_remitente: remitenteId, id_destinatario: targetId, estado: 'enviado' });
-
-        const remitente = await User.findByPk(remitenteId);
-        await agregarNotificacion(targetId, `${remitente.usuario} te ha enviado una solicitud para seguirte.`, remitente.usuario, { type: 'follow_request', requestId: registro.id, fromUser: remitenteId });
-
-        return res.status(201).json({ message: 'Solicitud enviada', data: registro });
-    } catch (err) {
-        console.error('Error enviando solicitud de seguimiento:', err);
-        return res.status(500).json({ error: 'Error en el servidor' });
-    }
-};
-
-// Aceptar / rechazar una solicitud
-const responderSolicitud = async (req, res) => {
-    try {
-        const usuarioId = req.user.id; // quien responde -> debe ser destinatario
-        const { requestId } = req.params;
-        const { accion } = req.body; // 'aceptar' | 'rechazar'
-
-        const id = Number(requestId);
-        if (Number.isNaN(id)) return res.status(400).json({ error: 'ID de solicitud inválido' });
-
-        const solicitud = await Seguidos.findByPk(id);
-        if (!solicitud) return res.status(404).json({ error: 'Solicitud no encontrada' });
-
-        if (solicitud.id_destinatario !== usuarioId) return res.status(403).json({ error: 'Solo el destinatario puede responder la solicitud' });
-
-        if (!['aceptar', 'rechazar'].includes(accion)) return res.status(400).json({ error: 'Acción inválida' });
-
-        solicitud.estado = accion === 'aceptar' ? 'aceptado' : 'rechazado';
-        await solicitud.save();
-
-        const remitente = await User.findByPk(solicitud.id_remitente);
-        const destinatario = await User.findByPk(solicitud.id_destinatario);
-
-        await agregarNotificacion(remitente.id, `${destinatario.usuario} ha ${solicitud.estado} tu solicitud.`, destinatario.usuario, { type: 'follow_response', requestId: solicitud.id, status: solicitud.estado, fromUser: destinatario.id });
-
-        return res.json({ message: `Solicitud ${solicitud.estado}`, data: solicitud });
-    } catch (err) {
-        console.error('Error respondiendo solicitud:', err);
-        return res.status(500).json({ error: 'Error en el servidor' });
-    }
-};
-
-// Listar seguidores (quienes siguen al usuario)
-const listarSeguidores = async (req, res) => {
-    try {
-        const userId = Number(req.params.id);
-        if (Number.isNaN(userId)) return res.status(400).json({ error: 'ID inválido' });
-
-        // Opcional query ?estado=aceptado|enviado|all
-        const { estado = 'aceptado' } = req.query;
-
-        const where = { id_destinatario: userId };
-        if (estado !== 'all') where.estado = estado;
-
-        const relaciones = await Seguidos.findAll({
-            where,
-            include: [{ model: User, as: 'Remitente', attributes: ['id', 'nombre', 'apellido', 'usuario', 'idIcono'] }],
-            order: [['id', 'DESC']]
-        });
-
-        // incluir el id de la relación para poder aceptar/rechazar (requestId)
-        const seguidores = relaciones.map(r => ({ id: r.id, estado: r.estado, usuario: r.Remitente }));
-
-        return res.json({ count: seguidores.length, seguidores });
-    } catch (err) {
-        console.error('Error listando seguidores:', err);
-        return res.status(500).json({ error: 'Error en el servidor' });
-    }
-};
-
-// Listar seguidos (a quienes sigue el usuario)
-const listarSeguidos = async (req, res) => {
-    try {
-        const userId = Number(req.params.id);
-        if (Number.isNaN(userId)) return res.status(400).json({ error: 'ID inválido' });
-
-        const { estado = 'aceptado' } = req.query;
-
-        const where = { id_remitente: userId };
-        if (estado !== 'all') where.estado = estado;
-
-        const relaciones = await Seguidos.findAll({
-            where,
-            include: [{ model: User, as: 'Destinatario', attributes: ['id', 'nombre', 'apellido', 'usuario', 'idIcono'] }],
-            order: [['id', 'DESC']]
-        });
-
-        // incluir el id de la relación para obtener requestId desde el frontend
-        const seguidos = relaciones.map(r => ({ id: r.id, estado: r.estado, usuario: r.Destinatario }));
-
-        return res.json({ count: seguidos.length, seguidos });
-    } catch (err) {
-        console.error('Error listando seguidos:', err);
-        return res.status(500).json({ error: 'Error en el servidor' });
-    }
-};
-
-// Cancelar / dejar de seguir
-const cancelarSeguido = async (req, res) => {
-    try {
-        const remitenteId = req.user.id;
-        const targetId = Number(req.params.targetId);
-
-        if (Number.isNaN(targetId)) return res.status(400).json({ error: 'ID inválido' });
-
-        const relacion = await Seguidos.findOne({ where: { id_remitente: remitenteId, id_destinatario: targetId } });
-        if (!relacion) return res.status(404).json({ error: 'Relación no encontrada' });
-
-        await relacion.destroy();
-
-        await agregarNotificacion(targetId, `@${req.user.usuario} ha dejado de seguirte.`, req.user.usuario, { type: 'unfollow', fromUser: req.user.id });
-
-        return res.json({ message: 'Se ha cancelado la relación de seguimiento' });
-    } catch (err) {
-        console.error('Error cancelando seguimiento:', err);
-        return res.status(500).json({ error: 'Error en el servidor' });
-    }
-};
-
 module.exports = {
     agregarNotificacion,
     getAllUsers,
@@ -756,15 +566,8 @@ module.exports = {
     login,
     getUser,
     editarPerfil,
-    // Nuevo endpoint para búsqueda de usuarios por término
-    buscarUsuario,
     checkEmail,
     checkUsername,
     crearLista,
-    agregarLibroAListaEnLista,
-    enviarSolicitudSeguimiento,
-    responderSolicitud,
-    listarSeguidores,
-    listarSeguidos,
-    cancelarSeguido
+    agregarLibroAListaEnLista
 };

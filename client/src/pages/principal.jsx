@@ -35,7 +35,6 @@ export default function Principal() {
   const [autorMasLeidoNombre, setAutorMasLeidoNombre] = useState(null); // Nuevo estado para el título
   const [generoSeleccionado, setGeneroSeleccionado] = useState("Género...");
   const [currentIndex, setCurrentIndex] = useState(0);
-  const [librosPorDecada, setLibrosPorDecada] = useState([]);
 
   // Popover / restricción
   const headerRightRef = useRef(null);
@@ -85,52 +84,6 @@ export default function Principal() {
     };
     fetchTendencias();
   }, [generoSeleccionado]);
-
-  // 3. FETCH LIBROS POR DÉCADA PERSONALIZADAS (basadas en los gustos del usuario)
-  useEffect(() => {
-    const fetchDecadasPersonalizadas = async () => {
-      // Si no hay usuario logueado, usar las décadas estándar
-      if (!user || !user.correo) {
-        try {
-          const res = await axios.get("http://localhost:3000/nextread/libros/por-decada");
-          setLibrosPorDecada(Array.isArray(res.data?.decades) ? res.data.decades.slice(0, 5) : []);
-        } catch (e) {
-          console.error("Error cargando libros por década:", e);
-          setLibrosPorDecada([]);
-        }
-        return;
-      }
-
-      // Si hay usuario, obtener décadas personalizadas
-      try {
-        const res = await axios.post("http://localhost:3000/nextread/decadas-personalizadas", {
-          email: user.correo
-        });
-        setLibrosPorDecada(Array.isArray(res.data?.decades) ? res.data.decades : []);
-      } catch (e) {
-        console.error("Error cargando décadas personalizadas:", e);
-        setLibrosPorDecada([]);
-      }
-    };
-
-    // Ejecutar cuando el usuario cambia (incluyendo cuando se carga desde localStorage)
-    if (user !== null) {
-      fetchDecadasPersonalizadas();
-    }
-  }, [user]);
-
-  // Función auxiliar para obtener libros de una década específica
-  const fetchLibrosDecada = async (decade) => {
-    try {
-      const res = await axios.get("http://localhost:3000/nextread/libros/por-decada", {
-        params: { decade }
-      });
-      return res.data.libros || [];
-    } catch (e) {
-      console.error(`Error cargando libros de ${decade}:`, e);
-      return [];
-    }
-  };
 
   // 2. FETCH LIBROS DEL AUTOR MÁS LEÍDO (SE EJECUTA SOLO SI HAY USUARIO)
   useEffect(() => {
@@ -297,33 +250,80 @@ export default function Principal() {
           <BookList libros={librosAutor} onBookClick={handleBookCardClick} />
         </section>
 
-        {/* === CARRUSELES POR DÉCADA ===
-            Renderiza un carrusel para cada década disponible (máx 5)
-        */}
-        {librosPorDecada && librosPorDecada.length > 0 && 
-          librosPorDecada.map((group) => (
-            <section className="book-section" key={group.decade}>
-              <h2
-                style={{
-                  fontSize: "1.8rem",
-                  fontWeight: "600",
-                  marginBottom: "15px",
-                  marginLeft: "20px",
-                  color: "#222",
-                }}
-              >
-                {(() => {
-                  const raw = group.decade || "";
-                  let short = raw;
-                  if (/^19/.test(raw)) short = raw.slice(2);
-                  if (/^20/.test(raw)) short = raw;
-                  return `Libros de los ${short}`;
-                })()}
-              </h2>
-              <BookList libros={group.libros} onBookClick={handleBookCardClick} />
-            </section>
-          ))
-        }
+        {/* Sección 3, 4, etc. que siguen usando los libros de tendencia por defecto, 
+            pero podrías reemplazarlos con más lógica de recomendación */}
+        <h2
+          style={{
+            fontSize: "1.8rem",
+            fontWeight: "600",
+            marginBottom: "15px",
+            marginLeft: "20px",
+            color: "#222",
+          }}
+        >
+          Novedades y Tendencias
+        </h2>
+        <BookList libros={librosTendencias} onBookClick={handleBookCardClick} />
+        <h2
+          style={{
+            fontSize: "1.8rem",
+            fontWeight: "600",
+            marginBottom: "15px",
+            marginLeft: "20px",
+            color: "#222",
+          }}
+        >
+          Novedades y Tendencias
+        </h2>
+        <BookList libros={librosTendencias} onBookClick={handleBookCardClick} />
+        <h2
+          style={{
+            fontSize: "1.8rem",
+            fontWeight: "600",
+            marginBottom: "15px",
+            marginLeft: "20px",
+            color: "#222",
+          }}
+        >
+          Novedades y Tendencias
+        </h2>
+        <BookList libros={librosTendencias} onBookClick={handleBookCardClick} />
+        <h2
+          style={{
+            fontSize: "1.8rem",
+            fontWeight: "600",
+            marginBottom: "15px",
+            marginLeft: "20px",
+            color: "#222",
+          }}
+        >
+          Novedades y Tendencias
+        </h2>
+        <BookList libros={librosTendencias} onBookClick={handleBookCardClick} />
+        <h2
+          style={{
+            fontSize: "1.8rem",
+            fontWeight: "600",
+            marginBottom: "15px",
+            marginLeft: "20px",
+            color: "#222",
+          }}
+        >
+          Novedades y Tendencias
+        </h2>
+        <BookList libros={librosTendencias} onBookClick={handleBookCardClick} />
+        <h2
+          style={{
+            fontSize: "1.8rem",
+            fontWeight: "600",
+            marginBottom: "15px",
+            marginLeft: "20px",
+            color: "#222",
+          }}
+        >
+          Novedades y Tendencias
+        </h2>
+        <BookList libros={librosTendencias} onBookClick={handleBookCardClick} />
         
       </main>
 

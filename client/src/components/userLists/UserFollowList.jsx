@@ -12,12 +12,8 @@ export default function UserFollowList({ mode }) {
   const [search, setSearch] = useState("");
   const [title, setTitle] = useState("");
   const [loading, setLoading] = useState(true);
-  const [actionLoading, setActionLoading] = useState(false);
-  const [iconosMap, setIconosMap] = useState({});
 
-  const storedUser = JSON.parse(localStorage.getItem("user")) || {};
-  const token = storedUser?.token;
-  const currentUserId = storedUser?.id;
+  const token = JSON.parse(localStorage.getItem("user"))?.token;
 
   // ----------------------------------------
   // CARGA DE DATOS
@@ -31,129 +27,26 @@ export default function UserFollowList({ mode }) {
     let endpoint = "";
     let pageTitle = "";
 
-    const profileUserId = currentUserId; // by now this view shows the logged-in user's lists
-
     if (mode === "seguidores") {
-      endpoint = `http://localhost:3000/nextread/user/${profileUserId}/seguidores`;
+      endpoint = "http://localhost:3000/nextread/seguidores";
       pageTitle = "Seguidores";
-    } else if (mode === 'solicitudes') {
-      // pending incoming follow requests for this user
-      endpoint = `http://localhost:3000/nextread/user/${profileUserId}/seguidores?estado=enviado`;
-      pageTitle = "Solicitudes";
     } else {
-      endpoint = `http://localhost:3000/nextread/user/${profileUserId}/seguidos`;
+      endpoint = "http://localhost:3000/nextread/seguidos";
       pageTitle = "Seguidos";
     }
 
     setTitle(pageTitle);
 
-    // Also fetch the current user's seguidos (to compute if we "teSigo")
-    const mySeguidosEndpoint = `http://localhost:3000/nextread/user/${currentUserId}/seguidos`;
-
-    Promise.all([
-      axios.get(endpoint, { headers: { Authorization: `Bearer ${token}` } }),
-      axios.get(mySeguidosEndpoint, { headers: { Authorization: `Bearer ${token}` } }).catch(() => ({ data: { seguidos: [] } }))
-    ])
-      .then(([listRes, mineRes]) => {
-        // mineRes.data.seguidos -> array of { estado, usuario }
-        const mine = (mineRes.data && (mineRes.data.seguidos || [])) || [];
-        const mySeguidosIds = new Set(mine.map((r) => r.usuario?.id).filter(Boolean));
-
-        // listRes may return { seguidores: [...] } or { seguidos: [...] }
-        const payload = listRes.data || {};
-        const items = payload.seguidores || payload.seguidos || [];
-
-        // normalize to simple user objects
-        const normalized = items.map((entry) => {
-          // entry may be { id, estado, usuario } (for seguidores) or a plain user object
-          const userObj = entry.usuario || entry;
-          const requestId = entry.id || null; // relation id when showing requests
-          return {
-            id: userObj.id,
-            nombre: userObj.nombre,
-            apellido: userObj.apellido,
-            usuario: userObj.usuario,
-            icono: userObj.icono || null,
-            idIcono: userObj.idIcono ?? null,
-            // teSigo = true if current user is following this listed user
-            teSigo: mySeguidosIds.has(userObj.id),
-            requestId
-          };
-        });
-
-        setList(normalized);
-
-        // fetch iconos mapping (id -> simbolo) so we can resolve avatars when only idIcono is present
-        axios.get('http://localhost:3000/nextread/iconos').then(r => {
-          const map = {};
-          (r.data || []).forEach(i => { map[i.id] = i.simbolo; });
-          setIconosMap(map);
-        }).catch(() => {});
+    axios
+      .get(endpoint, {
+        headers: { Authorization: `Bearer ${token}` },
       })
-        .catch((err) => console.error("Error:", err))
+      .then((res) => {
+        setList(res.data || []);
+      })
+      .catch((err) => console.error("Error:", err))
       .finally(() => setLoading(false));
   }, [mode]);
-
-  // ------------------------
-  // ACCIONES PARA SOLICITUDES
-  // ------------------------
-  const acceptRequest = async (requestId) => {
-    if (!requestId) return;
-    try {
-      setActionLoading(true);
-      await axios.patch(
-        `http://localhost:3000/nextread/follow/${requestId}`,
-        { accion: 'aceptar' },
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-
-      // remove request from lists
-      setList(prev => prev.filter(u => u.requestId !== requestId));
-      setSearchResults(prev => prev.filter(u => u.requestId !== requestId));
-
-      // update perfil counts in localStorage (recipient gained 1 follower)
-      try {
-        const user = JSON.parse(localStorage.getItem('user')) || {};
-        if (user?.stats) {
-          user.stats.seguidores = (user.stats.seguidores || 0) + 1;
-          localStorage.setItem('user', JSON.stringify(user));
-        }
-      } catch (_) {}
-
-    } catch (err) {
-      console.error('Error aceptando solicitud', err);
-      alert(err.response?.data?.error || 'Error aceptando solicitud');
-    } finally {
-      setActionLoading(false);
-    }
-  };
-
-  const rejectRequest = async (requestId) => {
-    if (!requestId) return;
-    try {
-      setActionLoading(true);
-      await axios.patch(
-        `http://localhost:3000/nextread/follow/${requestId}`,
-        { accion: 'rechazar' },
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-
-      // remove request from lists
-      setList(prev => prev.filter(u => u.requestId !== requestId));
-      setSearchResults(prev => prev.filter(u => u.requestId !== requestId));
-
-    } catch (err) {
-      console.error('Error rechazando solicitud', err);
-      alert(err.response?.data?.error || 'Error rechazando solicitud');
-    } finally {
-      setActionLoading(false);
-    }
-  };
-
-  // ------------------------
-  // LIVE SEARCH (debounced)
-  // ------------------------
-  // No remote live-search — this component filters the already-fetched list locally.
 
   // ----------------------------------------
   // ACCIONES: SEGUIR / DEJAR DE SEGUIR
@@ -168,28 +61,16 @@ export default function UserFollowList({ mode }) {
           }
         );
 
-        // Si estamos en la lista de seguidos, eliminar del listado; si es la lista de seguidores
-        // solo actualizamos la bandera teSigo a false
-        if (mode === 'seguidos') {
-          setList((prev) => prev.filter((u) => u.id !== userId));
-        } else {
-          setList((prev) => prev.map((u) => (u.id === userId ? { ...u, teSigo: false } : u)));
-        }
-
-        // (no remote search state) — only update the main list
+        // Actualiza inmediatamente la lista sin recargar
+        setList((prev) => prev.filter((u) => u.id !== userId));
 
         updateProfileStats(-1); // resta uno
       } else {
-
-        // Use the new API for follow request
         await axios.post(
-          `http://localhost:3000/nextread/follow/request/${userId}`,
+          `http://localhost:3000/nextread/follow/${userId}`,
           {},
           { headers: { Authorization: `Bearer ${token}` } }
         );
-
-        // Mark the user as followed locally (optimistic)
-        setList((prev) => prev.map((u) => (u.id === userId ? { ...u, teSigo: true } : u)));
 
         updateProfileStats(+1); // suma uno
       }
@@ -206,8 +87,11 @@ export default function UserFollowList({ mode }) {
 
     if (!user?.stats) return;
 
-    // A follow/unfollow action siempre afecta el contador de 'seguidos' (a quién sigo)
-    user.stats.seguidos += diff;
+    if (mode === "seguidos") {
+      user.stats.seguidos += diff;
+    } else {
+      user.stats.seguidores += diff;
+    }
 
     localStorage.setItem("user", JSON.stringify(user));
   };
@@ -215,11 +99,9 @@ export default function UserFollowList({ mode }) {
   // ----------------------------------------
   // FILTRO DE BÚSQUEDA
   // ----------------------------------------
-  // local filter — search within currently loaded list
-  const qLocal = (search || '').trim().toLowerCase();
-  const filteredList = qLocal.length > 0
-    ? list.filter((user) => [user.nombre, user.apellido, user.usuario].join(' ').toLowerCase().includes(qLocal))
-    : list;
+  const filteredList = list.filter((user) =>
+    user.nombre.toLowerCase().includes(search.toLowerCase())
+  );
 
   return (
     <>
@@ -242,47 +124,35 @@ export default function UserFollowList({ mode }) {
           </div>
         ) : (
           <div className="follow-list">
-            {/* Filtered list: we always filter locally — show results or empty message */}
             {filteredList.length === 0 ? (
-                <p className="empty-msg">No se encontraron resultados.</p>
-              ) : (
-                filteredList.map((u) => (
+              <p className="empty-msg">No se encontraron resultados.</p>
+            ) : (
+              filteredList.map((u) => (
                 <div key={u.id} className="follow-card">
                   <img
-                    src={u.icono || (u.idIcono ? iconosMap[u.idIcono] : "/iconos/LogoDefault1.jpg")}
+                    src={u.icono || "/default.png"}
                     className="follow-avatar"
-                    alt={`${u.nombre} ${u.apellido}`}
-                    onError={(e) => { e.target.src = '/iconos/LogoDefault1.jpg'; }}
                   />
 
                   <div className="follow-user-info">
                     <strong>{u.nombre}</strong>
-                    <span>{u.usuario ? `@${u.usuario}` : ""}</span>
+                    <span>{u.username ? `@${u.username}` : ""}</span>
                   </div>
 
-                  {/* Acciones para solicitudes (si corresponde) */}
-                  {mode === 'solicitudes' ? (
-                    <div className="requests-actions">
-                      <button className="btn-accept" disabled={actionLoading} onClick={() => acceptRequest(u.requestId)}>Aceptar</button>
-                      <button className="btn-reject" disabled={actionLoading} onClick={() => rejectRequest(u.requestId)}>Rechazar</button>
-                    </div>
-                  ) : (
-                    <button
-                      className={
-                        u.teSigo
-                          ? "btn-unfollow"
-                          : "btn-follow"
-                      }
-                      onClick={() => toggleFollow(u.id, u.teSigo)}
-                    >
-                      {u.teSigo ? "Dejar de seguir" : "Seguir"}
-                    </button>
-                  )}
+                  {/* BOTÓN SEGUIR / DEJAR DE SEGUIR */}
+                  <button
+                    className={
+                      u.teSigo
+                        ? "btn-unfollow"
+                        : "btn-follow"
+                    }
+                    onClick={() => toggleFollow(u.id, u.teSigo)}
+                  >
+                    {u.teSigo ? "Dejar de seguir" : "Seguir"}
+                  </button>
                 </div>
-                ))
-              )
-              
-            }
+              ))
+            )}
           </div>
         )}
       </div>

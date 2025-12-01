@@ -1,5 +1,5 @@
 const jwt = require('jsonwebtoken');
-const Usuario = require('../models/Usuario'); // <-- nombre correcto
+const User = require('../models/Usuario');
 
 const claveSecreta = 'AdminLibros';
 
@@ -7,26 +7,23 @@ const isAuth = (req, res, next) => {
     const authHeader = req.headers['authorization'];
     if (!authHeader) return res.status(401).json({ message: "Token no proporcionado" });
 
-    const token = authHeader.split(' ')[1];
+    const token = authHeader.split(' ')[1]; // extrae solo el token después de 'Bearer'
 
-    jwt.verify(token, claveSecreta, async (err, decodificado) => {
+    if (!token) return res.status(401).json({ message: "Token no proporcionado" });
+
+    jwt.verify(token, claveSecreta, async (err, decodifica) => {
         if (err) {
             return res.status(401).json({ message: "Token inválido" });
         }
 
-        const user = await Usuario.findByPk(decodificado.id);
-        console.log("USER DESDE BD:", user);
+        const user = await User.findByPk(decodifica.id);
+        if (!user) return res.status(400).json({ message: "Usuario no encontrado" });
 
-        if (!user) {
-            return res.status(404).json({ message: "Usuario no encontrado en la base de datos" });
-        }
-
-        console.log("TOKEN DECODIFICADO:", decodificado);
+        console.log(decodifica);
 
         req.user = {
             id: user.id,
-            correo: user.correo,
-            rol: user.rol
+            correo: user.correo // corregido de email a correo
         };
 
         next();

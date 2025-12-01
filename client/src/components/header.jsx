@@ -38,13 +38,13 @@ export default function Header({ user, onRestrictedAction, headerRightRef }) {
         {/* IZQUIERDA */}
         <div className="header-left">
           <div className="logo" onClick={() => navigate("/")}>
-              <div className="logo-circle">
-                <img
-                  src={'/icono.png'}
-                  alt="Inicio"
-                  className="home-img"
-                />
-              </div>
+            <div className="logo-circle">
+              <img
+                src={libroIcono}
+                alt="Inicio"
+                className="home-img"
+              />
+            </div>
           </div>
 
           <span className="app-title" onClick={() => navigate(-1)}>
@@ -100,59 +100,40 @@ export default function Header({ user, onRestrictedAction, headerRightRef }) {
             backdrop-filter: blur(8px);
           }
 
-          /* --------- LOGO CIRCLE (AHORA TRANSPARENTE) --------- */
+          /* --------- LOGO CIRCLE (MODIFICADO) --------- */
           .logo-circle {
-            width: 64px;
-            height: 64px;
-            background: transparent; /* quitar fondo blanco */
-            border-radius: 0; /* no recorte */
+            width: 52px;        /* más grande */
+            height: 52px;
+            background: white;
+            border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
-            padding: 0; /* sin padding para que se vea solo la imagen */
-            box-shadow: none; /* sin sombra detrás */
-            overflow: visible; /* mostrar toda la imagen */
+            padding: 6px;
+            box-shadow: 0 3px 8px rgba(0,0,0,0.25);
           }
 
           /* Sin hover, sin zoom */
           .logo-circle:hover {
             transform: none;
           }
+
           .header-left {
             display: flex;
             align-items: center;
-            gap: 12px; /* juntar un poco más con el título */
+            gap: 20px;
           }
 
-          /* Sobrescribir estilos globales que añaden fondo blanco al logo */
           .logo {
             cursor: pointer;
             padding: 0; /* ya no hace falta */
-            width: 64px !important;
-            height: 64px !important;
-            background: transparent !important;
-            border-radius: 0 !important;
-            margin-right: 8px !important;
-            display: flex;
-            align-items: center;
-            justify-content: center;
           }
 
           .home-img {
-            width: 56px;  /* imagen un poco más pequeña */
-            height: 56px;
-            object-fit: contain; /* mostrar la foto completa sin recorte */
+            width: 36px;  /* imagen más grande */
+            height: 36px;
+            object-fit: contain;
             transition: none; /* quitamos animación */
-            border-radius: 0; /* sin bordes */
-            display: block;
-            mix-blend-mode: normal;
-            background-color: transparent;
-          }
-
-          /* Asegurar que el selector .logo global no vuelva a aplicar fondo blanco */
-          .logo {
-            background-color: transparent !important;
-            box-shadow: none !important;
           }
 
           /* Se elimina totalmente el efecto hover */
@@ -247,7 +228,6 @@ export default function Header({ user, onRestrictedAction, headerRightRef }) {
       <NotificacionesModal
         open={openNotif}
         close={() => setOpenNotif(false)}
-        data={currentUser?.id}
       />
     </>
   );

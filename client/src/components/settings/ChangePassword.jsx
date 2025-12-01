@@ -1,53 +1,24 @@
+
 // File: src/components/settings/ChangePassword.jsx
-import React, { useState } from "react";
-import axios from "axios";
+import React, { useState } from 'react';
 
 export default function ChangePassword() {
-  const [currentPwd, setCurrentPwd] = useState("");
-  const [newPwd, setNewPwd] = useState("");
-  const [confirmPwd, setConfirmPwd] = useState("");
+  const [currentPwd, setCurrentPwd] = useState('');
+  const [newPwd, setNewPwd] = useState('');
+  const [confirmPwd, setConfirmPwd] = useState('');
   const [message, setMessage] = useState(null);
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = (e) => {
     e.preventDefault();
-
     if (newPwd !== confirmPwd) {
-      setMessage({
-        type: "error",
-        text: "Las contraseñas nuevas no coinciden.",
-      });
+      setMessage({ type: 'error', text: 'Las contraseñas nuevas no coinciden.' });
       return;
     }
-
-    try {
-      const res = await axios.patch(
-        "http://localhost:3000/nextread/user/change-password",
-        {
-          currentPwd,
-          newPwd,
-        },
-        {
-          headers: {
-            Authorization: "Bearer " + localStorage.getItem("token"),
-          },
-        }
-      );
-
-      setMessage({
-        type: "info",
-        text: res.data.msg || "Contraseña cambiada correctamente.",
-      });
-      setCurrentPwd("");
-      setNewPwd("");
-      setConfirmPwd("");
-    } catch (error) {
-      console.error(error);
-
-      setMessage({
-        type: "error",
-        text: error.response?.data?.error || "Error al cambiar la contraseña.",
-      });
+    if (newPwd.length < 6) {
+      setMessage({ type: 'error', text: 'La nueva contraseña debe tener al menos 6 caracteres.' });
+      return;
     }
+    setMessage({ type: 'info', text: 'Aquí se dispararía la petición para cambiar la contraseña (placeholder).' });
   };
 
   return (
@@ -85,17 +56,12 @@ export default function ChangePassword() {
         </label>
 
         <div className="form-actions">
-          <button type="submit" className="btn-primary">
-            Cambiar contraseña
-          </button>
+          <button type="submit" className="btn-primary">Cambiar contraseña</button>
         </div>
 
-        {message && (
-          <p className={"info " + (message.type === "error" ? "error" : "")}>
-            {message.text}
-          </p>
-        )}
+        {message && <p className={"info " + (message.type === 'error' ? 'error' : '')}>{message.text}</p>}
       </form>
     </section>
   );
 }
+

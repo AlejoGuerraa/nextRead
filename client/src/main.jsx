@@ -12,8 +12,6 @@ import Seguidos from './pages/seguidos';
 import Configuracion from './pages/configuracion';
 import ResetPassword from './pages/ResetPassword';
 import Cookies from './pages/cookies';
-import UserProfile from './pages/UserProfile.jsx';
-import ConfirmDelete from './components/settings/confirm-delete.jsx';
 
 import { useEffect } from "react";
 import { useLocation } from "react-router-dom";
@@ -42,8 +40,6 @@ function TitleManager() {
       document.title = "NextRead - Configuracion";
     } else if (path === "/seguidos") {
       document.title = "NextRead - Seguidos";
-    } else if (path.startsWith("/user/")) {
-      document.title = "NextRead - Perfil de usuario";
     } else if (path === "/") {
       document.title = "NextRead - Inicio";
     } else if (path === "/reset-password") {
@@ -72,8 +68,6 @@ const router = createBrowserRouter([
       { path: "/configuracion", element: <Configuracion /> },
       { path: "/reset-password", element: <ResetPassword /> },
       { path: "/cookies", element: <Cookies /> },
-      { path: "/user/:username", element: <UserProfile /> },
-      { path: "/confirm-delete", element: <ConfirmDelete /> }
     ]
   }
 ]);

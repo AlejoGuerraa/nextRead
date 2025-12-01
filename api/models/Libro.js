@@ -25,28 +25,7 @@ const Libro = sequelize.define('Libro', {
     // Comentario: año de publicación del libro, extra para búsquedas rápidas
 
     tipo: {
-        // valores permitidos para la columna "tipo" — ampliados para cubrir los valores
-        // existentes en api/data/libros.json (p. ej. "Novela Corta", "Reportaje", combinaciones)
-        type: DataTypes.ENUM(
-            'Novela',
-            'Cuento',
-            'Novela Corta',
-            'Poesía',
-            'Reportaje',
-            'Ensayo',
-            'Ensayo/Cuento',
-            'Cuento/Ensayo',
-            'Memorias',
-            'Manga',
-            'Biografía',
-            'Fábula',
-            'Teatro',
-            'Cómic',
-            'Epopeya',
-            'Filosófico',
-            'Ficción',
-            'Histórico'
-        ),
+        type: DataTypes.ENUM('Novela','Cuento','Poesía','Manga','Ensayo','Biografía','Fábula','Teatro','Cómic','Epopeya','Filosófico','Ficción','Histórico'),
         allowNull: false
     },
     // Comentario: tipo de libro (novela, cuento, poesía, manga, ensayo, etc.)
