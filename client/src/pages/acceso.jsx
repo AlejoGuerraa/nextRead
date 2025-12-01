@@ -86,6 +86,10 @@ export default function Acceso() {
         "user",
         JSON.stringify({ ...response.data, correo: loginForm.correo })
       );
+      // Store token separately so other components can read it via localStorage.getItem('token')
+      if (response.data && response.data.token) {
+        localStorage.setItem('token', response.data.token);
+      }
 
       setLoginOpen(false);
       navigate("/");
@@ -173,6 +177,10 @@ export default function Acceso() {
         'user',
         JSON.stringify({ ...loginResponse.data, correo: registerForm.correo, banner: bannerUrl })
       );
+      // Save token for authenticated requests
+      if (loginResponse.data && loginResponse.data.token) {
+        localStorage.setItem('token', loginResponse.data.token);
+      }
 
       setShowGustos(false);
       setRegisterOpen(false);

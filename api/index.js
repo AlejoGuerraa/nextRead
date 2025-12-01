@@ -6,6 +6,7 @@ const { buscar, getTendencias, getLibrosPorDecada, getMasDeAutor, getLibroById, 
 const { getAllBooks, agregarLibroALista, guardarPuntuacion, obtenerResenas } = require('./controller/peticionesLibros');
 const { getAllBanners, getAllIconos } = require('./controller/banners');
 const { enviarEnlaceRecuperacion, resetearPassword } = require('./controller/recoveryController');
+const { changePassword, changeEmailRequest, confirmEmailChange, deleteAccountRequest, deleteAccountConfirm } = require('./controller/configuracion');
 
 const isAuth = require('./middlewares/isAuth');
 const isAdmin = require('./middlewares/isAdmin');
@@ -86,20 +87,31 @@ server.get('/nextread/buscar', buscar);
 server.get('/nextread/tendencias', getTendencias);
 server.get("/nextread/libros/por-decada", getLibrosPorDecada);
 
+// Carrouseles de libros (página principal)
 server.post('/nextread/autorMasLeido', getMasDeAutor);
 server.post('/nextread/decadas-personalizadas', getDecadasPersonalizadas);
 server.get('/nextread/libro/:id', getLibroById);
 server.get('/nextread/libros', getAllBooks);
 
+// Funcionalidades de libros
 server.post('/nextread/usuario/:tipo/:idLibro', isAuth, agregarLibroALista);
 server.post('/nextread/resena/:idLibro', isAuth, guardarPuntuacion);
 server.get('/nextread/resenas/:idLibro', obtenerResenas);
+
 // Rutas para listas nombradas
 server.post('/nextread/listas', isAuth, crearLista);
 server.post('/nextread/listas/:nombre/libro/:idLibro', isAuth, agregarLibroAListaEnLista);
 
 server.post('/api/forgot-password', enviarEnlaceRecuperacion);
 server.post('/api/reset-password', resetearPassword);
+
+// Configuracion
+server.post("/nextread/user/change-email-request", isAuth, changeEmailRequest);
+server.get("/api/confirm-email-change", confirmEmailChange);
+server.patch('/nextread/user/change-password', isAuth, changePassword);
+server.post("/nextread/user/delete-account-request", isAuth, deleteAccountRequest);
+server.post("/nextread/user/delete-account-confirm", deleteAccountConfirm);
+
 
 server.listen(3000, '0.0.0.0', async () => {
   try {

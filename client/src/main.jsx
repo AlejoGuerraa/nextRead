@@ -12,9 +12,8 @@ import Seguidos from './pages/seguidos';
 import Configuracion from './pages/configuracion';
 import ResetPassword from './pages/ResetPassword';
 import Cookies from './pages/cookies';
-
-// 👇 IMPORTAMOS LA NUEVA PÁGINA
 import UserProfile from './pages/UserProfile.jsx';
+import ConfirmDelete from './components/settings/confirm-delete.jsx';
 
 import { useEffect } from "react";
 import { useLocation } from "react-router-dom";
@@ -73,9 +72,8 @@ const router = createBrowserRouter([
       { path: "/configuracion", element: <Configuracion /> },
       { path: "/reset-password", element: <ResetPassword /> },
       { path: "/cookies", element: <Cookies /> },
-
-      // 👇 **RUTA NUEVA PARA VER PERFILES DE USUARIOS**
       { path: "/user/:username", element: <UserProfile /> },
+      { path: "/confirm-delete", element: <ConfirmDelete /> }
     ]
   }
 ]);

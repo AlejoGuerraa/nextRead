@@ -9,6 +9,7 @@ const bcrypt = require('bcrypt');
 // CONFIGURAR NODEMAILER (GMAIL + FIX TLS)
 // ========================================================
 
+
 const transporter = nodemailer.createTransport({
     service: 'gmail',
     auth: {

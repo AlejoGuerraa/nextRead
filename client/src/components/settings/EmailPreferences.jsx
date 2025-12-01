@@ -61,6 +61,7 @@ export default function EmailPreferences() {
       </div>
 
       <form onSubmit={handleSave} className="config-form prefs-form">
+        {/*
         <ToggleSwitch
           id="pref-reco"
           checked={recommendations}
@@ -68,7 +69,7 @@ export default function EmailPreferences() {
           label="Recibir recomendaciones"
           description="Sugerencias personalizadas según tu actividad."
         />
-
+        
         <ToggleSwitch
           id="pref-weekly"
           checked={weeklySummary}
@@ -76,7 +77,7 @@ export default function EmailPreferences() {
           label="Resumen semanal"
           description="Resumen con lo más importante de la semana."
         />
-
+        */}
         <ToggleSwitch
           id="pref-social"
           checked={social}
