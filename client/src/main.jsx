@@ -14,6 +14,7 @@ import ResetPassword from './pages/ResetPassword';
 import Cookies from './pages/cookies';
 import UserProfile from './pages/UserProfile.jsx';
 import ConfirmDelete from './components/settings/confirm-delete.jsx';
+import SobreNosotros from './pages/sobreNosotros';
 
 import { useEffect } from "react";
 import { useLocation } from "react-router-dom";
@@ -50,6 +51,8 @@ function TitleManager() {
       document.title = "NextRead - Restablecer Contraseña";
     } else if (path === "/cookies") {
       document.title = "NextRead - Cookies";
+    } else if (path === "/nosotros") {
+      document.title = "NextRead - Sobre Nosotros";
     } else {
       document.title = "NextRead 📚";
     }
@@ -73,7 +76,8 @@ const router = createBrowserRouter([
       { path: "/reset-password", element: <ResetPassword /> },
       { path: "/cookies", element: <Cookies /> },
       { path: "/user/:username", element: <UserProfile /> },
-      { path: "/confirm-delete", element: <ConfirmDelete /> }
+      { path: "/confirm-delete", element: <ConfirmDelete /> },
+      { path: "/nosotros", element: <SobreNosotros /> },
     ]
   }
 ]);

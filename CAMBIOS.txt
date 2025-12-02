@@ -117,3 +117,32 @@ HECHOS:
 - 
 
 
+==========================================================================
+
+01/12/2025:
+
+COSAS HECHAS:
+
+- Funcionalidades de admin, configuracion y algunos carruseles implementados
+- Se vincularon dos carruseles al frontend
+- Si eliminas la cuenta, pone activo en 0
+
+COSAS QUE FALTAN:
+
+- Lo de agus y lo de caro
+- Que en todas las paginas se fijen si la cuenta esta activa, y si no, que lo manden a la pagina de acceso
+- Implementar otros carruseles
+
+ARCHIVOS TOCADOS:
+
+En la carpeta api:
+
+- busqueda.js
+- configuracion.js
+- index.js
+
+En la carpeta client:
+
+- principal.jsx
+- configuracion.jsx
+- DeleteAccount.jsx

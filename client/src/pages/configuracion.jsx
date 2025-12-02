@@ -43,6 +43,22 @@ export default function Configuracion() {
     navigate("/acceso");
   };
 
+  // 🔍 REVISAR SI LA CUENTA ESTÁ ACTIVA
+  useEffect(() => {
+    if (!user) return;
+
+    if (user.activo === 0) {
+      alert("Tu cuenta fue desactivada. Serás redirigido al acceso.");
+
+      // Borrar datos locales
+      localStorage.removeItem("token");
+      localStorage.removeItem("user");
+
+      navigate("/acceso");
+    }
+  }, [user]);
+
+
   return (
     <div className="pagina-configuracion">
       <Header user={user} onRestrictedAction={handleRestrictedAction} />
