@@ -1,0 +1,265 @@
+/* Modal Overlay - base para todos los modales */
+.modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 10000;
+    animation: fadeIn 0.2s ease-out;
+    backdrop-filter: blur(1px);
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
+}
+
+/* Modal Card - contenedor principal */
+.modal-card {
+    background: white;
+    border-radius: 12px;
+    padding: 30px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
+    max-width: 500px;
+    width: 90%;
+    max-height: 90vh;
+    overflow-y: auto;
+    animation: slideIn 0.3s ease-out;
+}
+
+@keyframes slideIn {
+    from {
+        opacity: 0;
+        transform: translateY(-20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Modal Card - variante lista (más ancha) */
+.modal-card.lists-modal {
+    max-width: 700px;
+}
+
+/* Títulos en modales */
+.modal-card h3 {
+    font-size: 20px;
+    font-weight: bold;
+    margin-bottom: 20px;
+    color: #1A374D;
+    text-align: center;
+}
+
+/* Inputs en modales */
+.modal-card input {
+    width: 100%;
+    padding: 12px;
+    margin-bottom: 15px;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    font-size: 14px;
+    box-sizing: border-box;
+    transition: border-color 0.3s ease;
+}
+
+.modal-card input:focus {
+    outline: none;
+    border-color: #406882;
+    box-shadow: 0 0 0 2px rgba(64, 104, 130, 0.1);
+}
+
+/* Botones en modales */
+.modal-card button,
+.modal-card .btn,
+.modal-card .btn-primary,
+.modal-card .btn-small {
+    padding: 10px 15px;
+    border: none;
+    border-radius: 6px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.modal-card .btn,
+.modal-card button[type="button"] {
+    background-color: #999;
+    color: white;
+}
+
+.modal-card .btn:hover,
+.modal-card button[type="button"]:hover {
+    background-color: #777;
+}
+
+.modal-card .btn-primary,
+.modal-card button[type="submit"] {
+    background-color: #406882;
+    color: white;
+    width: 100%;
+}
+
+.modal-card .btn-primary:hover,
+.modal-card button[type="submit"]:hover {
+    background-color: #2f4f5f;
+}
+
+.modal-card .btn-primary:disabled,
+.modal-card button[type="submit"]:disabled {
+    background-color: #ccc;
+    cursor: not-allowed;
+}
+
+.modal-card .btn-small {
+    background-color: #406882;
+    color: white;
+    padding: 8px 12px;
+    font-size: 12px;
+    width: auto;
+}
+
+.modal-card .btn-small:hover {
+    background-color: #2f4f5f;
+}
+
+/* Acciones del modal (botones al pie) */
+.modal-actions {
+    display: flex;
+    gap: 10px;
+    margin-top: 20px;
+}
+
+.modal-actions button {
+    flex: 1;
+}
+
+/* Grid de listas */
+.lists-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 15px;
+    margin: 20px 0;
+}
+
+/* Item de lista en el modal */
+.list-item {
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    overflow: hidden;
+    background: #fff;
+    transition: all 0.3s ease;
+}
+
+.list-item:hover {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    transform: translateY(-2px);
+}
+
+/* Portada del libro en el item */
+.list-item .cover {
+    width: 100%;
+    height: 150px;
+    background: #f5f5f5;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+}
+
+.list-item .cover img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.list-item .cover .placeholder {
+    font-size: 48px;
+}
+
+/* Metadatos del item */
+.list-item .meta {
+    padding: 12px;
+}
+
+.list-item .list-name {
+    font-weight: bold;
+    font-size: 14px;
+    color: #1A374D;
+    margin-bottom: 5px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.list-item .count {
+    font-size: 12px;
+    color: #999;
+    margin-bottom: 10px;
+}
+
+.list-item .btn-small {
+    width: 100%;
+    text-align: center;
+}
+
+/* Mensaje vacío */
+.modal-card .empty {
+    text-align: center;
+    color: #999;
+    padding: 40px 20px;
+    font-size: 14px;
+}
+
+/* Mensajes de estado */
+.modal-card .status-message {
+    padding: 12px;
+    border-radius: 6px;
+    margin-bottom: 15px;
+    font-size: 14px;
+    text-align: center;
+}
+
+.modal-card .status-message.success {
+    background-color: #efe;
+    color: #060;
+    border: 1px solid #0c0;
+}
+
+.modal-card .status-message.error {
+    background-color: #fee;
+    color: #c00;
+    border: 1px solid #f00;
+}
+
+/* Responsive */
+@media (max-width: 600px) {
+    .modal-card {
+        padding: 20px;
+        max-width: 95vw;
+    }
+
+    .modal-card.lists-modal {
+        max-width: 95vw;
+    }
+
+    .lists-grid {
+        grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    }
+
+    .modal-actions {
+        flex-direction: column;
+    }
+
+    .modal-actions button {
+        width: 100%;
+    }
+}
