@@ -282,34 +282,16 @@ MAIL_PASSWORD=tu_contraseña_app
 
 ---
 
-## 🤝 Contribuciones
-
-Las contribuciones son bienvenidas. Para cambios significativos:
-
-1. Fork el proyecto
-2. Crea una rama para tu feature (`git checkout -b feature/AmazingFeature`)
-3. Commit tus cambios (`git commit -m 'Add some AmazingFeature'`)
-4. Push a la rama (`git push origin feature/AmazingFeature`)
-5. Abre un Pull Request
-
----
-
-## 📝 Licencia
-
-Este proyecto está bajo licencia ISC. Ver archivo `LICENSE` para más detalles.
-
----
-
 ## 👥 Equipo
 
-Desarrollado por **Alejo Guerra**
+Desarrollado por **Agustin Rivera, Alejo Guerra, Renata Gallucci, Sofia Power, Carolina Mendez**
 
 ---
 
 ## 📧 Contacto
 
 Para preguntas, sugerencias o reportar bugs:
-- Email: [tu_email@example.com](mailto:tu_email@example.com)
+- Email: [tu_email@example.com](mailto:nextreadoficial@gmail.com)
 - GitHub: [@AlejoGuerraa](https://github.com/AlejoGuerraa)
 
 ---
