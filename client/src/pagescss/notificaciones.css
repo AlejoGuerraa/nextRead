@@ -1,58 +1,164 @@
-.notif-modal {
-  width: 420px;
-  border-radius: 14px;
-  padding: 20px;
-  background: #ffffff;
-  font-family: "Poppins", sans-serif;
+/* CONTENEDOR GENERAL */
+.notif-container {
+  padding: 0;
+  color: #e4e4e4;
+  font-family: 'Inter', sans-serif;
+  width: 100%;
+  animation: slide-up 0.35s ease-out;
 }
 
-.notif-container h2 {
-  margin-bottom: 15px;
+.notif-title {
+  margin: 0 0 20px 0;
+  padding: 0 20px;
+  color: #1a1a1a;
+  font-size: 26px;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  font-weight: 700;
   text-align: center;
+  letter-spacing: -0.3px;
 }
 
+/* LISTA */
 .notif-list {
   display: flex;
   flex-direction: column;
-  gap: 12px;
-  max-height: 300px;
-  overflow-y: auto;
+  gap: 10px;
+  margin: 0;
+  padding: 0 20px 20px 20px;
 }
 
+/* ITEM */
 .notif-item {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 10px;
-  background: #f3f7fa;
+  background: #f5f5f5;
   border-radius: 10px;
+  padding: 14px 16px;
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  position: relative;
+  border-left: 4px solid #09b05c; /* Verde Letterboxd */
+  transition: all 0.2s ease;
+  animation: fade-in 0.35s ease forwards;
+  border: 1px solid #e8e8e8;
 }
 
+.notif-item:hover {
+  background: #fafafa;
+  transform: translateX(2px);
+  box-shadow: 0 3px 12px rgba(0, 0, 0, 0.08);
+}
+
+/* AVATAR */
 .notif-avatar {
-  width: 42px;
-  height: 42px;
-  background: #1a374d;
-  color: white;
+  width: 48px;
+  height: 48px;
+  min-width: 48px;
+  background: #09b05c;
+  color: #000;
+  font-weight: bold;
+  border-radius: 50%;
   display: flex;
   justify-content: center;
   align-items: center;
-  border-radius: 50%;
-  font-weight: 600;
-  font-size: 18px;
+  font-size: 20px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
 }
 
+/* TEXTO */
 .notif-text {
   flex: 1;
-  font-size: 14px;
+  font-size: 15px;
+  line-height: 1.4;
+  color: #333;
 }
 
+.notif-text strong {
+  color: #0a6fb4;
+  font-weight: 700;
+}
+
+/* FECHA */
 .notif-date {
-  font-size: 11px;
-  color: gray;
+  display: block;
+  margin-top: 6px;
+  font-size: 12px;
+  color: #999;
+  white-space: nowrap;
 }
 
+/* PUNTO NO LEÍDO */
+.notif-dot {
+  width: 10px;
+  height: 10px;
+  background: #4da6ff;
+  border-radius: 50%;
+  position: absolute;
+  right: 10px;
+  top: 12px;
+}
+
+/* ESTILOS DE ESTADO PARA DIFERENTES TIPOS DE NOTIFICACIONES */
+.notif-status {
+  padding: 6px 10px;
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+  display: inline-block;
+}
+
+.notif-status.like {
+  background: rgba(255, 100, 130, 0.15);
+  color: #ff6482;
+  border-left: 3px solid #ff6482;
+}
+
+.notif-status.unlike {
+  background: rgba(150, 150, 150, 0.15);
+  color: #a0a0a0;
+  border-left: 3px solid #a0a0a0;
+}
+
+.notif-status.follow {
+  background: rgba(100, 200, 255, 0.15);
+  color: #64c8ff;
+  border-left: 3px solid #64c8ff;
+}
+
+.notif-status.unfollow {
+  background: rgba(200, 100, 100, 0.15);
+  color: #ff8080;
+  border-left: 3px solid #ff8080;
+}
+
+/* Accepted/Rejected styles removed — solicitudes no utilizadas */
+
+/* MENSAJE VACÍO */
 .notif-empty {
-  padding: 20px;
+  color: #999;
   text-align: center;
-  color: #777;
+  font-size: 16px;
+  padding: 40px 20px;
+  font-style: italic;
+}
+
+/* ANIMACIONES */
+@keyframes fade-in {
+  from { opacity: 0; transform: translateY(5px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes slide-up {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* ANIMACIÓN DEL MODAL */
+.modal-fade-in {
+  animation: modal-fade 0.35s ease;
+}
+
+@keyframes modal-fade {
+  from { opacity: 0; transform: scale(0.8); }
+  to { opacity: 1; transform: scale(1); }
 }

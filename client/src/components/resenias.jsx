@@ -119,41 +119,62 @@ export default function Resenas() {
     };
 
     const handleLike = async (resenaId) => {
+        const idNum = Number(resenaId);
+        
+        // Prevenir doble click / ya está en vuelo
+        if (likingIds.includes(idNum)) return;
+
+        const token = localStorage.getItem('token');
+        if (!token) {
+            toast?.push('Debes iniciar sesión para dar like', 'error');
+            return;
+        }
+
+        // Marcar como en-vuelo INMEDIATAMENTE
+        setLikingIds(prev => [...prev, idNum]);
+
         try {
-            const idNum = Number(resenaId);
-            // prevent double clicks / already liked
-            if (likedResenas.map(Number).includes(idNum) || likingIds.includes(idNum)) return;
+            const isAlreadyLiked = likedResenas.map(Number).includes(idNum);
 
-            const token = localStorage.getItem('token');
-            if (!token) {
-                toast?.push('Debes iniciar sesión para dar like', 'error');
-                return;
+            if (isAlreadyLiked) {
+                // Ya likeado: hacer DELETE al servidor para quitar like
+                await axios.delete(`${API_BASE}/resena/${idNum}/like`, {
+                    headers: { Authorization: `Bearer ${token}` }
+                });
+
+                // Actualizar estado local
+                const newLiked = likedResenas.filter(id => Number(id) !== idNum);
+                setLikedResenas(newLiked);
+                localStorage.setItem('likedResenas', JSON.stringify(newLiked));
+                
+                // Actualizar contador localmente
+                setReviews(prev => prev.map(r => r.id === idNum ? { ...r, likes: Math.max(0, (r.likes || 0) - 1) } : r));
+            } else {
+                // No likeado: hacer POST al servidor para agregar like
+                const res = await axios.post(`${API_BASE}/resena/${idNum}/like`, null, {
+                    headers: { Authorization: `Bearer ${token}` }
+                });
+
+                // Actualizar estado local
+                const newLiked = Array.from(new Set([...likedResenas.map(Number), idNum]));
+                setLikedResenas(newLiked);
+                localStorage.setItem('likedResenas', JSON.stringify(newLiked));
+                
+                // Actualizar contador desde la respuesta
+                setReviews(prev => prev.map(r => r.id === idNum ? { ...r, likes: res.data.likes } : r));
             }
-
-            // optimistic: mark as in-flight and mark liked locally
-            setLikingIds(prev => [...prev, idNum]);
-            const newLiked = Array.from(new Set([...likedResenas.map(Number), idNum]));
-            setLikedResenas(newLiked);
-            localStorage.setItem('likedResenas', JSON.stringify(newLiked));
-
-            const res = await axios.post(`${API_BASE}/resena/${idNum}/like`, null, {
-                headers: { Authorization: `Bearer ${token}` }
-            });
-
-            // update likes count in local reviews state
-            setReviews(prev => prev.map(r => r.id === idNum ? { ...r, likes: res.data.likes } : r));
         } catch (err) {
-            console.error('Error al dar like:', err);
-            const msg = err.response?.data?.error || 'Error al dar like';
-            toast?.push(msg, 'error');
-            // if server rejected because already liked, ensure local state reflects that
-            if (err.response?.status === 400) {
-                const idNum = Number(resenaId);
-                setLikedResenas(prev => Array.from(new Set([...prev.map(Number), idNum])));
-                localStorage.setItem('likedResenas', JSON.stringify(Array.from(new Set([...likedResenas.map(Number), idNum]))));
+            console.error('Error al procesar like:', err);
+            
+            // Revertir cambio local en caso de error
+            const isAlreadyLiked = likedResenas.map(Number).includes(idNum);
+            if (!isAlreadyLiked) {
+                // Si intentamos agregar y falla, lo quitamos del estado local
+                setLikedResenas(prev => prev.filter(id => Number(id) !== idNum));
+                localStorage.setItem('likedResenas', JSON.stringify(likedResenas.filter(id => Number(id) !== idNum)));
             }
         } finally {
-            const idNum = Number(resenaId);
+            // Limpiar likingIds al final, después de que TODO se resuelva
             setLikingIds(prev => prev.filter(x => x !== idNum));
         }
     };
@@ -288,16 +309,20 @@ export default function Resenas() {
                                     <button
                                         type="button"
                                         onClick={() => handleLike(r.id)}
+                                        disabled={likingIds.includes(r.id)}
                                         style={{
                                             background: 'none',
                                             border: 'none',
-                                            cursor: 'pointer',
+                                            cursor: likingIds.includes(r.id) ? 'not-allowed' : 'pointer',
                                             color: likedResenas.includes(r.id) ? '#e74c3c' : '#999',
-                                            fontSize: 20
+                                            fontSize: 20,
+                                            opacity: likingIds.includes(r.id) ? 0.6 : 1,
+                                            transition: 'color 0.2s'
                                         }}
+                                        title={likedResenas.includes(r.id) ? 'Quitar like' : 'Dar like'}
                                         aria-label="Me gusta"
                                     >
-                                        ♥
+                                        {likingIds.includes(r.id) ? '⏳' : '♥'}
                                     </button>
 
                                     <span style={{ color: '#666' }}>{r.likes || 0}</span>

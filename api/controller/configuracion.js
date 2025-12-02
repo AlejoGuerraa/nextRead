@@ -134,24 +134,32 @@ const deleteAccountRequest = async (req, res) => {
 
         const link = `http://localhost:5173/confirm-delete?token=${token}`;
 
-        await sendEmail({
-            to: user.correo,
-            subject: "Confirmar eliminación de cuenta",
-            html: `
-                <h3>Confirmar eliminación de cuenta</h3>
-                <p>Estás a punto de eliminar tu cuenta permanentemente.</p>
-                <p><strong>Esta acción es irreversible.</strong></p>
+        // Enviar email ASYNC (NO bloquea respuesta si falla)
+        setImmediate(async () => {
+            try {
+                await sendEmail({
+                    to: user.correo,
+                    subject: "Confirmar eliminación de cuenta",
+                    html: `
+                        <h3>Confirmar eliminación de cuenta</h3>
+                        <p>Estás a punto de eliminar tu cuenta permanentemente.</p>
+                        <p><strong>Esta acción es irreversible.</strong></p>
 
-                <a href="${link}" style="
-                    background:#d9534f;
-                    color:white;
-                    padding:10px 16px;
-                    border-radius:5px;
-                    text-decoration:none;
-                ">Confirmar eliminación</a>
+                        <a href="${link}" style="
+                            background:#d9534f;
+                            color:white;
+                            padding:10px 16px;
+                            border-radius:5px;
+                            text-decoration:none;
+                        ">Confirmar eliminación</a>
 
-                <p>Este enlace expira en 15 minutos.</p>
-            `
+                        <p>Este enlace expira en 15 minutos.</p>
+                    `
+                });
+                console.log('[DeleteAccount] Email enviado a:', user.correo);
+            } catch (emailErr) {
+                console.error('[DeleteAccount] Error email (no bloquea):', emailErr.message);
+            }
         });
 
         return res.status(200).json({

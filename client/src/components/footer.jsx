@@ -45,10 +45,10 @@ const Footer = () => {
                         <a href="TU_LINK_FACEBOOK" target="_blank" rel="noopener noreferrer">
                             <FontAwesomeIcon icon={faFacebookF} />
                         </a>
-                        <a href="TU_LINK_TWITTER" target="_blank" rel="noopener noreferrer">
+                        <a href="https://x.com/NextReadOficial" target="_blank" rel="noopener noreferrer">
                             <FontAwesomeIcon icon={faTwitter} />
                         </a>
-                        <a href="TU_LINK_INSTAGRAM" target="_blank" rel="noopener noreferrer">
+                        <a href="https://www.instagram.com/nextread.oficial/" target="_blank" rel="noopener noreferrer">
                             <FontAwesomeIcon icon={faInstagram} />
                         </a>
                     </div>

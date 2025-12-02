@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { Modal } from "./modal";
 import axios from "axios";
 
-const DEFAULT_BANNER_URL = "/banners/bibliotecaAntigua.jpg"; // fallback
+const DEFAULT_BANNER_URL = "/banners/bannerBiblioteca.jpg"; // fallback
 
 export function ModalGustos({ open, close, onFinish, onBack }) {
   const [bannerOptions, setBannerOptions] = useState([]);

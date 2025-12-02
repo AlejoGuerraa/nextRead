@@ -111,3 +111,25 @@
   color: var(--primary);
   margin-bottom: 12px;
 }
+
+/* FAVORITOS */
+.userprofile-favorites {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 15px;
+  padding: 15px;
+  background: #f0f4ff;
+  border-radius: 10px;
+  border-left: 4px solid var(--primary);
+}
+
+.userprofile-favorites p {
+  margin: 0;
+  color: #333;
+  font-size: 0.95rem;
+}
+
+.userprofile-favorites strong {
+  color: var(--primary);
+}

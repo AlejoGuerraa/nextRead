@@ -176,3 +176,14 @@ dialog::backdrop {
   max-height: 78vh;
   overflow: auto;
 }
+
+/* === MODAL DE NOTIFICACIONES === */
+.modal-dialog.notif-modal {
+  width: 520px !important;
+  max-width: 95% !important;
+  padding-top: 40px !important;
+  padding-bottom: 40px !important;
+  background: #fff !important;
+  max-height: 85vh !important;
+  overflow-y: auto !important;
+}

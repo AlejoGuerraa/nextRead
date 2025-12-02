@@ -2,12 +2,14 @@
 import { Modal } from "./modal";
 import React, { useState } from 'react';
 import axios from "axios";
+import { Eye, EyeOff } from 'lucide-react';
 
 export const LoginModal = ({ open, close, loginForm, error, onChange, submit, openRegister }) => {
     const [isRecoveryActive, setIsRecoveryActive] = useState(false);
     const [recoveryEmail, setRecoveryEmail] = useState('');
     const [recoveryMessage, setRecoveryMessage] = useState('');
     const [recoveryLoading, setRecoveryLoading] = useState(false);
+    const [showPass, setShowPass] = useState(false);
 
     // --- Enviar email al servidor ---
     const handleRecoverySubmit = async (e) => {
@@ -53,6 +55,9 @@ export const LoginModal = ({ open, close, loginForm, error, onChange, submit, op
         setRecoveryLoading(false);
     };
 
+    // ---------------------------------
+    // RECOVERY FORM
+    // ---------------------------------
     const RecoveryForm = (
         <form className="login-content" onSubmit={handleRecoverySubmit}>
             <h2>Recuperar Contraseña</h2>
@@ -97,37 +102,73 @@ export const LoginModal = ({ open, close, loginForm, error, onChange, submit, op
         </form>
     );
 
+    // ---------------------------------
+    // LOGIN FORM
+    // ---------------------------------
     const LoginForm = (
         <form className="login-content" onSubmit={submit}>
             <h2>Vuelve con nosotros ¡Logueate!</h2>
 
-            <input
-                type="email"
-                name="correo"
-                placeholder="Email"
-                value={loginForm.correo}
-                onChange={onChange}
-            />
+            {/* EMAIL - MISMO LARGO */}
+            <div style={{ width: "100%", marginBottom: 12 }}>
+                <input
+                    type="email"
+                    name="correo"
+                    placeholder="Email"
+                    value={loginForm.correo}
+                    onChange={onChange}
+                    style={{ width: '100%', padding: '12px', fontSize: 16 }}
+                />
+            </div>
 
-            <input
-                type="password"
-                name="contrasena"
-                placeholder="Contraseña"
-                value={loginForm.contrasena}
-                onChange={onChange}
-            />
+            {/* CONTRASEÑA - MISMO LARGO */}
+            <div style={{ width: "100%", position: 'relative', marginBottom: 12 }}>
+                <input
+                    type={!showPass ? "password" : "text"}
+                    name="contrasena"
+                    placeholder="Contraseña"
+                    value={loginForm.contrasena}
+                    onChange={onChange}
+                    style={{ width: '100%', padding: '12px', fontSize: 16, paddingRight: 44 }}
+                />
+                <span 
+                    onClick={() => setShowPass(!showPass)}
+                    style={{ 
+                        position: 'absolute',
+                        right: 12,
+                        top: '50%',
+                        transform: 'translateY(-50%)',
+                        cursor: 'pointer',
+                        color: '#666'
+                    }}
+                >
+                    {!showPass ? <Eye size={18} /> : <EyeOff size={18} />}
+                </span>
+            </div>
 
             {error && <p style={{ color: "red", marginTop: "10px" }}>{error}</p>}
 
-            <button type="submit">Iniciar Sesión</button>
+            <button type="submit" className="btn-primary" style={{ width: '100%', padding: '10px 0' }}>
+                Iniciar Sesión
+            </button>
 
-            <span className="redirect-link" onClick={handleOpenRecovery} style={{ cursor: 'pointer', color: '#406882', textDecoration: 'underline' }}>
-                ¿Olvidaste tu contraseña?
-            </span>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginTop: 12, alignItems: 'flex-start' }}>
+                <span 
+                    className="redirect-link" 
+                    onClick={handleOpenRecovery}
+                    style={{ cursor: 'pointer', color: '#406882', textDecoration: 'underline' }}
+                >
+                    ¿Olvidaste tu contraseña?
+                </span>
 
-            <span className="redirect-link" onClick={openRegister}>
-                ¿No tenés cuenta? Regístrate
-            </span>
+                <span 
+                    className="redirect-link" 
+                    onClick={openRegister}
+                    style={{ cursor: 'pointer', color: '#406882', textDecoration: 'underline' }}
+                >
+                    ¿No tenés cuenta? Regístrate
+                </span>
+            </div>
         </form>
     );
 

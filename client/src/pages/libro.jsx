@@ -4,7 +4,7 @@ import { useParams } from "react-router-dom";
 import axios from "axios";
 
 import InfoLibro from "../components/infoLibro";
-import ChooseListModal from "../components/ChooseListModal";
+import ElegirListaModal from "../components/listasUsuario/elegirListaModal";
 import Resenas from "../components/resenias";
 import Header from "../components/header";
 import Footer from "../components/footer";
@@ -146,7 +146,7 @@ export default function Libro() {
 
         <Resenas />
       </div>
-      <ChooseListModal isOpen={showChooseListModal} onClose={() => setShowChooseListModal(false)} listas={fullUser?.listas || {}} bookId={id} onAdded={(name, lista) => {
+      <ElegirListaModal isOpen={showChooseListModal} onClose={() => setShowChooseListModal(false)} listas={fullUser?.listas || {}} bookId={id} onAdded={(name, lista) => {
         // refrescar datos de usuario
         const token = localStorage.getItem('token');
         if (token) {

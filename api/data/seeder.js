@@ -50,11 +50,31 @@ async function seedDatabase() {
     const autoresCreados = await Autor.bulkCreate(autoresData);
     console.log(`✔ ${autoresCreados.length} autores cargados.`);
 
+    // Crear mapa de nombre de autor -> id
+    const autorMap = {};
+    autoresCreados.forEach(autor => {
+      autorMap[autor.nombre] = autor.id;
+    });
+
+    // Actualizar libros con los IDs correctos de autores
+    const librosActualizados = librosData.map(libro => {
+      // Buscar el autor por nombre (usando id_autor_nombre si existe en el JSON)
+      const nombreAutor = libro.id_autor_nombre || libro.nombreAutor;
+      if (nombreAutor && autorMap[nombreAutor]) {
+        return {
+          ...libro,
+          id_autor: autorMap[nombreAutor]
+        };
+      }
+      // Si no hay nombre, usar el id_autor original
+      return libro;
+    });
+
     // ------------------------------
     // Cargar LIBROS
     // ------------------------------
     console.log('Cargando libros...');
-    const librosCreados = await Libro.bulkCreate(librosData);
+    const librosCreados = await Libro.bulkCreate(librosActualizados);
     console.log(`✔ ${librosCreados.length} libros cargados.`);
 
     console.log('Seeding completado con éxito.');

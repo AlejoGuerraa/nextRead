@@ -3,6 +3,7 @@ const Libro = require('../models/Libro');
 const Usuario = require('../models/Usuario');
 const Icono = require('../models/Icono');
 const sequelize = require('../config/db');
+const { agregarNotificacion } = require('./peticionesUsuario');
 
 const getAllBooks = async (_req, res) => {
   try {
@@ -229,10 +230,76 @@ const obtenerResenas = async (req, res) => {
   }
 };
 
-// Incrementar likes de una reseña
+// Toggle de likes en una reseña
 const ResenaLike = require('../models/ResenaLike');
 
 const likeResena = async (req, res) => {
+  try {
+    // Normalizar ids a números para evitar problemas de tipo
+    const userIdRaw = req.user?.id;
+    const { id: resenaIdRaw } = req.params;
+    const userId = Number(userIdRaw);
+    const resenaId = Number(resenaIdRaw);
+
+    console.log('[likeResena] called - userId:', userIdRaw, '->', userId, 'resenaId:', resenaIdRaw, '->', resenaId);
+
+    if (!userId || Number.isNaN(userId)) return res.status(401).json({ error: 'No autorizado' });
+    if (!resenaId || Number.isNaN(resenaId)) return res.status(400).json({ error: 'ID de reseña inválido' });
+
+    const resena = await Resena.findByPk(resenaId);
+    if (!resena) return res.status(404).json({ error: 'Reseña no encontrada' });
+
+    console.log('[likeResena] resena found - resena.usuario_id:', resena.usuario_id);
+
+    // Usar findOrCreate para evitar condiciones de carrera y manejar idempotencia
+    const [likeRecord, created] = await ResenaLike.findOrCreate({
+      where: { resena_id: resenaId, usuario_id: userId },
+      defaults: { resena_id: resenaId, usuario_id: userId }
+    });
+
+    if (!created) {
+      // Ya existía: devolver contador actual
+      return res.json({ message: 'Ya has dado like a esta reseña', likes: resena.likes || 0 });
+    }
+
+    // Se creó el like: incrementar contador y notificar
+    try {
+      resena.likes = (resena.likes || 0) + 1;
+      await resena.save();
+
+      // Solo enviar notificación si el que da like es diferente del que escribió la reseña
+      if (userId !== resena.usuario_id) {
+        const usuarioActual = await Usuario.findByPk(userId, { attributes: ['usuario'] });
+        console.log('[likeResena] usuarioActual.usuario:', usuarioActual && usuarioActual.usuario);
+
+        if (usuarioActual) {
+          await agregarNotificacion(
+            resena.usuario_id,
+            `@${usuarioActual.usuario} le dio like a tu reseña.`,
+            usuarioActual.usuario,
+            { type: 'new_like', fromUser: userId, resenaId: resenaId, bookId: resena.libro_id }
+          );
+        }
+      }
+
+      return res.json({ message: 'Like contabilizado', likes: resena.likes });
+    } catch (err) {
+      console.error('Error procesando likeResena (post-create):', err);
+      // si hubo error después de crear el registro, intentamos revertir el likeRecord
+      try { await likeRecord.destroy(); } catch (e) { /* ignore */ }
+      return res.status(500).json({ error: 'Error al procesar like' });
+    }
+  } catch (err) {
+    console.error('Error en likeResena:', err);
+    if (err.name === 'SequelizeUniqueConstraintError') {
+      return res.status(400).json({ error: 'Ya has dado like a esta reseña' });
+    }
+    res.status(500).json({ error: 'Error al procesar like' });
+  }
+};
+
+// Remover un like de una reseña
+const unlikeResena = async (req, res) => {
   try {
     const userId = req.user?.id;
     const { id } = req.params;
@@ -243,24 +310,20 @@ const likeResena = async (req, res) => {
     const resena = await Resena.findByPk(id);
     if (!resena) return res.status(404).json({ error: 'Reseña no encontrada' });
 
-    // Verificar si ya existe un like de este usuario para esta reseña
-    const existente = await ResenaLike.findOne({ where: { resena_id: id, usuario_id: userId } });
-    if (existente) return res.status(400).json({ error: 'Ya has dado like a esta reseña' });
+    // Buscar y eliminar el registro de like
+    const like = await ResenaLike.findOne({ where: { resena_id: id, usuario_id: userId } });
+    if (!like) return res.status(400).json({ error: 'No has dado like a esta reseña' });
 
-    // Crear registro de like y actualizar contador atómico
-    await ResenaLike.create({ resena_id: id, usuario_id: userId });
-
-    // Incrementar likes en la reseña
-    resena.likes = (resena.likes || 0) + 1;
+    await like.destroy();
+    resena.likes = Math.max(0, (resena.likes || 1) - 1);
     await resena.save();
 
-    res.json({ message: 'Like contabilizado', likes: resena.likes });
+    // No enviamos notificación al quitar like (requerimiento: solo notificar on like)
+
+    res.json({ message: 'Like removido', likes: resena.likes });
   } catch (err) {
-    console.error('Error en likeResena:', err);
-    if (err.name === 'SequelizeUniqueConstraintError') {
-      return res.status(400).json({ error: 'Ya has dado like a esta reseña' });
-    }
-    res.status(500).json({ error: 'Error al procesar like' });
+    console.error('Error en unlikeResena:', err);
+    res.status(500).json({ error: 'Error al remover like' });
   }
 };
 
@@ -269,5 +332,6 @@ module.exports = {
   agregarLibroALista,
   guardarPuntuacion,
   obtenerResenas,
-  likeResena
+  likeResena,
+  unlikeResena
 }

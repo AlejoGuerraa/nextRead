@@ -1,15 +1,9 @@
 const User = require('../models/Usuario');
 const Resena = require('../models/Resena');
+const emailService = require('../services/emailService');
 
-// traer helper para notificaciones (está exportado en peticionesUsuario)
-let agregarNotificacion = null;
-try {
-  // require lazily to avoid potential circular require issues at load time
-  agregarNotificacion = require('./peticionesUsuario').agregarNotificacion;
-} catch (e) {
-  // ignore if not available
-  agregarNotificacion = null;
-}
+// Importar helper para notificaciones
+const { agregarNotificacion } = require('./peticionesUsuario');
 
 // Banear usuario: marca activo = 0
 const banearUsuario = async (req, res) => {
@@ -34,8 +28,33 @@ const banearUsuario = async (req, res) => {
     usuario.activo = 0;
     await usuario.save();
 
+    const { descargo } = req.body || {};
+
     // Notificar al usuario (si existe el helper)
     try { if (agregarNotificacion) await agregarNotificacion(usuario.id, 'Has sido baneado por un administrador.', 'Sistema'); } catch (_) {}
+
+    // Enviar correo ASYNC (NO bloquea respuesta si falla)
+    setImmediate(async () => {
+      try {
+        const subject = 'Cuenta suspendida - NextRead';
+        const html = `
+          <p>Hola ${usuario.nombre || ''},</p>
+          <p>Tu cuenta ha sido suspendida por un administrador.</p>
+          ${descargo ? `<p><strong>Motivo:</strong></p><div style="padding:10px;border-left:4px solid #d33;background:#fff">${descargo}</div>` : ''}
+          <p>Si consideras que esto es un error, por favor responde a este correo.</p>
+          <p>Equipo NextRead</p>
+        `;
+
+        if (usuario.correo) {
+          await emailService({ to: usuario.correo, subject, html });
+          console.log('[Ban] Email enviado a:', usuario.correo);
+        } else {
+          console.warn('[Ban] Usuario sin correo, id:', usuario.id);
+        }
+      } catch (emailErr) {
+        console.error('[Ban] Error email (no bloquea):', emailErr.message);
+      }
+    });
 
     return res.json({ message: 'Usuario baneado correctamente', usuario });
   } catch (err) {
@@ -45,7 +64,6 @@ const banearUsuario = async (req, res) => {
 };
 
 // Eliminar comentario/resena por id
-const emailService = require('../services/emailService');
 const eliminarComentario = async (req, res) => {
   // El ID del usuario administrador que realiza la acción se adjunta en el middleware
   const adminId = req.user.id;

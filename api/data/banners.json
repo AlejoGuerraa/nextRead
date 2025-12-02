@@ -1,17 +1,20 @@
 [
   {
-    "url": "/banners/bibliotecaAntigua.jpg"
+    "url": "/banners/bannerSol.jpg"
   },
   {
-    "url": "/banners/cafeYlectura.jpg"
+    "url": "/banners/bannerCienAS.png"
   },
   {
-    "url": "/banners/minimalistaAzul.jpg"
+    "url": "/banners/bannerMetamorfosis.jpg"
   },
   {
-    "url": "/banners/bosqueMagico.jpg"
+    "url": "/banners/bannerSherlock.png"
   },
   {
-    "url": "/banners/cieloEstrellado.jpg"
+    "url": "/banners/bannerBiblioteca.jpg"
+  },
+  {
+    "url": "/banners/bannerCielo.jpg"
   }
 ]

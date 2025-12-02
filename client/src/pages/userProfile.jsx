@@ -62,17 +62,30 @@ export default function UserProfile() {
   };
 
   // --------------------------------------
-  // VER SI YA LO SIGO
-  // --------------------------------------
+  // Verificar si sigo al usuario (GET endpoint)
   const fetchFollowState = async (idUser) => {
     try {
+      const token = localStorage.getItem('token');
+      const currentUser = JSON.parse(localStorage.getItem('user') || '{}');
+      
+      if (!token || !currentUser.id) {
+        setIsFollowing(false);
+        return;
+      }
+      
+      // Traer los seguidores de idUser y ver si currentUser está en la lista
       const res = await fetch(
-        `http://localhost:3000/nextread/seguir/estado/${idUser}`
+        `http://localhost:3000/nextread/user/${idUser}/seguidores`,
+        { headers: { Authorization: `Bearer ${token}` } }
       );
       const data = await res.json();
-      setIsFollowing(data.sigue || false);
+      
+      // Si currentUser está en la lista de seguidores, significa que currentUser sigue a idUser
+      const siguiendo = data.seguidores && data.seguidores.some(s => s.usuario.id === currentUser.id);
+      setIsFollowing(siguiendo);
     } catch (err) {
       console.log("Error follow state:", err);
+      setIsFollowing(false);
     }
   };
 
@@ -82,15 +95,48 @@ export default function UserProfile() {
   const toggleFollow = async () => {
     if (!user) return;
 
+    const token = localStorage.getItem('token');
+    if (!token) {
+      alert('Debes iniciar sesión para seguir a usuarios');
+      return;
+    }
+
     const url = isFollowing
       ? `http://localhost:3000/nextread/dejar-seguir/${user.id}`
       : `http://localhost:3000/nextread/seguir/${user.id}`;
 
     try {
-      await fetch(url, { method: "POST" });
-      setIsFollowing(!isFollowing);
+      const res = await fetch(url, {
+        method: "POST",
+        headers: { Authorization: `Bearer ${token}` }
+      });
+
+      if (res.ok) {
+        // Actualizar UI inmediatamente
+        const newFollowState = !isFollowing;
+        setIsFollowing(newFollowState);
+        
+        // Actualizar contadores del perfil que se está viendo
+        const diffFollowers = newFollowState ? 1 : -1;
+        setUser(prev => ({
+          ...prev,
+          seguidores: (prev.seguidores || 0) + diffFollowers
+        }));
+        
+        // Actualizar contador de "siguiendo" del usuario actual en localStorage
+        const currentUser = JSON.parse(localStorage.getItem('user') || '{}');
+        if (currentUser.id) {
+          const diffFollowing = newFollowState ? 1 : -1;
+          currentUser.siguiendo = (currentUser.siguiendo || 0) + diffFollowing;
+          localStorage.setItem('user', JSON.stringify(currentUser));
+        }
+      } else {
+        const err = await res.json();
+        alert(err.error || 'Error al cambiar seguimiento');
+      }
     } catch (err) {
       console.log("Error follow:", err);
+      alert('Error al cambiar seguimiento');
     }
   };
 
@@ -135,18 +181,18 @@ export default function UserProfile() {
 
           {/* -------- BIO -------- */}
           <p className="userprofile-bio">
-            {user.bio || "Este usuario aún no escribió su biografía."}
+            {user.descripcion || "Este usuario aún no escribió su biografía."}
           </p>
 
           {/* -------- STATS -------- */}
           <div className="stats-row">
             <div className="stat-box">
-              <strong>{user.seguidores || 0}</strong>
+              <strong>{user.seguidores ?? 0}</strong>
               <span>Seguidores</span>
             </div>
 
             <div className="stat-box">
-              <strong>{user.siguiendo || 0}</strong>
+              <strong>{user.siguiendo ?? 0}</strong>
               <span>Siguiendo</span>
             </div>
 
@@ -168,9 +214,31 @@ export default function UserProfile() {
             <p>
               <strong>Nombre:</strong> {user.nombre} {user.apellido}
             </p>
-            <p>
-              <strong>Email:</strong> {user.correo}
-            </p>
+
+            {/* Mostrar favoritos en lugar de email para otros usuarios */}
+            {user.usuario === (JSON.parse(localStorage.getItem('user') || '{}').usuario) ? (
+              <p>
+                <strong>Email:</strong> {user.correo}
+              </p>
+            ) : (
+              <div className="userprofile-favorites">
+                {user.autor_preferido && (
+                  <p>
+                    <strong> Autor favorito:</strong> {user.autor_preferido}
+                  </p>
+                )}
+                {user.genero_preferido && (
+                  <p>
+                    <strong> Género favorito:</strong> {user.genero_preferido}
+                  </p>
+                )}
+                {user.titulo_preferido && (
+                  <p>
+                    <strong> Libro favorito:</strong> {user.titulo_preferido}
+                  </p>
+                )}
+              </div>
+            )}
 
             {user.pais && (
               <p>

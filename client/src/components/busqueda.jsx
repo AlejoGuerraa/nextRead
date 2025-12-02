@@ -25,8 +25,8 @@ export default function SearchBar() {
     function FollowButton({ user }) {
         const [state, setState] = useState("idle");
 
-        const token = localStorage.getItem("token");
         const storedUser = JSON.parse(localStorage.getItem("user") || "null");
+        const token = localStorage.getItem("token");
         const currentId = storedUser?.id;
 
         const disabledSelf = currentId && Number(currentId) === Number(user.id);
@@ -39,13 +39,14 @@ export default function SearchBar() {
             try {
                 setState("loading");
 
+                // Usar el nuevo endpoint directo de seguir
                 await axios.post(
-                    `http://localhost:3000/nextread/follow/request/${user.id}`,
+                    `http://localhost:3000/nextread/seguir/${user.id}`,
                     {},
                     { headers: { Authorization: `Bearer ${token}` } }
                 );
 
-                setState("sent");
+                setState("following");
             } catch (err) {
                 console.error("follow error", err?.response?.data || err);
                 const msg = err?.response?.data?.error || "";
@@ -55,9 +56,8 @@ export default function SearchBar() {
         };
 
         if (disabledSelf) return null;
-        if (state === "sent") return <button className="btn-sent" disabled>Solicitud enviada</button>;
         if (state === "following") return <button className="btn-unfollow" disabled>Siguiendo</button>;
-        if (state === "loading") return <button className="btn-follow" disabled>Enviando…</button>;
+        if (state === "loading") return <button className="btn-follow" disabled>Siguiendo…</button>;
 
         return (
             <button className="btn-follow" onClick={handleFollow}>

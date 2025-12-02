@@ -76,6 +76,7 @@ const router = createBrowserRouter([
       { path: "/reset-password", element: <ResetPassword /> },
       { path: "/cookies", element: <Cookies /> },
       { path: "/user/:username", element: <UserProfile /> },
+      { path: "/usuario/:username", element: <UserProfile /> },
       { path: "/confirm-delete", element: <ConfirmDelete /> },
       { path: "/nosotros", element: <SobreNosotros /> },
     ]

@@ -1,7 +1,7 @@
 import React, { useRef, useEffect, useState } from "react";
 import "../pagescss/carrouselImagenes.css";
 
-export default function Carousel({ slides }) {
+export default function Carousel({ slides, onSlideClick }) {
     // Se Empieza directamente en la primera imagen real (indice 1).
     const [currentIndex, setCurrentIndex] = useState(1);
     const listRef = useRef(null);
@@ -85,7 +85,14 @@ export default function Carousel({ slides }) {
             <div className="container-images">
                 <ul ref={listRef}>
                     {extendedSlides.map((s, i) => (
-                        <li key={i}>
+                        <li
+                            key={i}
+                            role={onSlideClick ? 'button' : undefined}
+                            tabIndex={onSlideClick ? 0 : undefined}
+                            onKeyDown={onSlideClick ? (e) => { if (e.key === 'Enter' || e.key === ' ') onSlideClick(s); } : undefined}
+                            onClick={onSlideClick ? () => onSlideClick(s) : undefined}
+                            style={{ cursor: onSlideClick ? 'pointer' : 'default' }}
+                        >
                             <img src={s.imgUrl} alt="" />
                         </li>
                     ))}

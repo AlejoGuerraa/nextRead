@@ -1,4 +1,3 @@
-// src/models/asociaciones.js
 const { DataTypes } = require('sequelize');
 const sequelize = require('../config/db');
 
@@ -6,6 +5,7 @@ const Usuario = require('./Usuario');
 const Libro = require('./Libro');
 const Autor = require('./Autor');
 const Resena = require('./Resena');
+const ResenaLike = require('./ResenaLike');
 const Seguidos_Seguidores = require('./Seguidos_seguidores');
 const Logro = require('./Logro');
 const Usuario_Logro = require('./Usuario_Logro');
@@ -54,6 +54,27 @@ Usuario.hasMany(Resena, {
 Libro.hasMany(Resena, {
     foreignKey: 'libro_id',
     as: 'Resenas'
+});
+
+// 👍 ResenaLike relationships
+ResenaLike.belongsTo(Resena, {
+    foreignKey: 'resena_id',
+    as: 'Resena'
+});
+
+ResenaLike.belongsTo(Usuario, {
+    foreignKey: 'usuario_id',
+    as: 'Usuario'
+});
+
+Resena.hasMany(ResenaLike, {
+    foreignKey: 'resena_id',
+    as: 'Likes'
+});
+
+Usuario.hasMany(ResenaLike, {
+    foreignKey: 'usuario_id',
+    as: 'ResenaLikes'
 });
 
 // 👥 Amigos (relación doble)
@@ -136,4 +157,4 @@ Usuario.belongsToMany(Usuario, {
     otherKey: 'id_remitente'
 });
 
-module.exports = { Usuario, Libro, Resena, Seguidos_Seguidores, Logro, Usuario_Logro, Autor, Icono, Banner };
+module.exports = { Usuario, Libro, Resena, ResenaLike, Seguidos_Seguidores, Logro, Usuario_Logro, Autor, Icono, Banner };

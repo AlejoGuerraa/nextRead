@@ -11,10 +11,9 @@ import Header from "../components/header";
 import BannerPerfil from "../components/perfil/bannerPerfil";
 import SeccionAbout from "../components/perfil/seccionAbout";
 import Estadisticas from "../components/perfil/estadisticas";
-import ListaLogros from "../components/logros/listaLogros";
 import BookList from "../components/carrouselLibros";
 import Footer from "../components/footer";
-import CreateListModal from "../components/CreateListModal";
+import CrearListaModal from "../components/listasUsuario/crearListaModal";
 
 const COLORS = {
   primary: "#1A374D",
@@ -63,6 +62,7 @@ export default function Perfil() {
 
   const handleLogout = () => {
     localStorage.removeItem("user");
+    localStorage.removeItem("token");
     navigate("/acceso");
   };
 
@@ -224,11 +224,7 @@ export default function Perfil() {
 
   const ratingGeneral = computeGeneralRating();
 
-  const userAchievements = Array.isArray(user.logros)
-    ? user.logros
-    : Array.isArray(user.logros_ids)
-      ? user.logros_ids
-      : [];
+  
 
   const normalizeBooks = (arr) =>
     arr.map((b) => ({
@@ -368,14 +364,11 @@ export default function Perfil() {
 
         </section>
 
-        <section className="achievements-section">
-          <h3 className="section-title">Logros</h3>
-          <ListaLogros logros={userAchievements} />
-        </section>
+        {/* Logros ocultos según solicitud del usuario */}
       </main>
 
       <Footer />
-      <CreateListModal isOpen={showCreateModal} onClose={() => setShowCreateModal(false)} onCreated={() => { refreshUser(); }} />
+      <CrearListaModal isOpen={showCreateModal} onClose={() => setShowCreateModal(false)} onCreated={() => { refreshUser(); }} />
     </div>
   );
 }

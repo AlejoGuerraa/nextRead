@@ -1,12 +1,9 @@
 
 // File: src/components/settings/AdminBanUser.jsx
 import React, { useEffect, useState } from 'react';
+import axios from 'axios';
 
-const mockUsers = [
-  { id: 1, nombre: 'Loco Gonzalez', correo: 'loco@gmail.com', usuario: 'Locochon23' },
-  { id: 2, nombre: 'María Pérez', correo: 'maria@example.com', usuario: 'mariap' },
-  { id: 3, nombre: 'Juan López', correo: 'juan@example.com', usuario: 'juanl' }
-];
+const API_BASE = 'http://localhost:3000/nextread';
 
 export default function AdminBanUser() {
   const [query, setQuery] = useState('');
@@ -14,24 +11,52 @@ export default function AdminBanUser() {
   const [selectedUser, setSelectedUser] = useState(null);
   const [reason, setReason] = useState('');
   const [message, setMessage] = useState(null);
+  const [loadingSearch, setLoadingSearch] = useState(false);
+  const [loadingBan, setLoadingBan] = useState(false);
 
   useEffect(() => {
-    if (!query) return setResults([]);
-    const q = query.toLowerCase();
-    const filtered = mockUsers.filter(u =>
-      u.nombre.toLowerCase().includes(q) || u.correo.toLowerCase().includes(q) || u.usuario.toLowerCase().includes(q)
-    );
-    setResults(filtered);
+    const doSearch = async () => {
+      if (!query || query.trim().length === 0) return setResults([]);
+      setLoadingSearch(true);
+      try {
+        const token = localStorage.getItem('token');
+        const res = await axios.get(`${API_BASE}/buscar-usuario?q=${encodeURIComponent(query)}`, { headers: token ? { Authorization: `Bearer ${token}` } : {} });
+        // Normalizar ids a números para evitar problemas de comparación
+        const normalized = (res.data.results || []).map(u => ({ ...u, id: u.id ? Number(u.id) : u.id }));
+        setResults(normalized);
+      } catch (err) {
+        console.error('Error buscando usuarios:', err);
+        setMessage({ type: 'error', text: 'Error buscando usuarios' });
+      } finally {
+        setLoadingSearch(false);
+      }
+    };
+
+    const t = setTimeout(doSearch, 350);
+    return () => clearTimeout(t);
   }, [query]);
 
-  const handleConfirmBan = () => {
+  const handleConfirmBan = async () => {
     if (!selectedUser) return setMessage({ type: 'error', text: 'Seleccioná un usuario para banear' });
-    if (!reason) return setMessage({ type: 'error', text: 'Ingresá un motivo para el baneo' });
+    if (!reason || !reason.trim()) return setMessage({ type: 'error', text: 'Ingresá un motivo para el baneo' });
 
-    setMessage({ type: 'info', text: `Se enviaría la petición para banear a ${selectedUser.usuario} (placeholder).` });
-    // TODO: POST /api/admin/ban => { userId: selectedUser.id, reason }
-    // Backend: set isActive = false (NO borrar registro), enviar email al usuario,
-    // y generar un mensaje cuando intente loguear que diga "Cuenta inactiva".
+    setLoadingBan(true);
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) return setMessage({ type: 'error', text: 'No autenticado' });
+
+      const res = await axios.patch(`${API_BASE}/admin/ban/${selectedUser.id}`, { descargo: reason }, { headers: { Authorization: `Bearer ${token}` } });
+      setMessage({ type: 'success', text: res.data.message || 'Usuario baneado correctamente' });
+      // opcional: actualizar lista
+      setResults(prev => prev.filter(u => u.id !== selectedUser.id));
+      setSelectedUser(null);
+      setReason('');
+    } catch (err) {
+      console.error('Error baneando usuario:', err);
+      setMessage({ type: 'error', text: err.response?.data?.error || 'Error al banear usuario' });
+    } finally {
+      setLoadingBan(false);
+    }
   };
 
   return (
@@ -40,12 +65,20 @@ export default function AdminBanUser() {
 
       <label>
         Buscar usuario (nombre, correo o usuario)
-        <input value={query} onChange={(e) => setQuery(e.target.value)} placeholder="buscar..." />
+        <input value={query} onChange={(e) => { setQuery(e.target.value); setMessage(null); }} placeholder="buscar..." />
       </label>
 
       <ul className="search-results">
+        {loadingSearch && <li className="muted">Buscando...</li>}
         {results.map(u => (
-          <li key={u.id} className={selectedUser?.id === u.id ? 'selected' : ''} onClick={() => { setSelectedUser(u); setMessage(null); }}>
+          <li
+            key={u.id}
+            className={Number(selectedUser?.id) === Number(u.id) ? 'selected' : ''}
+            onClick={() => { setSelectedUser({ ...u, id: Number(u.id) }); setMessage(null); }}
+            role="button"
+            tabIndex={0}
+            onKeyDown={(e) => { if (e.key === 'Enter') { setSelectedUser({ ...u, id: Number(u.id) }); setMessage(null); } }}
+          >
             <strong>{u.usuario}</strong> — {u.nombre} ({u.correo})
           </li>
         ))}
@@ -57,14 +90,12 @@ export default function AdminBanUser() {
       </label>
 
       <div className="form-actions">
-        <button className="btn-danger" type="button" onClick={handleConfirmBan}>Confirmar baneo</button>
+        <button className="btn-danger" type="button" onClick={handleConfirmBan} disabled={loadingBan}>{loadingBan ? 'Procesando...' : 'Confirmar baneo'}</button>
       </div>
 
       {message && <p className={"info " + (message.type === 'error' ? 'error' : '')}>{message.text}</p>}
 
-      <div className="muted small">
-        Nota: En producción el baneo debe marcar <code>isActive = false</code> (no borrar la cuenta). El usuario debe recibir un mail y al intentar loguear ver un mensaje que explique que su cuenta está inactiva.
-      </div>
+      {/* Nota removida por solicitud del equipo */}
     </section>
   );
 }

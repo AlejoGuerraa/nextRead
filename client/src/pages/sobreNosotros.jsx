@@ -1,6 +1,6 @@
 import React, { useEffect } from "react";
 import { motion } from "framer-motion";
-import "../pagescss/sobreNosotros.css";
+import "../pagescss/footer/sobreNosotros.css";
 import { Link, useLocation } from "react-router-dom";
 
 import Header from "../components/header";

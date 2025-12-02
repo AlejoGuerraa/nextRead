@@ -12,9 +12,9 @@ import { Modal } from '../components/acceso/modal';
 import { ModalGustos } from '../components/acceso/modalBanners';
 import { FeatureCard } from '../components/acceso/card';
 
-import { Step1 } from '../components/acceso/pasos/paso1';
-import { Step2 } from '../components/acceso/pasos/paso2';
-import { Step3 } from '../components/acceso/pasos/paso3';
+import { Step1 } from '../components/acceso/pasos/datosCuenta';
+import { Step2 } from '../components/acceso/pasos/datosPersonales';
+import { Step3 } from '../components/acceso/pasos/personalizaPerfil';
 import { LoginModal } from '../components/acceso/modalLogin';
 
 import Footer from '../components/footer';

@@ -38,13 +38,29 @@ async function agregarNotificacion(userId, mensaje, nombre = "Sistema", meta = n
             }
         }
 
+        // Construir nueva notificación. Por defecto 'leido' = false
         const nueva = {
             id: Date.now(),
             nombre,
             mensaje,
             fecha: new Date().toISOString(),
-            meta
+            meta,
+            leido: false
         };
+
+        // Dedupe para ciertos tipos: si es 'new_like' o 'follow', eliminamos
+        // notificaciones previas del mismo emisor (fromUser) y misma entidad
+        if (meta && meta.type) {
+            try {
+                if (meta.type === 'new_like') {
+                    notis = notis.filter(n => !(n.meta && n.meta.type === 'new_like' && Number(n.meta.fromUser) === Number(meta.fromUser) && Number(n.meta.resenaId) === Number(meta.resenaId)));
+                } else if (meta.type === 'follow') {
+                    notis = notis.filter(n => !(n.meta && n.meta.type === 'follow' && Number(n.meta.fromUser) === Number(meta.fromUser)));
+                }
+            } catch (e) {
+                // ignore parse errors
+            }
+        }
 
         notis.unshift(nueva);
 
@@ -588,7 +604,23 @@ const buscarUsuario = async (req, res) => {
             limit: 50
         });
 
-        return res.json({ count: usuarios.length, results: usuarios });
+        // Agregar contadores de seguidos/seguidores a cada usuario
+        const usuariosConContadores = await Promise.all(usuarios.map(async (u) => {
+            const usuarioJSON = u.toJSON();
+            try {
+                const seguidosCount = await Seguidos.count({ where: { id_remitente: u.id, estado: 'aceptado' } });
+                const seguidoresCount = await Seguidos.count({ where: { id_destinatario: u.id, estado: 'aceptado' } });
+                usuarioJSON.siguiendo = seguidosCount;
+                usuarioJSON.seguidores = seguidoresCount;
+            } catch (e) {
+                console.error('Error calculando contadores:', e);
+                usuarioJSON.siguiendo = 0;
+                usuarioJSON.seguidores = 0;
+            }
+            return usuarioJSON;
+        }));
+
+        return res.json({ count: usuariosConContadores.length, results: usuariosConContadores });
     } catch (error) {
         console.error('Error buscando usuarios:', error);
         return res.status(500).json({ error: 'Error en el servidor' });
@@ -596,81 +628,10 @@ const buscarUsuario = async (req, res) => {
 };
 
 // ----------------------
-// SEGUIMIENTOS / SOLICITUDES
+// SEGUIMIENTOS SIMPLE: seguir / dejar de seguir (sin solicitudes)
 // ----------------------
-
-// Enviar solicitud de seguimiento (remitente = req.user.id -> destinatario = :targetId)
-const enviarSolicitudSeguimiento = async (req, res) => {
-    try {
-        const remitenteId = req.user.id;
-        const targetId = Number(req.params.targetId || req.body.targetId);
-
-        if (!targetId || Number.isNaN(targetId)) return res.status(400).json({ error: 'ID de destinatario inválido' });
-        if (remitenteId === targetId) return res.status(400).json({ error: 'No te puedes seguir a ti mismo' });
-
-        const destinatario = await User.findByPk(targetId);
-        if (!destinatario) return res.status(404).json({ error: 'Usuario destinatario no encontrado' });
-
-        // Buscar si ya existe relación entre ambos
-        const existente = await Seguidos.findOne({ where: { id_remitente: remitenteId, id_destinatario: targetId } });
-
-            if (existente) {
-            if (existente.estado === 'enviado') return res.status(400).json({ error: 'Solicitud ya enviada' });
-            if (existente.estado === 'aceptado') return res.status(400).json({ error: 'Ya sigues a este usuario' });
-            // si estaba rechazado, la reapertura la marcamos como enviado otra vez
-            existente.estado = 'enviado';
-            await existente.save();
-
-            // notificar al destinatario que se re-envió la solicitud
-            const remitente = await User.findByPk(remitenteId);
-            await agregarNotificacion(targetId, `${remitente.usuario} te ha vuelto a enviar una solicitud para seguirte.`, remitente.usuario, { type: 'follow_request', requestId: existente.id, fromUser: remitenteId });
-
-            return res.json({ message: 'Solicitud reenviada', data: existente });
-        }
-
-        const registro = await Seguidos.create({ id_remitente: remitenteId, id_destinatario: targetId, estado: 'enviado' });
-
-        const remitente = await User.findByPk(remitenteId);
-        await agregarNotificacion(targetId, `${remitente.usuario} te ha enviado una solicitud para seguirte.`, remitente.usuario, { type: 'follow_request', requestId: registro.id, fromUser: remitenteId });
-
-        return res.status(201).json({ message: 'Solicitud enviada', data: registro });
-    } catch (err) {
-        console.error('Error enviando solicitud de seguimiento:', err);
-        return res.status(500).json({ error: 'Error en el servidor' });
-    }
-};
-
-// Aceptar / rechazar una solicitud
-const responderSolicitud = async (req, res) => {
-    try {
-        const usuarioId = req.user.id; // quien responde -> debe ser destinatario
-        const { requestId } = req.params;
-        const { accion } = req.body; // 'aceptar' | 'rechazar'
-
-        const id = Number(requestId);
-        if (Number.isNaN(id)) return res.status(400).json({ error: 'ID de solicitud inválido' });
-
-        const solicitud = await Seguidos.findByPk(id);
-        if (!solicitud) return res.status(404).json({ error: 'Solicitud no encontrada' });
-
-        if (solicitud.id_destinatario !== usuarioId) return res.status(403).json({ error: 'Solo el destinatario puede responder la solicitud' });
-
-        if (!['aceptar', 'rechazar'].includes(accion)) return res.status(400).json({ error: 'Acción inválida' });
-
-        solicitud.estado = accion === 'aceptar' ? 'aceptado' : 'rechazado';
-        await solicitud.save();
-
-        const remitente = await User.findByPk(solicitud.id_remitente);
-        const destinatario = await User.findByPk(solicitud.id_destinatario);
-
-        await agregarNotificacion(remitente.id, `${destinatario.usuario} ha ${solicitud.estado} tu solicitud.`, destinatario.usuario, { type: 'follow_response', requestId: solicitud.id, status: solicitud.estado, fromUser: destinatario.id });
-
-        return res.json({ message: `Solicitud ${solicitud.estado}`, data: solicitud });
-    } catch (err) {
-        console.error('Error respondiendo solicitud:', err);
-        return res.status(500).json({ error: 'Error en el servidor' });
-    }
-};
+// Nota: eliminamos el flujo de 'solicitud' para mantener un sistema simple
+// donde seguir es inmediato (estado 'aceptado') y dejar de seguir elimina la relación.
 
 // Listar seguidores (quienes siguen al usuario)
 const listarSeguidores = async (req, res) => {
@@ -686,7 +647,15 @@ const listarSeguidores = async (req, res) => {
 
         const relaciones = await Seguidos.findAll({
             where,
-            include: [{ model: User, as: 'Remitente', attributes: ['id', 'nombre', 'apellido', 'usuario', 'idIcono'] }],
+            include: [{
+                model: User,
+                as: 'Remitente',
+                attributes: ['id', 'nombre', 'apellido', 'usuario', 'idIcono', 'autor_preferido', 'genero_preferido', 'titulo_preferido', 'descripcion'],
+                include: [
+                    { model: Icono, as: 'iconoData', attributes: ['simbolo'] },
+                    { model: Banner, as: 'bannerData', attributes: ['url'] }
+                ]
+            }],
             order: [['id', 'DESC']]
         });
 
@@ -713,7 +682,15 @@ const listarSeguidos = async (req, res) => {
 
         const relaciones = await Seguidos.findAll({
             where,
-            include: [{ model: User, as: 'Destinatario', attributes: ['id', 'nombre', 'apellido', 'usuario', 'idIcono'] }],
+            include: [{
+                model: User,
+                as: 'Destinatario',
+                attributes: ['id', 'nombre', 'apellido', 'usuario', 'idIcono', 'autor_preferido', 'genero_preferido', 'titulo_preferido', 'descripcion'],
+                include: [
+                    { model: Icono, as: 'iconoData', attributes: ['simbolo'] },
+                    { model: Banner, as: 'bannerData', attributes: ['url'] }
+                ]
+            }],
             order: [['id', 'DESC']]
         });
 
@@ -740,11 +717,72 @@ const cancelarSeguido = async (req, res) => {
 
         await relacion.destroy();
 
-        await agregarNotificacion(targetId, `@${req.user.usuario} ha dejado de seguirte.`, req.user.usuario, { type: 'unfollow', fromUser: req.user.id });
+        // No notificamos en unfollow según requerimiento: solo notificar on follow
 
         return res.json({ message: 'Se ha cancelado la relación de seguimiento' });
     } catch (err) {
         console.error('Error cancelando seguimiento:', err);
+        return res.status(500).json({ error: 'Error en el servidor' });
+    }
+};
+
+// NUEVO: Seguir usuario directamente (sin solicitud, aceptación inmediata)
+const seguirUsuario = async (req, res) => {
+    try {
+        const remitenteId = req.user.id;
+        const targetId = Number(req.params.targetId);
+
+        if (!targetId || Number.isNaN(targetId)) return res.status(400).json({ error: 'ID de destinatario inválido' });
+        if (remitenteId === targetId) return res.status(400).json({ error: 'No te puedes seguir a ti mismo' });
+
+        const destinatario = await User.findByPk(targetId);
+        if (!destinatario) return res.status(404).json({ error: 'Usuario no encontrado' });
+
+        // Buscar si ya existe relación aceptada
+        const existente = await Seguidos.findOne({ where: { id_remitente: remitenteId, id_destinatario: targetId, estado: 'aceptado' } });
+        if (existente) return res.status(400).json({ error: 'Ya sigues a este usuario' });
+
+        // Crear o actualizar a aceptado
+        const [registro, creado] = await Seguidos.findOrCreate({
+            where: { id_remitente: remitenteId, id_destinatario: targetId },
+            defaults: { estado: 'aceptado' }
+        });
+
+        if (!creado) {
+            registro.estado = 'aceptado';
+            await registro.save();
+        }
+
+        // Notificar
+        const remitente = await User.findByPk(remitenteId);
+        await agregarNotificacion(targetId, `${remitente.usuario} te está siguiendo.`, remitente.usuario, { type: 'follow', fromUser: remitenteId });
+
+        return res.status(201).json({ message: 'Ahora sigues a este usuario', data: registro });
+    } catch (err) {
+        console.error('Error siguiendo usuario:', err);
+        return res.status(500).json({ error: 'Error en el servidor' });
+    }
+};
+
+// NUEVO: Dejar de seguir usuario
+const dejarDeSeguir = async (req, res) => {
+    try {
+        const remitenteId = req.user.id;
+        const targetId = Number(req.params.targetId);
+
+        if (Number.isNaN(targetId)) return res.status(400).json({ error: 'ID inválido' });
+
+        const relacion = await Seguidos.findOne({ where: { id_remitente: remitenteId, id_destinatario: targetId } });
+        if (!relacion) return res.status(404).json({ error: 'No sigues a este usuario' });
+
+        await relacion.destroy();
+
+        const remitente = await User.findByPk(remitenteId);
+        // No notificamos en unfollow según requerimiento: solo notificar on follow
+
+        return res.json({ message: 'Has dejado de seguir a este usuario' });
+    } catch (err) {
+        console.error('Error dejando de seguir:', err);
         return res.status(500).json({ error: 'Error en el servidor' });
     }
 };
@@ -756,15 +794,66 @@ module.exports = {
     login,
     getUser,
     editarPerfil,
-    // Nuevo endpoint para búsqueda de usuarios por término
     buscarUsuario,
     checkEmail,
     checkUsername,
     crearLista,
     agregarLibroAListaEnLista,
-    enviarSolicitudSeguimiento,
-    responderSolicitud,
     listarSeguidores,
     listarSeguidos,
-    cancelarSeguido
+    cancelarSeguido,
+    seguirUsuario,
+    dejarDeSeguir
 };
+
+// (handlers añadidos serán exportados al final del archivo)
+
+// Marcar todas las notificaciones del usuario como leídas
+const marcarNotificacionesLeidas = async (req, res) => {
+    try {
+        const userId = req.user.id;
+        const usuario = await User.findByPk(userId);
+        if (!usuario) return res.status(404).json({ error: 'Usuario no encontrado' });
+
+        const parseNotis = (value) => {
+            if (!value) return [];
+            if (Array.isArray(value)) return value;
+            try { return JSON.parse(value); } catch { return []; }
+        };
+
+        let notis = parseNotis(usuario.notificaciones);
+        notis = notis.map(n => ({ ...n, leido: true }));
+
+        usuario.notificaciones = notis;
+        await usuario.save();
+
+        return res.json({ message: 'Notificaciones marcadas como leídas' });
+    } catch (err) {
+        console.error('Error marcando notificaciones leidas:', err);
+        return res.status(500).json({ error: 'Error en el servidor' });
+    }
+};
+
+// Obtener datos públicos de usuario por id (para avatar/icono)
+const getPublicUserById = async (req, res) => {
+    try {
+        const id = Number(req.params.id);
+        if (Number.isNaN(id)) return res.status(400).json({ error: 'ID inválido' });
+
+        const usuario = await User.findByPk(id, {
+            attributes: ['id', 'usuario', 'nombre', 'apellido', 'idIcono'],
+            include: [{ model: Icono, as: 'iconoData', attributes: ['simbolo'] }]
+        });
+
+        if (!usuario) return res.status(404).json({ error: 'Usuario no encontrado' });
+
+        return res.json(usuario);
+    } catch (err) {
+        console.error('Error obteniendo usuario público:', err);
+        return res.status(500).json({ error: 'Error en el servidor' });
+    }
+};
+
+// Exportar handlers añadidos (definidos más arriba)
+module.exports.marcarNotificacionesLeidas = marcarNotificacionesLeidas;
+module.exports.getPublicUserById = getPublicUserById;

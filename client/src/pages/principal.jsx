@@ -16,16 +16,18 @@ import carrousel1 from "../assets/carrousel/carrouselPrincipito.jpg";
 import carrousel2 from "../assets/carrousel/carrouselOrgulloYPrejuicio.jpg";
 import carrousel3 from "../assets/carrousel/carrouselMetamorfosis.jpg";
 import carrousel4 from "../assets/carrousel/carrouselElTunel.jpg";
-import carrousel5 from "../assets/carrousel/carrousel5.jpeg"
-import carrousel6 from "../assets/carrousel/carrousel6.jpg"
+import carrousel5 from "../assets/carrousel/carrousel1984.jpg";
+import carrousel6 from "../assets/carrousel/carrouselTomie.jpg";
+import carrousel7 from "../assets/carrousel/carrouselDorian.jpg";
 
 const mockCarouselData = [
-  { id: 1, imgUrl: carrousel1 },
-  { id: 2, imgUrl: carrousel2 },
-  { id: 3, imgUrl: carrousel3 },
-  { id: 4, imgUrl: carrousel4 },
-  { id: 5, imgUrl: carrousel5 },
-  { id: 6, imgUrl: carrousel6 },
+  { id: 263, imgUrl: carrousel1 }, // El Principito
+  { id: 17, imgUrl: carrousel2 },  // Orgullo y Prejuicio
+  { id: 25, imgUrl: carrousel3 },  // La Metamorfosis
+  { id: 264, imgUrl: carrousel4 },   // Addie larue
+  { id: 69, imgUrl: carrousel5 },  // 1984
+  { id: 262, imgUrl: carrousel6 }, // Tomie Deluxe Edition
+  { id: 62, imgUrl: carrousel7 },  // El Retrato de Dorian Gray
 ];
 
 export default function Principal() {
@@ -394,7 +396,12 @@ export default function Principal() {
       )}
 
       <main className="logueado-main">
-        <Carousel slides={mockCarouselData} currentIndex={currentIndex} setCurrentIndex={setCurrentIndex} />
+        <Carousel
+          slides={mockCarouselData}
+          currentIndex={currentIndex}
+          setCurrentIndex={setCurrentIndex}
+          onSlideClick={(slide) => handleBookCardClick(slide.id)}
+        />
 
         {/* TENDENCIAS */}
         <section className="book-section">

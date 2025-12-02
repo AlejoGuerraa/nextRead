@@ -1,105 +1,113 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Modal } from "../acceso/modal";
 import "../../pagescss/notificaciones.css";
-import axios from 'axios';
+import axios from "axios";
 
-export default function NotificacionesModal({ open, close, data, onRefresh }) {
-    const notificaciones = data?.notificaciones || [];
-    const [loadingIds, setLoadingIds] = useState(new Set());
-    
-    // Asumiendo que obtienes la URL base de tu aplicación de alguna manera
-    const BASE_URL = 'http://localhost:3000/nextread'; 
+export default function NotificacionesModal({ open, close, data, onRefresh, userData }) {
+    const notificaciones = (userData?.notificaciones) || (data?.notificaciones) || [];
+    const visibleNotificaciones = notificaciones.filter(n => ['new_like', 'follow'].includes(n.meta?.type));
+    const [userMap, setUserMap] = useState({}); // cache id -> user public data
 
-    const token = localStorage.getItem('token');
-  
-    const handleRespond = async (requestId, accion) => {
-        if (!token || !requestId) return;
-        setLoadingIds(prev => new Set([...prev, requestId]));
-        try {
-            await axios.patch(
-                `${BASE_URL}/follow/${requestId}`, 
-                { accion }, 
-                { headers: { Authorization: `Bearer ${token}` } }
-            );
-            close();
-            onRefresh?.();
-        } catch (err) {
-            console.error('Error responding follow request', err?.response?.data || err);
-            alert(err?.response?.data?.error || 'Error procesando la solicitud');
-        } finally {
-            setLoadingIds(prev => { const s = new Set(prev); s.delete(requestId); return s; });
+    // helper to build avatar src like in resenias
+    const getAvatarSrc = (rawIcon) => {
+        let avatarSrc = "/iconos/LogoDefault1.jpg";
+        if (rawIcon) {
+            if (typeof rawIcon === 'string') {
+                if (rawIcon.startsWith('/') || rawIcon.startsWith('http')) {
+                    avatarSrc = rawIcon;
+                } else {
+                    avatarSrc = `/iconos/${rawIcon}`;
+                }
+            }
         }
+        return avatarSrc;
     };
 
-    // Nueva función para manejar el clic en notificaciones de "Comentario"
+    // Fetch minimal public user info for all fromUser ids found in notificaciones
+    useEffect(() => {
+        const ids = [...new Set(notificaciones.map(n => n.meta?.fromUser).filter(Boolean))];
+        if (ids.length === 0) return;
+
+        (async () => {
+            const map = { ...userMap };
+            for (const id of ids) {
+                if (map[id]) continue;
+                try {
+                    const res = await axios.get(`http://localhost:3000/nextread/user/public/${id}`);
+                    if (res?.data) map[id] = res.data;
+                } catch (e) {
+                    // ignore per-user errors
+                }
+            }
+            setUserMap(map);
+        })();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [notificaciones]);
+
     const handleCommentClick = (n) => {
-        if (n.meta?.type === 'new_comment' && n.meta.bookId) {
-            // Aquí deberías redirigir al usuario a la página del libro o la reseña
-            // Ejemplo: window.location.href = `/libro/${n.meta.bookId}#comentario-${n.meta.commentId}`;
-            
-            alert(`Navegando a la reseña del libro ID: ${n.meta.bookId}`);
-            close(); // Cerrar el modal al navegar
+        if (n.meta?.type === "new_comment" && n.meta.bookId) {
+            alert(`Ir a reseña del libro ID: ${n.meta.bookId}`);
+            close();
         }
     };
-
 
     return (
         <Modal openModal={open} closeModal={close} extraClass="notif-modal">
             <div className="notif-container">
                 <h2>Notificaciones</h2>
 
-                {notificaciones.length === 0 ? (
+                {visibleNotificaciones.length === 0 ? (
                     <p className="notif-empty">No tenés notificaciones por ahora.</p>
                 ) : (
                     <div className="notif-list">
-                        {notificaciones.map((n) => {
-                            
-                            let isFollowRequest = n.meta?.type === 'follow_request' && n.meta?.requestId;
-                            let isNewComment = n.meta?.type === 'new_comment' && n.meta?.bookId;
-                            
-                            // Determinar si la notificación es "cliqueable"
-                            const isClickable = isNewComment;
+                        {visibleNotificaciones.map((n) => {
+                            const meta = n.meta || {};
+
+                            const isClickable = meta.type === "new_comment";
 
                             return (
-                                <div 
-                                    key={n.id} 
-                                    className={`notif-item ${isClickable ? 'clickable' : ''}`}
+                                <div
+                                    key={n.id}
+                                    className={`notif-item ${isClickable ? "clickable" : ""}`}
                                     onClick={isClickable ? () => handleCommentClick(n) : undefined}
                                 >
-                                    {/* Avatar del remitente */}
+                                    {/* Avatar */}
                                     <div className="notif-avatar">
-                                        {n.nombre ? n.nombre.charAt(0).toUpperCase() : 'S'}
+                                        {n.meta?.fromUser && userMap[n.meta.fromUser] ? (
+                                            <img
+                                                src={getAvatarSrc(userMap[n.meta.fromUser].iconoData?.simbolo || userMap[n.meta.fromUser].idIcono)}
+                                                alt={userMap[n.meta.fromUser].usuario || n.nombre}
+                                                style={{ width: '100%', height: '100%', borderRadius: '50%', objectFit: 'cover' }}
+                                                onError={(e) => { e.target.src = '/iconos/LogoDefault1.jpg'; }}
+                                            />
+                                        ) : (
+                                            <span style={{ fontWeight: 700 }}>{n.nombre ? n.nombre.charAt(0).toUpperCase() : 'S'}</span>
+                                        )}
                                     </div>
 
-                                    {/* Texto de la notificación */}
+                                    {/* Texto */}
                                     <div className="notif-text">
-                                        {/* Modificación en el mensaje para manejar el caso de 'Sistema' o un mensaje directo */}
-                                        <strong>{n.nombre || "Sistema"}</strong> {n.mensaje.replace(`${n.nombre} `, '')}
+                                        <strong>{n.nombre || "Sistema"}:</strong>{" "}
+                                        {n.mensaje}
                                     </div>
 
-                                    <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+                                    {/* Fecha + botones o mensaje de estado */}
+                                    <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
                                         <span className="notif-date">
                                             {new Date(n.fecha).toLocaleString("es-AR", {
                                                 dateStyle: "short",
                                                 timeStyle: "short",
                                             })}
                                         </span>
-                                        
-                                        {/* LÓGICA DE RESPUESTA A SOLICITUD DE SEGUIMIENTO */}
-                                        {isFollowRequest && (
-                                            <div style={{ display: 'flex', gap: 6 }}>
-                                                <button 
-                                                    className="btn-accept" 
-                                                    disabled={loadingIds.has(n.meta.requestId)} 
-                                                    onClick={(e) => { e.stopPropagation(); handleRespond(n.meta.requestId, 'aceptar'); }}
-                                                >Aceptar</button>
-                                                <button 
-                                                    className="btn-reject" 
-                                                    disabled={loadingIds.has(n.meta.requestId)} 
-                                                    onClick={(e) => { e.stopPropagation(); handleRespond(n.meta.requestId, 'rechazar'); }}
-                                                >Rechazar</button>
-                                            </div>
-                                        )}
+
+                                            {/* Notificaciones de likes */}
+                                            {meta.type === 'new_like' && (
+                                                <span className="notif-status like">❤️ Like</span>
+                                            )}
+
+                                            {meta.type === 'follow' && (
+                                                <span className="notif-status follow">👤 Nuevo seguidor</span>
+                                            )}
                                     </div>
                                 </div>
                             );
