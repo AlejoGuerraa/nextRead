@@ -1,10 +1,7 @@
 
 Cambios menores:
 Estrellas = 0 en algunos libros
-6 banners en vez de 5 en registro
 Funcionalidad completa de listas
-Cosas favoritas y listas en perfiles + info correcta
 
 Estudiar presentación
 Testear todo
-    

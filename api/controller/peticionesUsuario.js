@@ -595,7 +595,10 @@ const buscarUsuario = async (req, res) => {
                     { correo: { [Op.like]: like } }
                 ]
             },
-            attributes: { exclude: ['contrasena'] },
+            attributes: { 
+                exclude: ['contrasena'],
+                // Asegurar que se incluyen listas, notificaciones y otros campos JSON
+            },
             include: [
                 { model: Icono, as: 'iconoData', attributes: ['simbolo'] },
                 { model: Banner, as: 'bannerData', attributes: ['url'] }
@@ -604,7 +607,7 @@ const buscarUsuario = async (req, res) => {
             limit: 50
         });
 
-        // Agregar contadores de seguidos/seguidores a cada usuario
+        // Agregar contadores de seguidos/seguidores y contar libros leídos
         const usuariosConContadores = await Promise.all(usuarios.map(async (u) => {
             const usuarioJSON = u.toJSON();
             try {
@@ -612,10 +615,19 @@ const buscarUsuario = async (req, res) => {
                 const seguidoresCount = await Seguidos.count({ where: { id_destinatario: u.id, estado: 'aceptado' } });
                 usuarioJSON.siguiendo = seguidosCount;
                 usuarioJSON.seguidores = seguidoresCount;
+                
+                // Contar libros leídos
+                let librosLeidos = u.libros_leidos;
+                if (typeof librosLeidos === 'string') {
+                    try { librosLeidos = JSON.parse(librosLeidos); } catch { librosLeidos = []; }
+                }
+                usuarioJSON.librosLeidos = Array.isArray(librosLeidos) ? librosLeidos.length : 0;
+                
             } catch (e) {
                 console.error('Error calculando contadores:', e);
                 usuarioJSON.siguiendo = 0;
                 usuarioJSON.seguidores = 0;
+                usuarioJSON.librosLeidos = 0;
             }
             return usuarioJSON;
         }));
@@ -786,29 +798,6 @@ const dejarDeSeguir = async (req, res) => {
         return res.status(500).json({ error: 'Error en el servidor' });
     }
 };
-
-module.exports = {
-    agregarNotificacion,
-    getAllUsers,
-    register,
-    login,
-    getUser,
-    editarPerfil,
-    buscarUsuario,
-    checkEmail,
-    checkUsername,
-    crearLista,
-    agregarLibroAListaEnLista,
-    listarSeguidores,
-    listarSeguidos,
-    cancelarSeguido,
-    seguirUsuario,
-    dejarDeSeguir
-};
-
-// (handlers añadidos serán exportados al final del archivo)
-
-// Marcar todas las notificaciones del usuario como leídas
 const marcarNotificacionesLeidas = async (req, res) => {
     try {
         const userId = req.user.id;
@@ -854,6 +843,24 @@ const getPublicUserById = async (req, res) => {
     }
 };
 
-// Exportar handlers añadidos (definidos más arriba)
-module.exports.marcarNotificacionesLeidas = marcarNotificacionesLeidas;
-module.exports.getPublicUserById = getPublicUserById;
+module.exports = {
+    agregarNotificacion,
+    getAllUsers,
+    register,
+    login,
+    getUser,
+    editarPerfil,
+    buscarUsuario,
+    checkEmail,
+    checkUsername,
+    crearLista,
+    agregarLibroAListaEnLista,
+    listarSeguidores,
+    listarSeguidos,
+    cancelarSeguido,
+    seguirUsuario,
+    dejarDeSeguir,
+    marcarNotificacionesLeidas,
+    getPublicUserById
+};
+

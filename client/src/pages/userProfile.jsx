@@ -46,19 +46,28 @@ export default function UserProfile() {
     fetchUser();
   }, [username]);
 
+  // Actualizar listas cuando user se carga
+  useEffect(() => {
+    if (user) {
+      let listasData = user.listas;
+      if (typeof listasData === 'string') {
+        try { listasData = JSON.parse(listasData); } catch { listasData = []; }
+      }
+      const listasArray = Array.isArray(listasData) ? listasData : [];
+      console.log("Listas del usuario:", listasArray);
+      setListas(listasArray);
+    } else {
+      setListas([]);
+    }
+  }, [user]);
+
   // --------------------------------------
   // CARGAR LISTAS DEL USUARIO
+  // (Las listas están dentro del objeto usuario desde buscarUsuario)
   // --------------------------------------
   const fetchListas = async (idUser) => {
-    try {
-      const res = await fetch(
-        `http://localhost:3000/nextread/listas/usuario/${idUser}`
-      );
-      const data = await res.json();
-      setListas(data.listas || []);
-    } catch (err) {
-      console.log("Error cargando listas:", err);
-    }
+    // Esta función ya no se usa, las listas se cargan directamente del user
+    // Se mantiene por compatibilidad
   };
 
   // --------------------------------------
@@ -222,21 +231,15 @@ export default function UserProfile() {
               </p>
             ) : (
               <div className="userprofile-favorites">
-                {user.autor_preferido && (
-                  <p>
-                    <strong> Autor favorito:</strong> {user.autor_preferido}
-                  </p>
-                )}
-                {user.genero_preferido && (
-                  <p>
-                    <strong> Género favorito:</strong> {user.genero_preferido}
-                  </p>
-                )}
-                {user.titulo_preferido && (
-                  <p>
-                    <strong> Libro favorito:</strong> {user.titulo_preferido}
-                  </p>
-                )}
+                <p>
+                  <strong>Autor favorito:</strong> {user.autor_preferido && user.autor_preferido.trim() ? user.autor_preferido : "No definido"}
+                </p>
+                <p>
+                  <strong>Género favorito:</strong> {user.genero_preferido && user.genero_preferido.trim() ? user.genero_preferido : "No definido"}
+                </p>
+                <p>
+                  <strong>Libro favorito:</strong> {user.titulo_preferido && user.titulo_preferido.trim() ? user.titulo_preferido : "No definido"}
+                </p>
               </div>
             )}
 

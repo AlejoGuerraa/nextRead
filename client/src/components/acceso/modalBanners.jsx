@@ -16,7 +16,7 @@ export function ModalGustos({ open, close, onFinish, onBack }) {
         setLoading(true);
         const res = await axios.get("http://localhost:3000/nextread/banners");
         // res.data expected: [{ id, url }, ...]
-        setBannerOptions(res.data || []);
+        setBannerOptions((res.data || []).slice(0, 5));
       } catch (err) {
         console.error("Error cargando banners:", err);
         setBannerOptions([]);

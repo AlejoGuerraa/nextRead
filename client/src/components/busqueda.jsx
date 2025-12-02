@@ -22,8 +22,9 @@ export default function SearchBar() {
     // -------------------------
     // BOTÓN SEGUIR
     // -------------------------
-    function FollowButton({ user }) {
-        const [state, setState] = useState("idle");
+    function FollowButton({ user, onFollowChange }) {
+        const [isFollowing, setIsFollowing] = useState(false);
+        const [loading, setLoading] = useState(false);
 
         const storedUser = JSON.parse(localStorage.getItem("user") || "null");
         const token = localStorage.getItem("token");
@@ -31,37 +32,67 @@ export default function SearchBar() {
 
         const disabledSelf = currentId && Number(currentId) === Number(user.id);
 
-        const handleFollow = async (e) => {
+        // Verificar estado inicial de seguimiento
+        useEffect(() => {
+            const checkFollowState = async () => {
+                if (!token || !currentId || disabledSelf) return;
+                try {
+                    const res = await axios.get(
+                        `http://localhost:3000/nextread/user/${user.id}/seguidores`,
+                        { headers: { Authorization: `Bearer ${token}` } }
+                    );
+                    const data = res.data;
+                    const siguiendo = data.seguidores && data.seguidores.some(s => s.usuario.id === currentId);
+                    setIsFollowing(siguiendo);
+                } catch (err) {
+                    console.error("Error checking follow state:", err);
+                }
+            };
+            checkFollowState();
+        }, [user.id, token, currentId, disabledSelf]);
+
+        const handleToggleFollow = async (e) => {
             e.stopPropagation();
-            if (!token) return navigate("/acceso");
+            if (!token) return;
             if (disabledSelf) return;
 
             try {
-                setState("loading");
+                setLoading(true);
 
-                // Usar el nuevo endpoint directo de seguir
-                await axios.post(
-                    `http://localhost:3000/nextread/seguir/${user.id}`,
-                    {},
-                    { headers: { Authorization: `Bearer ${token}` } }
-                );
+                const url = isFollowing
+                    ? `http://localhost:3000/nextread/dejar-seguir/${user.id}`
+                    : `http://localhost:3000/nextread/seguir/${user.id}`;
 
-                setState("following");
+                const res = await axios.post(url, {}, {
+                    headers: { Authorization: `Bearer ${token}` }
+                });
+
+                // Actualizar estado
+                const newFollowState = !isFollowing;
+                setIsFollowing(newFollowState);
+                
+                // Notificar al padre si es necesario
+                if (onFollowChange) {
+                    onFollowChange(user.id, newFollowState);
+                }
             } catch (err) {
                 console.error("follow error", err?.response?.data || err);
                 const msg = err?.response?.data?.error || "";
-                if (msg.toLowerCase().includes("ya sigues")) setState("following");
-                else setState("error");
+                if (msg.toLowerCase().includes("ya sigues")) setIsFollowing(true);
+            } finally {
+                setLoading(false);
             }
         };
 
         if (disabledSelf) return null;
-        if (state === "following") return <button className="btn-unfollow" disabled>Siguiendo</button>;
-        if (state === "loading") return <button className="btn-follow" disabled>Siguiendo…</button>;
-
+        
         return (
-            <button className="btn-follow" onClick={handleFollow}>
-                Seguir
+            <button 
+                className={isFollowing ? "btn-unfollow" : "btn-follow"}
+                onClick={handleToggleFollow}
+                disabled={loading}
+            >
+                {loading ? "Cargando..." : isFollowing ? "Seguido" : "Seguir"}
             </button>
         );
     }
