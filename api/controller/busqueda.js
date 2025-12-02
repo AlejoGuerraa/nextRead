@@ -539,12 +539,23 @@ const getGeneroPreferido = async (req, res) => {
       return res.status(404).json({ message: "Usuario no encontrado" });
     }
 
-    const idsLeidos = usuario.libros_leidos || [];
-    if (!Array.isArray(idsLeidos) || idsLeidos.length === 0) {
+    let idsLeidos = usuario.libros_leidos || [];
+
+    // 🟢 Normalizar: si vienen objetos {id_libro}, convertirlos a números
+    if (Array.isArray(idsLeidos)) {
+      idsLeidos = idsLeidos.map(x => {
+        if (typeof x === "object" && x !== null) {
+          return Number(x.id_libro || x.id || x.idLibro);
+        }
+        return Number(x);
+      }).filter(n => Number.isFinite(n));
+    }
+
+    if (idsLeidos.length === 0) {
       return res.json({ generoPreferido: null, libros: [] });
     }
 
-    // Traer los libros leídos
+    // 🔍 Buscar los libros leídos
     const librosLeidos = await Libro.findAll({
       where: { id: idsLeidos }
     });
@@ -554,38 +565,27 @@ const getGeneroPreferido = async (req, res) => {
     for (const libro of librosLeidos) {
       let generos = libro.generos;
 
-      // -----------------------------
-      //  PARSEAR GENEROS CORRECTAMENTE
-      // -----------------------------
       if (!generos) generos = [];
-
-      // si viene como JSON string
       else if (typeof generos === "string") {
-        try {
-          generos = JSON.parse(generos);
-        } catch {
-          // fallback si está mal formado
-          generos = generos.split(",").map(s => s.trim());
-        }
+        try { generos = JSON.parse(generos); }
+        catch { generos = generos.split(",").map(s => s.trim()); }
       }
 
       if (!Array.isArray(generos)) generos = [];
 
-      // contar
       generos.forEach(g => {
         conteo[g] = (conteo[g] || 0) + 1;
       });
     }
 
-    const generoPreferido = Object.keys(conteo).sort(
-      (a, b) => conteo[b] - conteo[a]
-    )[0];
+    const generoPreferido =
+      Object.keys(conteo).sort((a, b) => conteo[b] - conteo[a])[0];
 
     if (!generoPreferido) {
       return res.json({ generoPreferido: null, libros: [] });
     }
 
-    // JSON_CONTAINS requiere '"valor"'
+    // JSON_CONTAINS requiere el valor entre comillas
     const candidate = JSON.stringify(generoPreferido);
 
     const libros = await Libro.findAll({
@@ -615,6 +615,8 @@ const getGeneroPreferido = async (req, res) => {
 };
 
 
+
+
 function fixGeneros(input) {
     if (!input) return [];
 
@@ -624,7 +626,7 @@ function fixGeneros(input) {
         try {
             const parsed = JSON.parse(input);
             if (Array.isArray(parsed)) return parsed;
-        } catch {}
+        } catch { }
 
         return input
             .replace(/[\[\]"]+/g, "")

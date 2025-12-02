@@ -75,59 +75,14 @@ export default function Principal() {
   // Cargar user desde localStorage
   useEffect(() => {
     const storedUser = localStorage.getItem("user");
-    if (!storedUser) {
-      setUser(null);
-      return;
-    }
-
-    try {
-      const parsed = JSON.parse(storedUser);
-
-      // Normalizar campos que podrían venir como JSON-string
-      const fixField = (field) => {
-        if (typeof parsed[field] === "string") {
-          try {
-            parsed[field] = JSON.parse(parsed[field]);
-          } catch {
-            // si no es JSON válido, lo dejamos como está
-          }
-        }
-      };
-
-      fixField("libros_leidos");
-      fixField("generos");
-      fixField("autoresFavoritos");
-      fixField("preferencias");
-      fixField("historial");
-
-      setUser(parsed);
-    } catch {
-      setUser(null);
+    if (storedUser) {
+      try {
+        setUser(JSON.parse(storedUser));
+      } catch {
+        setUser(null);
+      }
     }
   }, []);
-
-
-  // 🔒 CONTROL GLOBAL DE CUENTA ACTIVA
-  useEffect(() => {
-    if (user === null) return; // todavía no cargó
-
-    // Si no hay usuario logueado → nada
-    if (!user) return;
-
-    // Si el usuario está desactivado
-    if (user.activo === 0) {
-      // Mostrar popup bonito
-      alert("Tu cuenta fue desactivada. Debes volver a iniciar sesión.");
-
-      // Borrar token y user del localStorage
-      localStorage.removeItem("token");
-      localStorage.removeItem("user");
-
-      // Redirigir
-      window.location.href = "/acceso";
-    }
-  }, [user]);
-
 
   /* ---------------------------------------------------- */
   // 1. FETCH TENDENCIAS
