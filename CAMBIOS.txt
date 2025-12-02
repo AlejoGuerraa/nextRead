@@ -1,7 +1,0 @@
-
-Cambios menores:
-Estrellas = 0 en algunos libros
-Funcionalidad completa de listas
-
-Estudiar presentación
-Testear todo
