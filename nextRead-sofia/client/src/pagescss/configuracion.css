@@ -1,0 +1,244 @@
+/* File: src/pagescss/configuracion.css
+   Estilos actualizados para una apariencia más centrada y moderna.
+*/
+
+.pagina-configuracion {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  background: #f6f9fc;
+}
+
+/* Wrapper centrado */
+.config-wrapper {
+  width: 100%;
+  max-width: 1200px;
+  margin: 28px auto;
+  padding: 18px;
+  flex: 1;
+}
+
+/* Card principal que contiene todo */
+.config-main-card {
+  background: #ffffff;
+  border-radius: 14px;
+  padding: 20px;
+  box-shadow: 0 12px 40px rgba(16, 36, 56, 0.06);
+  border: 1px solid rgba(15,30,45,0.04);
+}
+
+/* Header area inside the config card */
+.config-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 18px;
+}
+
+.config-title h1 {
+  margin: 0;
+  font-size: 1.4rem;
+  color: #0f3d4f;
+}
+
+.config-title .subtitle {
+  margin: 6px 0 0;
+  color: #6b7f88;
+  font-size: 0.9rem;
+}
+
+/* Botón de logout inline, más discreto y ubicado a la derecha */
+.btn-logout-inline {
+  background: #fff;
+  color: #ce3b3b;
+  border: 1px solid rgba(206,59,59,0.12);
+  padding: 8px 12px;
+  border-radius: 10px;
+  cursor: pointer;
+  font-weight: 700;
+  box-shadow: 0 2px 6px rgba(12,20,30,0.03);
+}
+.btn-logout-inline:hover { transform: translateY(-1px); }
+
+/* Grid principal: left + aside */
+.config-grid {
+  display: grid;
+  grid-template-columns: 1fr 320px;
+  gap: 28px;
+  align-items: start;
+}
+
+/* Left and right columns */
+.left-col {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.right-col {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+/* Small sticky container in aside so admin/help sticks while scrolling */
+.sticky-aside {
+  position: sticky;
+  top: 92px; /* debajo del header global */
+}
+
+/* Secciones dentro del panel */
+.config-section {
+  background: linear-gradient(180deg,#ffffff,#fbfdff);
+  border: 1px solid rgba(15,30,45,0.06);
+  padding: 18px;
+  border-radius: 12px;
+  margin-bottom: 4px;
+  box-shadow: 0 6px 18px rgba(8,20,30,0.03);
+}
+
+/* header pequeño de sección */
+.section-head { margin-bottom: 8px; }
+.section-head h3 { margin: 0; color: #15384a; font-size: 1.05rem; }
+.section-head .muted { color: #6b7f88; }
+
+/* Formularios */
+.config-form {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.config-form label {
+  display: block;
+  margin-bottom: 6px;
+  color: #12323b;
+}
+
+.config-form input[type="text"],
+.config-form input[type="email"],
+.config-form input[type="password"],
+.config-form textarea {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid #e6eef8;
+  border-radius: 8px;
+  box-sizing: border-box;
+  background: #ffffff;
+  outline: none;
+  transition: box-shadow .12s ease, border-color .12s ease;
+}
+.config-form input:focus, .config-form textarea:focus {
+  border-color: #cfe1ff;
+  box-shadow: 0 4px 18px rgba(28,78,175,0.06);
+}
+
+.config-form textarea { min-height: 100px; }
+
+/* Acciones (alineadas a la derecha) */
+.form-actions { margin-top: 8px; display:flex; gap:8px; }
+.actions-right { justify-content: flex-end; display:flex; }
+
+/* Buttons */
+.btn-primary, .btn-secondary, .btn-danger {
+  padding: 10px 14px;
+  border-radius: 10px;
+  border: none;
+  cursor: pointer;
+  font-weight: 700;
+}
+.btn-primary { background: #1f6feb; color: #fff; box-shadow: 0 6px 18px rgba(31,111,235,0.12); }
+.btn-secondary { background: #eef6ff; color: #0b3b82; border: 1px solid rgba(11,59,130,0.06); }
+.btn-danger { background: #e04b4b; color: #fff; }
+
+/* Info / mensajes */
+.info { margin-top: 10px; padding: 8px 10px; border-radius: 8px; background: #f4f9ff; color: #0b3b82; }
+.info.error { background: #fff1f1; color: #b00020; }
+.info.muted { background: transparent; color: #6b7f88; padding: 0; }
+
+/* Small helper text */
+.muted { color: #6b7f88; }
+.small { font-size: 0.85rem; }
+
+/* Cards (aside) */
+.card { background: #fff; border: 1px solid #f1f5f9; padding: 12px; border-radius: 10px; margin-bottom: 12px; box-shadow: 0 6px 18px rgba(14,30,50,0.03); }
+
+/* Danger section visual distinct */
+.danger { border-color: #ffd6d6; background: linear-gradient(180deg,#fff6f6,#fffafc); }
+
+/* Search results */
+.search-results { list-style: none; padding: 0; margin: 8px 0; max-height: 160px; overflow: auto; border: 1px solid #f0f0f0; border-radius: 6px; }
+.search-results li { padding: 8px; border-bottom: 1px solid #f6f6f6; cursor: pointer; }
+.search-results li.selected { background: #f0f7ff; }
+
+/* Backend note */
+.backend-note { margin-top: 18px; background: #fffaf0; border: 1px solid #ffecb3; padding: 12px; border-radius: 8px; }
+
+/* ========================
+   Email Preferences toggles
+   ======================== */
+.prefs-form { gap: 14px; }
+
+.pref-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  padding: 10px;
+  border-radius: 10px;
+  transition: background .12s ease;
+}
+.pref-row:hover { background: rgba(10,40,80,0.02); }
+
+.pref-text { flex: 1; min-width: 0; }
+.pref-label { font-weight: 700; color: #0f3d4f; display:block; }
+.pref-desc { color:#687b85; font-size:0.9rem; margin-top:4px; }
+
+/* Toggle switch: hide default checkbox and draw custom */
+.pref-toggle {
+  display:flex;
+  align-items:center;
+  gap:10px;
+}
+
+.pref-toggle input[type="checkbox"] {
+  appearance: none;
+  -webkit-appearance: none;
+  width: 44px;
+  height: 26px;
+  border-radius: 20px;
+  border: 1px solid rgba(10,30,60,0.08);
+  background: linear-gradient(180deg,#fff,#f5f7fb);
+  position: relative;
+  outline: none;
+  cursor: pointer;
+  transition: background .12s ease, border-color .12s ease;
+}
+.pref-toggle input[type="checkbox"]::after {
+  content: "";
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: #fff;
+  position: absolute;
+  left: 4px;
+  top: 3.5px;
+  box-shadow: 0 3px 8px rgba(10,30,60,0.08);
+  transition: transform .14s ease, left .12s ease;
+}
+.pref-toggle input[type="checkbox"]:checked {
+  background: linear-gradient(90deg,#2b9cff,#1f6feb);
+  border-color: rgba(31,111,235,0.18);
+}
+.pref-toggle input[type="checkbox"]:checked::after {
+  transform: translateX(18px);
+  left: 4px;
+}
+
+/* Responsive tweaks */
+@media (max-width: 920px) {
+  .config-grid { grid-template-columns: 1fr; }
+  .sticky-aside { position: static; }
+  .btn-logout-inline { margin-top: 10px; }
+}
