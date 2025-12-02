@@ -166,7 +166,7 @@ const deleteAccountRequest = async (req, res) => {
 
 
 // =======================================================
-// 🗑 CONFIRMAR ELIMINACIÓN DE CUENTA
+// 🗑 CONFIRMAR ELIMINACIÓN DE CUENTA (desactivación)
 // =======================================================
 const deleteAccountConfirm = async (req, res) => {
     try {
@@ -182,10 +182,12 @@ const deleteAccountConfirm = async (req, res) => {
             return res.status(404).json({ error: "Usuario no encontrado" });
         }
 
-        await user.destroy();
+        // 🔥 DESACTIVAR CUENTA EN VEZ DE BORRARLA
+        user.activo = 0;
+        await user.save();
 
         return res.status(200).json({
-            msg: "Tu cuenta fue eliminada permanentemente."
+            msg: "Tu cuenta fue desactivada exitosamente."
         });
 
     } catch (error) {

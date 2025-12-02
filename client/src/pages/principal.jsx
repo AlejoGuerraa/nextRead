@@ -1,3 +1,4 @@
+// src/pages/Principal.jsx  (reemplaza tu versión actual)
 import React, { useEffect, useRef, useState, useMemo } from "react";
 import axios from "axios";
 
@@ -32,10 +33,14 @@ export default function Principal() {
   const [librosTendencias, setLibrosTendencias] = useState([]);
   const [librosAutor, setLibrosAutor] = useState([]);
   const [autorMasLeidoNombre, setAutorMasLeidoNombre] = useState(null);
-  const [librosGenero, setLibrosGenero] = useState([]);
+
+  // Género basado en gustos del usuario
+  const [generoUsuario, setGeneroUsuario] = useState(null);
+  const [librosGeneroUsuario, setLibrosGeneroUsuario] = useState([]);
+
   const [generoSeleccionado, setGeneroSeleccionado] = useState("Género...");
   const [librosRecomendados, setLibrosRecomendados] = useState([]);
-  const [ultimoLibroObj, setUltimoLibroObj] = useState(null);
+  const [ultimoLibroObj, setUltimoLibroObj] = useState(null); // objeto completo del último libro leído (si está disponible)
 
   const [currentIndex, setCurrentIndex] = useState(0);
   const [librosPorDecada, setLibrosPorDecada] = useState([]);
@@ -63,28 +68,68 @@ export default function Principal() {
     { genero: "Gótico", titulo: "Oscuridad y romance" },
   ];
 
-  const generoActual = useMemo(() => {
-    const random = Math.floor(Math.random() * generosRotativos.length);
-    return generosRotativos[random];
-  }, []);
-
   useEffect(() => {
     document.title = "NextRead - Inicio";
   }, []);
 
+  // Cargar user desde localStorage
   useEffect(() => {
     const storedUser = localStorage.getItem("user");
-    if (storedUser) {
-      try {
-        setUser(JSON.parse(storedUser));
-      } catch {
-        setUser(null);
-      }
+    if (!storedUser) {
+      setUser(null);
+      return;
+    }
+
+    try {
+      const parsed = JSON.parse(storedUser);
+
+      // Normalizar campos que podrían venir como JSON-string
+      const fixField = (field) => {
+        if (typeof parsed[field] === "string") {
+          try {
+            parsed[field] = JSON.parse(parsed[field]);
+          } catch {
+            // si no es JSON válido, lo dejamos como está
+          }
+        }
+      };
+
+      fixField("libros_leidos");
+      fixField("generos");
+      fixField("autoresFavoritos");
+      fixField("preferencias");
+      fixField("historial");
+
+      setUser(parsed);
+    } catch {
+      setUser(null);
     }
   }, []);
 
-  /* ---------------------------------------------------- */
 
+  // 🔒 CONTROL GLOBAL DE CUENTA ACTIVA
+  useEffect(() => {
+    if (user === null) return; // todavía no cargó
+
+    // Si no hay usuario logueado → nada
+    if (!user) return;
+
+    // Si el usuario está desactivado
+    if (user.activo === 0) {
+      // Mostrar popup bonito
+      alert("Tu cuenta fue desactivada. Debes volver a iniciar sesión.");
+
+      // Borrar token y user del localStorage
+      localStorage.removeItem("token");
+      localStorage.removeItem("user");
+
+      // Redirigir
+      window.location.href = "/acceso";
+    }
+  }, [user]);
+
+
+  /* ---------------------------------------------------- */
   // 1. FETCH TENDENCIAS
   useEffect(() => {
     const fetchTendencias = async () => {
@@ -95,7 +140,6 @@ export default function Principal() {
 
         const res = await axios.get("http://localhost:3000/nextread/tendencias", { params });
         setLibrosTendencias(res.data || []);
-
       } catch (e) {
         console.error("Error cargando los libros de tendencias:", e);
         setLibrosTendencias([]);
@@ -153,11 +197,11 @@ export default function Principal() {
         if (res.data?.libros) {
           setLibrosAutor(res.data.libros);
 
-          const nombre = res.data.message.match(/Libros de tu autor más leído: (.+)/);
+          const nombre = res.data.message?.match?.(/Libros de tu autor más leído: (.+)/);
           setAutorMasLeidoNombre(nombre ? nombre[1] : "Más Libros del Autor");
         } else {
           setLibrosAutor([]);
-          setAutorMasLeidoNombre(res.data.message);
+          setAutorMasLeidoNombre(res.data?.message || "No hay recomendaciones");
         }
 
       } catch (e) {
@@ -171,51 +215,107 @@ export default function Principal() {
   }, [user]);
 
   /* ----------------------------------------------------
-    4. FETCH GÉNEROS
-    Carga la lista de géneros desde el backend
- -----------------------------------------------------*/
+    4. FETCH GÉNERO PREFERIDO y sus libros (usa user?.id)
+  -----------------------------------------------------*/
   useEffect(() => {
-    const fetchLibrosPorGenero = async () => {
-      try {
-        // await la promesa
-        const res = await axios.get(
-          `http://localhost:3000/nextread/libros/genero`,
-          { params: { genero: generoActual.genero } }
-        );
-        console.log(res)
+    const fetchGeneroUsuario = async () => {
+      // No solicitar si no hay usuario
+      if (!user?.id) {
+        setGeneroUsuario(null);
+        setLibrosGeneroUsuario([]);
+        return;
+      }
 
-        // según tu backend devolvés { genero, libros }
-        setLibrosGenero(Array.isArray(res.data?.libros) ? res.data.libros : []);
+      try {
+        const res = await axios.get(
+          `http://localhost:3000/nextread/libros/genero-usuario/${user.id}`
+        );
+
+        const genero = res.data?.generoPreferido || null;
+        setGeneroUsuario(genero);
+        setLibrosGeneroUsuario(Array.isArray(res.data?.libros) ? res.data.libros : []);
       } catch (e) {
-        console.error("Error cargando libros por género:", e);
-        setLibrosGenero([]);
+        console.error("Error obteniendo género preferido:", e);
+        setGeneroUsuario(null);
+        setLibrosGeneroUsuario([]);
       }
     };
 
-    // llamar la función
-    fetchLibrosPorGenero();
-  }, [generoActual]); // se ejecuta solo si generoActual cambia
+    fetchGeneroUsuario();
+  }, [user?.id]); // sólo cuando cambia el id
 
-  // 5. FETCH RECOMENDACIONES POR LIBRO
+  // Calcula el título para el género del usuario (useMemo para evitar recalculos innecesarios)
+  const tituloGenero = useMemo(() => {
+    if (!generoUsuario) return null;
+    const match = generosRotativos.find(g => {
+      // comparar ignorando mayúsculas/minúsculas y acentos simples
+      return g.genero.toLowerCase() === generoUsuario.toString().toLowerCase();
+    });
+    return match?.titulo || `Recomendados de ${generoUsuario}`;
+  }, [generoUsuario]);
+
+  // 5. FETCH RECOMENDACIONES POR EL ÚLTIMO LIBRO LEÍDO
   useEffect(() => {
     const fetchRecomendaciones = async () => {
       try {
         if (!user?.id) {
           setLibrosRecomendados([]);
+          setUltimoLibroObj(null);
           return;
         }
 
-        const leidos = user.libros_leidos;
-        if (!Array.isArray(leidos) || leidos.length === 0) {
+        // Normalizar libros leídos desde user
+        let leidos = user.libros_leidos || [];
+        if (typeof leidos === "string") {
+          try { leidos = JSON.parse(leidos); } catch { leidos = []; }
+        }
+        if (!Array.isArray(leidos)) leidos = [];
+
+        if (leidos.length === 0) {
+          setLibrosRecomendados([]);
+          setUltimoLibroObj(null);
+          return;
+        }
+
+        // Tomar el último elemento
+        const ultimo = leidos[leidos.length - 1];
+
+        // Caso A: si 'ultimo' es un objeto que contiene id/titulo -> úsalo directamente
+        let ultimoId = null;
+        if (typeof ultimo === "object" && ultimo !== null) {
+          // intentamos obtener id ya sea como id o idLibro
+          ultimoId = Number(ultimo.id ?? ultimo.idLibro ?? ultimo);
+          // guardamos el objeto tal cual (podría tener titulo)
+          setUltimoLibroObj(ultimo);
+        } else {
+          // Caso B: si es un número o string con id -> convertir a número
+          ultimoId = Number(ultimo);
+          setUltimoLibroObj(null); // aún no tenemos el objeto completo
+        }
+
+        if (!Number.isInteger(ultimoId)) {
+          // no tenemos id válido: limpiar y salir
           setLibrosRecomendados([]);
           return;
         }
 
-        const ultimoLibro = leidos[leidos.length - 1];
-        setUltimoLibroObj(ultimoLibro); // ← LO GUARDAMOS
+        // Si no tenemos el objeto completo, pedirlo para obtener el título (útil para el header)
+        if (!ultimoLibroObj || (ultimoLibroObj && Number(ultimoLibroObj.id ?? ultimoLibroObj.idLibro ?? 0) !== ultimoId)) {
+          try {
+            const detalle = await axios.get(`http://localhost:3000/nextread/libro/${ultimoId}`);
+            if (detalle?.data) {
+              // detalle.data ya viene con generos parseados por tu endpoint getLibroById
+              setUltimoLibroObj(detalle.data);
+            }
+          } catch (e) {
+            // si falla el fetch del libro, no es crítico; seguimos sin titulo
+            console.warn("No se pudo obtener detalle del último libro leído:", e);
+          }
+        }
 
+        // Pedir recomendaciones usando el id del último libro
         const res = await axios.get(
-          `http://localhost:3000/nextread/libros/recomendaciones/${user.id}/${ultimoLibro.id}`
+          `http://localhost:3000/nextread/libros/recomendaciones/${user.id}/${ultimoId}`
         );
 
         setLibrosRecomendados(Array.isArray(res.data?.libros) ? res.data.libros : []);
@@ -226,11 +326,9 @@ export default function Principal() {
     };
 
     fetchRecomendaciones();
-  }, [user]);
-
+  }, [user]); // se re-ejecuta cuando cambia `user` (por ejemplo al agregar un libro leido)
 
   // POPUP + 🟣 handler
-
   const showRestrictionPopover = () => {
     setPopoverKey(k => k + 1);
     setShowRestriction(false);
@@ -298,7 +396,6 @@ export default function Principal() {
       <main className="logueado-main">
         <Carousel slides={mockCarouselData} currentIndex={currentIndex} setCurrentIndex={setCurrentIndex} />
 
-
         {/* TENDENCIAS */}
         <section className="book-section">
           <h2 className="titulo-section">Novedades y Tendencias</h2>
@@ -313,11 +410,12 @@ export default function Principal() {
           <BookList libros={librosAutor} onBookClick={handleBookCardClick} />
         </section>
 
-        
         {/* RECOMENDACIONES POR LIBRO */}
-        {librosRecomendados.length > 0 && ultimoLibroObj && (
+        {librosRecomendados.length > 0 && (
           <section className="book-section">
-            <h2 className="titulo-section">Porque leíste {ultimoLibroObj.titulo}</h2>
+            <h2 className="titulo-section">
+              {ultimoLibroObj?.titulo ? `Porque leíste ${ultimoLibroObj.titulo}` : "Recomendados para vos"}
+            </h2>
             <BookList libros={librosRecomendados} onBookClick={handleBookCardClick} />
           </section>
         )}
@@ -333,11 +431,16 @@ export default function Principal() {
           </section>
         ))}
 
-        {/* GÉNERO ROTATIVO */}
-        <section className="book-section">
-          <h2 className="titulo-section">{generoActual.titulo}</h2>
-          <BookList libros={librosGenero} onBookClick={handleBookCardClick} />
-        </section>
+        {/* GÉNERO BASADO EN LOS GUSTOS DEL USUARIO */}
+        {generoUsuario && (
+          <section className="book-section">
+            <h2 className="titulo-section">{tituloGenero}</h2>
+            <BookList
+              libros={librosGeneroUsuario}
+              onBookClick={handleBookCardClick}
+            />
+          </section>
+        )}
       </main>
 
       <Footer />

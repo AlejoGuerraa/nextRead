@@ -530,36 +530,90 @@ const getDecadasPersonalizadas = async (req, res) => {
 };
 
 
-const getLibrosPorGenero = async (req, res) => {
-    try {
-        const genero = req.query.genero;
-        if (!genero) return res.status(400).json({ message: "Debes enviar un género en la query (?genero=...)" });
+const getGeneroPreferido = async (req, res) => {
+  try {
+    const idUsuario = req.params.idUsuario;
 
-        // JSON_CONTAINS(target, candidate) -> candidate para string debe ser '"valor"'
-        const candidate = JSON.stringify(genero); // -> '"Fantasia"'
-
-        const libros = await Libro.findAll({
-            where: Sequelize.where(
-                // JSON_CONTAINS(generos, '"Fantasia"') = 1 cuando contiene
-                Sequelize.fn("JSON_CONTAINS", Sequelize.col("generos"), candidate),
-                1
-            ),
-            order: [
-                ["ranking", "DESC"],
-                ["fecha_publicacion", "DESC"]
-            ],
-            limit: 20,
-            include: [
-                { model: Autor, as: "Autor", attributes: ["id", "nombre", "url_cara"] }
-            ]
-        });
-
-        return res.json({ genero, libros });
-    } catch (error) {
-        console.error("Error obteniendo libros por género:", error);
-        return res.status(500).json({ message: "Error obteniendo libros por género" });
+    const usuario = await Usuario.findByPk(idUsuario);
+    if (!usuario) {
+      return res.status(404).json({ message: "Usuario no encontrado" });
     }
+
+    const idsLeidos = usuario.libros_leidos || [];
+    if (!Array.isArray(idsLeidos) || idsLeidos.length === 0) {
+      return res.json({ generoPreferido: null, libros: [] });
+    }
+
+    // Traer los libros leídos
+    const librosLeidos = await Libro.findAll({
+      where: { id: idsLeidos }
+    });
+
+    const conteo = {};
+
+    for (const libro of librosLeidos) {
+      let generos = libro.generos;
+
+      // -----------------------------
+      //  PARSEAR GENEROS CORRECTAMENTE
+      // -----------------------------
+      if (!generos) generos = [];
+
+      // si viene como JSON string
+      else if (typeof generos === "string") {
+        try {
+          generos = JSON.parse(generos);
+        } catch {
+          // fallback si está mal formado
+          generos = generos.split(",").map(s => s.trim());
+        }
+      }
+
+      if (!Array.isArray(generos)) generos = [];
+
+      // contar
+      generos.forEach(g => {
+        conteo[g] = (conteo[g] || 0) + 1;
+      });
+    }
+
+    const generoPreferido = Object.keys(conteo).sort(
+      (a, b) => conteo[b] - conteo[a]
+    )[0];
+
+    if (!generoPreferido) {
+      return res.json({ generoPreferido: null, libros: [] });
+    }
+
+    // JSON_CONTAINS requiere '"valor"'
+    const candidate = JSON.stringify(generoPreferido);
+
+    const libros = await Libro.findAll({
+      where: Sequelize.where(
+        Sequelize.fn("JSON_CONTAINS", Sequelize.col("generos"), candidate),
+        1
+      ),
+      include: [
+        { model: Autor, as: "Autor", attributes: ["id", "nombre", "url_cara"] }
+      ],
+      order: [
+        ["ranking", "DESC"],
+        ["fecha_publicacion", "DESC"]
+      ],
+      limit: 20
+    });
+
+    return res.json({
+      generoPreferido,
+      libros
+    });
+
+  } catch (error) {
+    console.error("Error obteniendo género preferido:", error);
+    res.status(500).json({ message: "Error obteniendo género preferido" });
+  }
 };
+
 
 function fixGeneros(input) {
     if (!input) return [];
@@ -684,6 +738,6 @@ module.exports = {
     getMasDeAutor,
     getLibroById,
     getDecadasPersonalizadas,
-    getLibrosPorGenero,
+    getGeneroPreferido,
     getRecomendacionesPorLibro
 };
