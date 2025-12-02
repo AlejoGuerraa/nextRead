@@ -10,7 +10,6 @@ export default function BookCard({ book, onClick }) {
         book.title ||
         "Sin título";
 
-    // Buscar autor en varias formas (Sequelize incluye como `Autor` según backend)
     const author =
         book.nombre_autor ||
         book.nombre ||
@@ -26,7 +25,6 @@ export default function BookCard({ book, onClick }) {
         book.cover ||
         null;
 
-    // Normalizar rating entre 0 y 5
     const rawRating =
         book.puntuacion_usuario ??
         book.puntuacion ??
