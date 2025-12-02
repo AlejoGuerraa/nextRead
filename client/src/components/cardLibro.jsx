@@ -10,7 +10,6 @@ export default function BookCard({ book, onClick }) {
         book.title ||
         "Sin título";
 
-    // Buscar autor en varias formas (Sequelize incluye como `Autor` según backend)
     const author =
         book.nombre_autor ||
         book.nombre ||
@@ -26,18 +25,16 @@ export default function BookCard({ book, onClick }) {
         book.cover ||
         null;
 
-    // Normalizar rating entre 0 y 5
-    const rawRating =
-        book.puntuacion_usuario ??
-        book.puntuacion ??
-        book.ranking ??
-        (typeof book.ranking === 'number' ? Math.floor(book.ranking) : null);
+    // 🔹 Normalizar rating a INT entre 0 y 5 — usar rawRating en todo el cálculo
+    let rawRating = book.puntuacion_usuario ?? book.puntuacion ?? book.ranking ?? 0;
+    const parsed = Number(rawRating); // convierte "4" o "4.2" a número (NaN si no se puede)
 
-    const rating = Number.isFinite(Number(rawRating))
-        ? Math.max(0, Math.min(5, Math.floor(Number(rawRating))))
-        : null;
+    const rating = Number.isFinite(parsed)
+        ? Math.max(0, Math.min(5, Math.floor(parsed))) // int 0..5
+        : 0;
 
-    const starsCount = rating ?? 0;
+    // Para debugging rápido (comentá cuando no lo necesites)
+    // console.log("BookCard", { id, titulo: title, rawRating, parsed, rating, book });
 
     return (
         <div className="book-card" onClick={() => onClick(id)}>
@@ -49,7 +46,7 @@ export default function BookCard({ book, onClick }) {
             <span className="book-title">{title}</span>
             <span className="book-author">{author}</span>
             <span className="book-stars">
-                {"★".repeat(starsCount)}{"☆".repeat(5 - starsCount)} ({rating ?? "0"})
+                {"★".repeat(rating)}{"☆".repeat(5 - rating)} ({rating})
             </span>
         </div>
     );

@@ -201,16 +201,14 @@ async function porDecada(libros) {
     const grupos = {};
 
     libros.forEach((raw) => {
-        // Normalizar el libro: convertir a número el año y parsear géneros
         const libro = { ...raw };
 
-        // anio puede venir como string — intentar parsear
         const year = Number(libro.anio);
         if (!Number.isFinite(year) || year <= 0) return;
 
         libro.anio = Math.floor(year);
 
-        // parsear generos si vienen como string
+        // Normalizar generos
         if (typeof libro.generos === 'string') {
             try {
                 libro.generos = JSON.parse(libro.generos);
@@ -219,20 +217,23 @@ async function porDecada(libros) {
             }
         }
 
-        // Calcular la década (ej. 1960)
+        // 🔹 Normalizar ranking a número
+        libro.ranking = libro.ranking !== undefined && libro.ranking !== null
+            ? Number(libro.ranking)
+            : 0;
+
         const decadaBase = Math.floor(libro.anio / 10) * 10;
-        const etiqueta = `${decadaBase}s`; // p. ej. '1960s' o '2000s'
+        const etiqueta = `${decadaBase}s`;
 
         if (!grupos[etiqueta]) grupos[etiqueta] = [];
         grupos[etiqueta].push(libro);
     });
 
-    // Convertir a arreglo con metadatos y ordenar
+
     const gruposArray = Object.keys(grupos).map((label) => {
         const start = Number(label.replace('s', ''));
         const end = start + 9;
 
-        // Ordenar libros por año descendente y/o por id como fallback
         const librosOrdenados = grupos[label].sort((a, b) => {
             const ay = Number(a.anio) || 0;
             const by = Number(b.anio) || 0;
@@ -249,7 +250,6 @@ async function porDecada(libros) {
         };
     });
 
-    // Orden descendente por década (más recientes primero)
     gruposArray.sort((a, b) => b.start - a.start);
 
     return gruposArray;
@@ -259,7 +259,19 @@ const getLibrosPorDecada = async (req, res) => {
     try {
         const { decade } = req.query;
 
-        // Si se proporciona una década específica, devolver solo los libros de esa década
+        // -------------------------
+        // 📌 ATRIBUTOS QUE MANDAMOS
+        // -------------------------
+        const baseAttributes = [
+            "id",
+            "titulo",
+            "anio",
+            "url_portada",
+            "generos",
+            "fecha_publicacion",
+            "ranking"   // 👈 RANKING SIEMPRE INCLUIDO
+        ];
+
         if (decade) {
             const decadaMatch = decade.match(/^(\d{4})s?$/);
             if (!decadaMatch) {
@@ -269,17 +281,15 @@ const getLibrosPorDecada = async (req, res) => {
             }
 
             const decadaBase = parseInt(decadaMatch[1]);
-            const startYear = decadaBase;
-            const endYear = decadaBase + 9;
 
             const libros = await Libro.findAll({
                 where: {
                     anio: {
-                        [Op.gte]: startYear,
-                        [Op.lte]: endYear,
+                        [Op.gte]: decadaBase,
+                        [Op.lte]: decadaBase + 9,
                     },
                 },
-                attributes: ["id", "titulo", "anio", "url_portada", "generos", "fecha_publicacion"],
+                attributes: baseAttributes,
                 order: [['fecha_publicacion', 'DESC']],
                 include: [
                     {
@@ -293,16 +303,18 @@ const getLibrosPorDecada = async (req, res) => {
 
             return res.json({
                 decade: `${decadaBase}s`,
-                start: startYear,
-                end: endYear,
+                start: decadaBase,
+                end: decadaBase + 9,
                 count: libros.length,
-                libros: libros,
+                libros,
             });
         }
 
-        // Si NO se proporciona década, devolver todas las décadas con sus libros (comportamiento original)
+        // -------------------------
+        // 📌 TODAS LAS DÉCADAS
+        // -------------------------
         const libros = await Libro.findAll({
-            attributes: ["id", "titulo", "anio", "url_portada", "generos", "fecha_publicacion"],
+            attributes: baseAttributes,
             include: [
                 {
                     model: Autor,
@@ -313,15 +325,25 @@ const getLibrosPorDecada = async (req, res) => {
             ],
         });
 
-        const grupos = await porDecada(libros.map(l => l.toJSON()));
+        const grupos = await porDecada(
+            libros.map(l => {
+                const lib = l.toJSON();
+                // 🔹 Normalizar ranking
+                lib.ranking = lib.ranking !== undefined && lib.ranking !== null
+                    ? Math.floor(Number(lib.ranking))
+                    : 0;
+                return lib;
+            })
+        );
 
-        // Retornamos la lista de décadas como arreglo — más fácil de iterar en el frontend
         res.json({ decades: grupos });
+
     } catch (error) {
         console.error(error);
         res.status(500).json({ error: "Error obteniendo libros por década" });
     }
-}
+};
+
 
 
 // =======================================================
@@ -414,7 +436,7 @@ const getDecadasPersonalizadas = async (req, res) => {
         if (todosLosIds.length === 0) {
             // Si no tiene libros guardados, devolver todas las décadas disponibles (comportamiento por defecto)
             const libros = await Libro.findAll({
-                attributes: ["id", "titulo", "anio", "url_portada", "generos", "fecha_publicacion"],
+                attributes: ["id", "titulo", "anio", "url_portada", "generos", "fecha_publicacion", "ranking"],
                 include: [
                     {
                         model: Autor,
@@ -477,7 +499,7 @@ const getDecadasPersonalizadas = async (req, res) => {
 
         const librosDecadas = await Libro.findAll({
             where: { [Op.or]: conditions },
-            attributes: ["id", "titulo", "anio", "url_portada", "generos", "fecha_publicacion"],
+            attributes: ["id", "titulo", "anio", "url_portada", "generos", "fecha_publicacion", "ranking"],
             order: [['fecha_publicacion', 'DESC']],
             include: [
                 {
@@ -531,87 +553,87 @@ const getDecadasPersonalizadas = async (req, res) => {
 
 
 const getGeneroPreferido = async (req, res) => {
-  try {
-    const idUsuario = req.params.idUsuario;
+    try {
+        const idUsuario = req.params.idUsuario;
 
-    const usuario = await Usuario.findByPk(idUsuario);
-    if (!usuario) {
-      return res.status(404).json({ message: "Usuario no encontrado" });
-    }
-
-    const idsLeidos = usuario.libros_leidos || [];
-    if (!Array.isArray(idsLeidos) || idsLeidos.length === 0) {
-      return res.json({ generoPreferido: null, libros: [] });
-    }
-
-    // Traer los libros leídos
-    const librosLeidos = await Libro.findAll({
-      where: { id: idsLeidos }
-    });
-
-    const conteo = {};
-
-    for (const libro of librosLeidos) {
-      let generos = libro.generos;
-
-      // -----------------------------
-      //  PARSEAR GENEROS CORRECTAMENTE
-      // -----------------------------
-      if (!generos) generos = [];
-
-      // si viene como JSON string
-      else if (typeof generos === "string") {
-        try {
-          generos = JSON.parse(generos);
-        } catch {
-          // fallback si está mal formado
-          generos = generos.split(",").map(s => s.trim());
+        const usuario = await Usuario.findByPk(idUsuario);
+        if (!usuario) {
+            return res.status(404).json({ message: "Usuario no encontrado" });
         }
-      }
 
-      if (!Array.isArray(generos)) generos = [];
+        const idsLeidos = usuario.libros_leidos || [];
+        if (!Array.isArray(idsLeidos) || idsLeidos.length === 0) {
+            return res.json({ generoPreferido: null, libros: [] });
+        }
 
-      // contar
-      generos.forEach(g => {
-        conteo[g] = (conteo[g] || 0) + 1;
-      });
+        // Traer los libros leídos
+        const librosLeidos = await Libro.findAll({
+            where: { id: idsLeidos }
+        });
+
+        const conteo = {};
+
+        for (const libro of librosLeidos) {
+            let generos = libro.generos;
+
+            // -----------------------------
+            //  PARSEAR GENEROS CORRECTAMENTE
+            // -----------------------------
+            if (!generos) generos = [];
+
+            // si viene como JSON string
+            else if (typeof generos === "string") {
+                try {
+                    generos = JSON.parse(generos);
+                } catch {
+                    // fallback si está mal formado
+                    generos = generos.split(",").map(s => s.trim());
+                }
+            }
+
+            if (!Array.isArray(generos)) generos = [];
+
+            // contar
+            generos.forEach(g => {
+                conteo[g] = (conteo[g] || 0) + 1;
+            });
+        }
+
+        const generoPreferido = Object.keys(conteo).sort(
+            (a, b) => conteo[b] - conteo[a]
+        )[0];
+
+        if (!generoPreferido) {
+            return res.json({ generoPreferido: null, libros: [] });
+        }
+
+        // JSON_CONTAINS requiere '"valor"'
+        const candidate = JSON.stringify(generoPreferido);
+
+        const libros = await Libro.findAll({
+            where: Sequelize.where(
+                Sequelize.fn("JSON_CONTAINS", Sequelize.col("generos"), candidate),
+                1
+            ),
+            include: [
+                { model: Autor, as: "Autor", attributes: ["id", "nombre", "url_cara"] }
+            ],
+            order: [
+                ["ranking", "DESC"],
+                ["fecha_publicacion", "DESC"]
+            ],
+            limit: 20
+        });
+
+        return res.json({
+            generoPreferido,
+            libros
+        });
+
+    } catch (error) {
+        console.error("Error obteniendo género preferido:", error);
+        res.status(500).json({ message: "Error obteniendo género preferido" });
     }
-
-    const generoPreferido = Object.keys(conteo).sort(
-      (a, b) => conteo[b] - conteo[a]
-    )[0];
-
-    if (!generoPreferido) {
-      return res.json({ generoPreferido: null, libros: [] });
-    }
-
-    // JSON_CONTAINS requiere '"valor"'
-    const candidate = JSON.stringify(generoPreferido);
-
-    const libros = await Libro.findAll({
-      where: Sequelize.where(
-        Sequelize.fn("JSON_CONTAINS", Sequelize.col("generos"), candidate),
-        1
-      ),
-      include: [
-        { model: Autor, as: "Autor", attributes: ["id", "nombre", "url_cara"] }
-      ],
-      order: [
-        ["ranking", "DESC"],
-        ["fecha_publicacion", "DESC"]
-      ],
-      limit: 20
-    });
-
-    return res.json({
-      generoPreferido,
-      libros
-    });
-
-  } catch (error) {
-    console.error("Error obteniendo género preferido:", error);
-    res.status(500).json({ message: "Error obteniendo género preferido" });
-  }
 };
 
 
@@ -624,7 +646,7 @@ function fixGeneros(input) {
         try {
             const parsed = JSON.parse(input);
             if (Array.isArray(parsed)) return parsed;
-        } catch {}
+        } catch { }
 
         return input
             .replace(/[\[\]"]+/g, "")

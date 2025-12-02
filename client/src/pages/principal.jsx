@@ -179,6 +179,8 @@ export default function Principal() {
     if (user !== null) fetchDecadasPersonalizadas();
   }, [user]);
 
+  console.log("Decadas:", librosPorDecada);
+
   // 3. FETCH AUTOR MÁS LEÍDO
   useEffect(() => {
     const fetchLibrosAutor = async () => {
@@ -426,6 +428,7 @@ export default function Principal() {
             <BookList libros={librosRecomendados} onBookClick={handleBookCardClick} />
           </section>
         )}
+
 
         {/* CARRUSELES POR DÉCADA */}
         {librosPorDecada?.map((group) => (
