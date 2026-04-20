@@ -172,8 +172,8 @@ La aplicación estará disponible en `http://localhost:5173`
   <b>
     <br>
     Desarrollado por:  
+    <a href="https://github.com/Renaaa189" style="color: inherit; font-weight: bold;">Renata Gallucci</a>,
     <a href="https://github.com/AlejoGuerraa" style="color: inherit; font-weight: bold;">Alejo Guerra</a>, 
-    <a href="https://github.com/Renaaa189" style="color: inherit; font-weight: bold;">Renata Gallucci</a>, 
     <a href="https://github.com/Sofipow-007" style="color: inherit; font-weight: bold;">Sofia Power</a>, 
     <a href="https://github.com/AgustinR55" style="color: inherit; font-weight: bold;">Agustin Rivera</a> y 
     <a href="https://github.com/CarolinaMendez" style="color: inherit; font-weight: bold;">Carolina Mendez</a>
