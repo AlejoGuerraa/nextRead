@@ -1,4 +1,5 @@
 
+
 <p align="center">
   <img src="https://capsule-render.vercel.app/api?type=rect&color=0:1b1b2f,100:16213e&height=200&section=header&text=NextRead&fontSize=52&fontColor=ffffff&animation=fadeIn&fontAlignY=35&desc=Plataforma%20Social%20de%20Lectura%20y%20Reseñas&descAlignY=60&descSize=16" />
 </p>
@@ -101,6 +102,32 @@ Permite a los usuarios explorar un extenso catálogo de obras, dejar reseñas, d
      Framer Motion • Lucide React • React Router • Axios • JWT • bcrypt • Canva • Axios 
 </p>
 
+## Vista del sistema
+
+<table align="center">
+  <tr>
+    <td align="center">
+      <img src="Documentacion/Imagenes/NextRead.PNG" width="700" style="border: 3px solid white; border-radius: 10px;"/><br>
+      <sub>Pantalla principal</sub>
+    </td>
+  </tr>
+</table>
+
+<br>
+
+<table align="center">
+  <tr>
+    <td align="center">
+      <img src="Documentacion/Imagenes/NextReadIngreso.PNG" width="700" style="border: 3px solid white; border-radius: 10px;"/><br>
+      <sub>Pantalla de ingreso</sub>
+    </td>
+  </tr>
+</table>
+
+<br>
+
+---
+
 ## <img src="https://media.giphy.com/media/juua9i2c2fA0AIp2iq/giphy.gif" width="25"> Instalación  y Setup
 
 ### Previa Instalación
@@ -167,3 +194,4 @@ La aplicación estará disponible en `http://localhost:5173`
   </a>
 
 </p>
+
