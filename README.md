@@ -1,7 +1,7 @@
 
-
+<!-- BANNER -->
 <p align="center">
-  <img src="https://capsule-render.vercel.app/api?type=rect&color=0:1b1b2f,100:16213e&height=200&section=header&text=NextRead&fontSize=52&fontColor=ffffff&animation=fadeIn&fontAlignY=35&desc=Plataforma%20Social%20de%20Lectura%20y%20Reseñas&descAlignY=60&descSize=16" />
+  <img src="Documentacion/Imagenes/NextRead.gif" width="100%" />
 </p>
 
 ## Descripción:
