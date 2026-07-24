@@ -1,46 +1,22 @@
 const express = require('express');
+const helmet = require("helmet");
+const cors = require("cors");
 
 // ---------------------- CONTROLLERS ----------------------
 const {
-    agregarNotificacion,
-    getAllUsers,
-    register,
-    login,
-    getUser,
-    editarPerfil,
-    checkEmail,
-    checkUsername,
-    buscarUsuario,
-    crearLista,
-    agregarLibroAListaEnLista,
-    listarSeguidores,
-    listarSeguidos,
-    cancelarSeguido,
-    seguirUsuario,
-    dejarDeSeguir
-    ,marcarNotificacionesLeidas, getPublicUserById
+    agregarNotificacion, getAllUsers, register, login,getUser,editarPerfil,checkEmail,checkUsername,buscarUsuario,
+    crearLista,agregarLibroAListaEnLista,listarSeguidores,listarSeguidos,cancelarSeguido,
+    seguirUsuario,dejarDeSeguir,marcarNotificacionesLeidas, getPublicUserById
 } = require('./controller/peticionesUsuario');
 
 const { banearUsuario, eliminarComentario } = require('./controller/peticionesAdmin');
 
 const {
-    buscar,
-    getTendencias,
-    getLibrosPorDecada,
-    getMasDeAutor,
-    getLibroById,
-    getDecadasPersonalizadas,
-    getGeneroPreferido,
-    getRecomendacionesPorLibro
+    buscar,getTendencias,getLibrosPorDecada,getMasDeAutor,getLibroById,getDecadasPersonalizadas,getGeneroPreferido,getRecomendacionesPorLibro
 } = require('./controller/busqueda');
 
 const {
-    getAllBooks,
-    agregarLibroALista,
-    guardarPuntuacion,
-    obtenerResenas,
-    likeResena,
-    unlikeResena
+    getAllBooks,agregarLibroALista,guardarPuntuacion,obtenerResenas,likeResena,unlikeResena
 } = require('./controller/peticionesLibros');
 
 const { getAllBanners, getAllIconos } = require('./controller/banners');
@@ -49,21 +25,20 @@ const { getAllAutores } = require('./controller/autorController');
 const { enviarEnlaceRecuperacion, resetearPassword } = require('./controller/recoveryController');
 
 const {
-    changePassword,
-    changeEmailRequest,
-    confirmEmailChange,
-    deleteAccountRequest,
-    deleteAccountConfirm
+    changePassword,changeEmailRequest,confirmEmailChange,deleteAccountRequest,deleteAccountConfirm
 } = require('./controller/configuracion');
 
 // ---------------------- MIDDLEWARES ----------------------
+
 const isAuth = require('./middlewares/isAuth');
 const isAdmin = require('./middlewares/isAdmin');
 
 // ---------------------- DB ----------------------
+
 const sequelize = require('./config/db');
 
 // ---------------------- MODELS ----------------------
+
 require('./models/Usuario');
 require('./models/Libro');
 require('./models/Autor');
@@ -78,15 +53,24 @@ require('./models/Banner');
 
 // ---------------------------------------------------------
 const server = express();
-server.use(express.json());
+
+// Seguridad
+server.use(helmet());
+
+// Logs HTTP (solo desarrollo)
+server.use(morgan("dev"));
 
 // CORS
-server.use((req, res, next) => {
-    res.setHeader('Access-Control-Allow-Origin', 'http://localhost:5173');
-    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, PATCH, DELETE, OPTIONS');
-    res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
-    next();
-});
+server.use(
+    cors({
+        origin: "http://localhost:5173",
+        methods: ["GET", "POST", "PUT", "PATCH", "DELETE"],
+        credentials: true,
+    })
+);
+
+// Parseo del body
+server.use(express.json());
 
 // ---------------------- RUTAS USUARIO ----------------------
 server.get('/nextread/user', isAuth, getUser);
