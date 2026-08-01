@@ -9,15 +9,21 @@ const bcrypt = require('bcrypt');
 // CONFIGURAR NODEMAILER (GMAIL + FIX TLS)
 // ========================================================
 
+const recoveryJwtSecret = process.env.TEMPORAL_SECRET;
+const recoveryTokenTtl = process.env.JWT_RECOVERY_TOKEN_TTL || '1h';
+const emailService = process.env.EMAIL_SERVICE || 'gmail';
+const emailUser = process.env.EMAIL_USER || 'NextReadOficial@gmail.com';
+const emailFrom = process.env.EMAIL_FROM || 'NextRead <NextReadOficial@gmail.com>';
+const tlsRejectUnauthorized = process.env.NODE_TLS_REJECT_UNAUTHORIZED === 'true';
 
 const transporter = nodemailer.createTransport({
-    service: 'gmail',
+    service: emailService,
     auth: {
-        user: 'NextReadOficial@gmail.com',
-        pass: 'glmz onkq jjlv jzmn'  // 🔥 IMPORTANTE: App Password de Gmail
+        user: emailUser,
+        pass: process.env.EMAIL_PASS
     },
     tls: {
-        rejectUnauthorized: false  // 🔥 FIX PARA "self-signed certificate"
+        rejectUnauthorized: tlsRejectUnauthorized
     }
 });
 
@@ -43,16 +49,15 @@ const enviarEnlaceRecuperacion = async (req, res) => {
         // Crear token JWT con vencimiento
         const token = jwt.sign(
             { id: usuario.id, correo: usuario.correo },
-            "CLAVE_SECRETA_RECUPERACION",
-            { expiresIn: "1h" }
+            recoveryJwtSecret,
+            { expiresIn: recoveryTokenTtl }
         );
 
-        // Frontend de tu app (VITE)
-        const enlace = `http://localhost:5173/reset-password?token=${token}`;
+        const enlace = `${process.env.FRONTEND_URL}/confirm-delete?token=${token}`;
 
         // Enviar email
         await transporter.sendMail({
-            from: "NextRead Recuperación <NextReadOficial@gmail.com>",
+            from: emailFrom,
             to: email,
             subject: "Restablecimiento de contraseña - NextRead",
             html: `
@@ -86,7 +91,7 @@ const resetearPassword = async (req, res) => {
 
         let decoded;
         try {
-            decoded = jwt.verify(token, "CLAVE_SECRETA_RECUPERACION");
+            decoded = jwt.verify(token, recoveryJwtSecret);
         } catch (error) {
             return res.status(401).json({ error: "Token inválido o expirado." });
         }

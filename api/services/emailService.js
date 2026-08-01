@@ -1,14 +1,16 @@
 const nodemailer = require("nodemailer");
 
+const emailService = process.env.EMAIL_SERVICE || "gmail";
+const emailUser = process.env.EMAIL_USER || "NextReadOficial@gmail.com";
+const emailFrom = process.env.EMAIL_FROM || "NextRead <NextReadOficial@gmail.com>";
+
 const transporter = nodemailer.createTransport({
-    service: "gmail",
+    service: emailService,
     auth: {
-        user: "NextReadOficial@gmail.com",
-        pass: "qaud qnnn xupf ewmg"  // ⚠️ Reemplazar si falla: regenerar en Google Account
-    },
-    tls: {
-        rejectUnauthorized: false
-    }
+        user: emailUser,
+        pass: process.env.EMAIL_PASS
+    },ectUnauthorized: false
+    
 });
 
 // Log transporter status on load (non-blocking)
@@ -21,7 +23,7 @@ transporter.verify().then(() => {
 module.exports = async function sendEmail({ to, subject, html }) {
     if (!to) throw new Error('No recipient `to` provided to emailService');
     const mail = {
-        from: '"NextRead" <NextReadOficial@gmail.com>',
+        from: emailFrom,
         to,
         subject,
         html

@@ -110,6 +110,7 @@ When adding new endpoints:
 - Validate permissions.
 - Return proper HTTP status codes.
 - Avoid exposing internal errors.
+- Create enviroment variables and create them in .env
 
 ---
 

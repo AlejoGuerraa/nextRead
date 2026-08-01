@@ -12,7 +12,9 @@ const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const { Op } = require('sequelize');
 
-const claveSecreta = 'AdminLibros';
+const claveSecreta = process.env.SECRET;
+const bcryptSaltRounds = Number(process.env.BCRYPT_SALT_ROUNDS || 10);
+const accessTokenTtl = process.env.JWT_ACCESS_TOKEN_TTL || '8h';
 
 // -------------------------------------------------
 // HELPER: AGREGAR NOTIFICACIÓN AL USUARIO
@@ -84,8 +86,6 @@ const getAllUsers = async (_req, res) => {
 
 // ----------------- REGISTER -----------------
 const register = async (req, res) => {
-    console.log(req.body);
-
     const {
         nombre, apellido, correo, usuario, contrasena, fecha_nacimiento,
         // Recibimos el símbolo del icono y la URL del banner
@@ -152,7 +152,7 @@ const register = async (req, res) => {
     }
 
     // 4. CREACIÓN DEL USUARIO
-    const hashedPassw = await bcrypt.hash(contrasena, 10);
+    const hashedPassw = await bcrypt.hash(contrasena, bcryptSaltRounds);
 
     // decidir rol — por defecto Usuario
     let rolFinal = 'Usuario';
@@ -210,7 +210,7 @@ const login = async (req, res) => {
             return res.status(400).json({ error: "Su email o contraseña incorrectos" });
         }
 
-        const token = jwt.sign({ id: user.id, correo: user.correo }, claveSecreta, { expiresIn: '8h' });
+        const token = jwt.sign({ id: user.id, correo: user.correo }, claveSecreta, { expiresIn: accessTokenTtl });
 
         const userData = user.get({ plain: true });
         delete userData.contrasena;

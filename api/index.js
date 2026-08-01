@@ -1,6 +1,8 @@
 const express = require('express');
 const helmet = require("helmet");
 const cors = require("cors");
+const morgan = require("morgan");
+require("dotenv").config();
 
 // ---------------------- CONTROLLERS ----------------------
 const {
@@ -53,8 +55,11 @@ require('./models/Banner');
 
 // ---------------------------------------------------------
 const server = express();
+const corsOrigin = process.env.FRONTEND_URL || "http://localhost:5173";
+const port = Number(process.env.PORT || 3000);
 
 // Seguridad
+server.disable("x-powered-by");
 server.use(helmet());
 
 // Logs HTTP (solo desarrollo)
@@ -63,7 +68,7 @@ server.use(morgan("dev"));
 // CORS
 server.use(
     cors({
-        origin: "http://localhost:5173",
+        origin: corsOrigin,
         methods: ["GET", "POST", "PUT", "PATCH", "DELETE"],
         credentials: true,
     })
@@ -163,11 +168,11 @@ server.post("/nextread/user/delete-account-request", isAuth, deleteAccountReques
 server.post("/nextread/user/delete-account-confirm", deleteAccountConfirm);
 
 // ---------------------- INIT SERVER ----------------------
-server.listen(3000, '0.0.0.0', async () => {
+server.listen(port, '0.0.0.0', async () => {
     try {
         await sequelize.sync({ force: false, alter: false });
         console.log("Tablas sincronizadas correctamente (alter:true)");
-        console.log("Servidor corriendo en puerto 3000");
+        console.log(`Servidor corriendo en puerto ${port}`);
     } catch (error) {
         console.error("Error al sincronizar tablas:", error);
     }

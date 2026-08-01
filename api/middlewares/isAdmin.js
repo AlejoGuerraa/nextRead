@@ -4,9 +4,13 @@ const User = require('../models/Usuario');
 // This middleware works similarly to `isAuth` but verifies the token
 // itself and ensures the user has role 'Admin'. Use this when routes
 // must be protected for admins only. It sets req.user with { id, correo, rol }.
-const claveSecreta = 'AdminLibros';
+
+const claveSecreta = process.env.SECRET;
 
 const isAdmin = async (req, res, next) => {
+  if (!claveSecreta) {
+    return res.status(500).json({ message: 'Configuración de autenticación incompleta' });
+  }
   try {
     const authHeader = req.headers['authorization'];
     if (!authHeader) return res.status(401).json({ message: 'Token no proporcionado' });

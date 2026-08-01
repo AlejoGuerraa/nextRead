@@ -4,8 +4,10 @@ const bcrypt = require("bcrypt");
 const sendEmail = require("../services/emailService");
 const jwt = require("jsonwebtoken");
 
-
-const claveTemporal = "CambioEmailTemporal123";
+const claveTemporal = process.env.TEMPORAL_SECRET;
+const emailTokenTtl = process.env.JWT_EMAIL_TOKEN_TTL || "15m";
+const apiBaseUrl = process.env.API_URL || "http://localhost:3000";
+const frontendBaseUrl = process.env.FRONTEND_URL || "http://localhost:5173";
 
 const changeEmailRequest = async (req, res) => {
     try {
@@ -22,10 +24,10 @@ const changeEmailRequest = async (req, res) => {
         const token = jwt.sign(
             { id: user.id, newEmail },
             claveTemporal,
-            { expiresIn: "15m" }
+            { expiresIn: emailTokenTtl }
         );
 
-        const link = `http://localhost:3000/api/confirm-email-change?token=${token}`;
+        const link = `${apiBaseUrl}/api/confirm-email-change?token=${token}`;
 
         try {
             await sendEmail({
@@ -129,10 +131,10 @@ const deleteAccountRequest = async (req, res) => {
         const token = jwt.sign(
             { id: user.id },
             claveTemporal,
-            { expiresIn: "15m" }
+            { expiresIn: emailTokenTtl }
         );
 
-        const link = `http://localhost:5173/confirm-delete?token=${token}`;
+        const link = `${frontendBaseUrl}/confirm-delete?token=${token}`;
 
         // Enviar email ASYNC (NO bloquea respuesta si falla)
         setImmediate(async () => {

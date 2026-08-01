@@ -1,10 +1,16 @@
+require('dotenv').config();
 const Sequelize = require('sequelize');
 
-// Reemplaza 'nombre_de_tu_base_de_datos', 'tu_usuario', 'tu_contraseña' con tus credenciales de PostgreSQL
-const database = new Sequelize('nextRead', 'root','',{
-    host: 'localhost', // O la dirección de tu servidor PostgreSQL
-    dialect: 'mysql', // ESTE es el cambio clave
-    logging: false
-});
+const database = new Sequelize(
+    process.env.SQL_DATABASE_NAME || 'nextread',
+    process.env.SQL_DATABASE_USER || 'root',
+    process.env.SQL_DATABASE_PASSWORD || '',
+    {
+        host: process.env.SQL_DATABASE_HOST || 'localhost',
+        port: Number(process.env.SQL_DATABASE_PORT || 3306),
+        dialect: 'mysql',
+        logging: false
+    }
+);
 
 module.exports = database;
