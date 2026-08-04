@@ -15,6 +15,7 @@ import Cookies from './pages/cookies';
 import UserProfile from './pages/UserProfile.jsx';
 import ConfirmDelete from './components/settings/confirm-delete.jsx';
 import SobreNosotros from './pages/sobreNosotros';
+import ProtectedRoute from './components/auth/ProtectedRoute';
 
 import { useEffect } from "react";
 import { useLocation } from "react-router-dom";
@@ -67,20 +68,25 @@ const router = createBrowserRouter([
     children: [
       { path: "/", element: <Principal /> },
       { path: "/acceso", element: <Acceso /> },
-      { path: "/perfil", element: <Perfil /> },
-      { path: "/perfil/editar", element: <EditarPerfil /> },
-      { path: "/libro/:id", element: <PaginaLibro /> },
-      { path: "/seguidores", element: <Seguidores /> },
-      { path: "/seguidos", element: <Seguidos /> },
-      { path: "/configuracion", element: <Configuracion /> },
-      { path: "/reset-password", element: <ResetPassword /> },
       { path: "/cookies", element: <Cookies /> },
-      { path: "/user/:username", element: <UserProfile /> },
-      { path: "/usuario/:username", element: <UserProfile /> },
-      { path: "/confirm-delete", element: <ConfirmDelete /> },
       { path: "/nosotros", element: <SobreNosotros /> },
-    ]
-  }
+      { path: "/reset-password", element: <ResetPassword /> },
+      {
+        element: <ProtectedRoute />,
+        children: [
+          { path: "/perfil", element: <Perfil /> },
+          { path: "/perfil/editar", element: <EditarPerfil /> },
+          { path: "/libro/:id", element: <PaginaLibro /> },
+          { path: "/seguidores", element: <Seguidores /> },
+          { path: "/seguidos", element: <Seguidos /> },
+          { path: "/configuracion", element: <Configuracion /> },
+          { path: "/user/:username", element: <UserProfile /> },
+          { path: "/usuario/:username", element: <UserProfile /> },
+          { path: "/confirm-delete", element: <ConfirmDelete /> },
+        ],
+      },
+    ],
+  },
 ]);
 
 ReactDOM.createRoot(document.getElementById('root')).render(

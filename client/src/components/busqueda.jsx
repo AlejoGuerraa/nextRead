@@ -1,9 +1,9 @@
 import { useState, useEffect, useRef } from "react";
 import { useLocation } from 'react-router-dom';
-import axios from "axios";
+import api from '../services/api';
 import { useNavigate } from "react-router-dom";
 
-const SEARCH_ENDPOINT = "http://localhost:3000/nextread/buscar";
+const SEARCH_ENDPOINT = "/nextread/buscar";
 
 export default function SearchBar() {
     const [term, setTerm] = useState("");
@@ -37,9 +37,8 @@ export default function SearchBar() {
             const checkFollowState = async () => {
                 if (!token || !currentId || disabledSelf) return;
                 try {
-                    const res = await axios.get(
-                        `http://localhost:3000/nextread/user/${user.id}/seguidores`,
-                        { headers: { Authorization: `Bearer ${token}` } }
+                    const res = await api.get(
+                        `/nextread/user/${user.id}/seguidores`
                     );
                     const data = res.data;
                     const siguiendo = data.seguidores && data.seguidores.some(s => s.usuario.id === currentId);
@@ -60,12 +59,10 @@ export default function SearchBar() {
                 setLoading(true);
 
                 const url = isFollowing
-                    ? `http://localhost:3000/nextread/dejar-seguir/${user.id}`
-                    : `http://localhost:3000/nextread/seguir/${user.id}`;
+                    ? `/nextread/dejar-seguir/${user.id}`
+                    : `/nextread/seguir/${user.id}`;
 
-                const res = await axios.post(url, {}, {
-                    headers: { Authorization: `Bearer ${token}` }
-                });
+                const res = await api.post(url, {});
 
                 // Actualizar estado
                 const newFollowState = !isFollowing;
@@ -112,8 +109,8 @@ export default function SearchBar() {
             try {
                 if (isUserSearch) {
                     // BUSCAR USUARIOS
-                    const { data } = await axios.get(
-                        "http://localhost:3000/nextread/buscar-usuario",
+                    const { data } = await api.get(
+                        "/nextread/buscar-usuario",
                         { params: { q: term } }
                     );
 
@@ -137,7 +134,7 @@ export default function SearchBar() {
                     setOpen(true);
                 } else {
                     // BUSCAR LIBROS
-                    const { data } = await axios.get(SEARCH_ENDPOINT, {
+                    const { data } = await api.get(SEARCH_ENDPOINT, {
                         params: { search: term }
                     });
 

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import axios from "axios";
+import api from '../../services/api';
 
 export default function ChangeEmail() {
   const [email, setEmail] = useState('');
@@ -15,8 +15,8 @@ export default function ChangeEmail() {
     }
 
     try {
-      const res = await axios.post(
-        "http://localhost:3000/nextread/user/change-email-request",
+      const res = await api.post(
+        "/nextread/user/change-email-request",
         { newEmail: email },
         {
           headers: {

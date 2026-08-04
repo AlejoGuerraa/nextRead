@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
-import axios from 'axios';
+import api from '../services/api';
 import { useToast } from './ToastProvider';
 import '../pagescss/modals.css';
 
-const API_BASE = 'http://localhost:3000/nextread';
+const API_BASE = '/nextread';
 
 export default function ChooseListModal({ isOpen, onClose, listas = {}, bookId, onAdded }) {
   const toast = useToast();
@@ -17,7 +17,7 @@ export default function ChooseListModal({ isOpen, onClose, listas = {}, bookId, 
 
     setLoading(true);
     try {
-      const res = await axios.post(`${API_BASE}/listas/${encodeURIComponent(listName)}/libro/${bookId}`, {}, { headers: { Authorization: `Bearer ${token}` } });
+      const res = await api.post(`${API_BASE}/listas/${encodeURIComponent(listName)}/libro/${bookId}`, {});
       toast?.push(res.data.message || 'Libro agregado', 'success');
       if (onAdded) onAdded(listName, res.data.lista);
       onClose();

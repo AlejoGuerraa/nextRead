@@ -1,6 +1,6 @@
 import { useState } from "react";
 
-import axios from "axios";
+import api from '../../../services/api';
 
 
 export const Step2 = ({ form, errors, onChange, next, back }) => {
@@ -16,9 +16,9 @@ export const Step2 = ({ form, errors, onChange, next, back }) => {
 
       try {
 
-        const response = await axios.get(
+        const response = await api.get(
 
-          `http://localhost:3000/nextread/check-username?usuario=${encodeURIComponent(newUsername)}`
+          `/nextread/check-username?usuario=${encodeURIComponent(newUsername)}`
 
         );
 

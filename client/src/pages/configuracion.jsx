@@ -4,6 +4,7 @@ import { useNavigate } from "react-router-dom";
 import Header from "../components/header";
 import Footer from "../components/footer";
 import RestrictionPopover from "../components/popOver";
+import { logoutAndRedirect } from "../services/authService";
 
 import ChangeEmail from "../components/settings/ChangeEmail";
 import ChangePassword from "../components/settings/ChangePassword";
@@ -41,8 +42,7 @@ export default function Configuracion() {
   const isAdmin = roleStr === 'admin';
 
   const handleLogout = () => {
-    localStorage.removeItem("user");
-    navigate("/acceso");
+    logoutAndRedirect(navigate);
   };
 
   // Si la cuenta está desactivada, redirigir

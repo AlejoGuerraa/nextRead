@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
-import axios from 'axios';
+import api from '../../services/api';
 import { useToast } from '../ToastProvider';
 import '../../pagescss/modals.css';
 
-const API_BASE = 'http://localhost:3000/nextread';
+const API_BASE = '/nextread';
 
 export default function CrearListaModal({ isOpen, onClose, onCreated }) {
   const [nombre, setNombre] = useState('');
@@ -19,7 +19,7 @@ export default function CrearListaModal({ isOpen, onClose, onCreated }) {
 
     setLoading(true);
     try {
-      const res = await axios.post(`${API_BASE}/listas`, { nombre }, { headers: { Authorization: `Bearer ${token}` } });
+      const res = await api.post(`${API_BASE}/listas`, { nombre });
       toast?.push(res.data.message || 'Lista creada', 'success');
       setNombre('');
       if (onCreated) onCreated(res.data.listas);

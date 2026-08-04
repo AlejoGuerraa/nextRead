@@ -29,6 +29,7 @@ const { enviarEnlaceRecuperacion, resetearPassword } = require('./controller/rec
 const {
     changePassword,changeEmailRequest,confirmEmailChange,deleteAccountRequest,deleteAccountConfirm
 } = require('./controller/configuracion');
+const { getAuthMe } = require('./controller/authController');
 
 // ---------------------- MIDDLEWARES ----------------------
 
@@ -113,6 +114,7 @@ server.delete('/nextread/resena/:id/like', isAuth, unlikeResena);
 // ---------------------- AUTH ----------------------
 server.post('/nextread/register', register);
 server.post('/nextread/login', login);
+server.get('/nextread/auth/me', isAuth, getAuthMe);
 server.patch('/nextread/user/editar', isAuth, editarPerfil);
 
 // ---------------------- NOTIFICACIONES ----------------------

@@ -1,6 +1,6 @@
 // File: src/components/settings/DeleteAccount.jsx
 import React, { useState } from 'react';
-import axios from "axios";
+import api from '../../services/api';
 
 export default function DeleteAccount() {
   const [confirmText, setConfirmText] = useState("");
@@ -11,8 +11,8 @@ export default function DeleteAccount() {
     if (confirmText !== "ELIMINAR") return;
 
     try {
-      const res = await axios.post(
-        "http://localhost:3000/nextread/user/delete-account-request",
+      const res = await api.post(
+        "/nextread/user/delete-account-request",
         {},
         {
           headers: {

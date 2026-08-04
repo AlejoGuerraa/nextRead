@@ -47,9 +47,7 @@ export default function Header({ user, onRestrictedAction, headerRightRef }) {
     try {
       const token = localStorage.getItem('token');
       if (!token) return;
-      const res = await fetch('http://localhost:3000/nextread/user', {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      const res = await api.get('/nextread/user');
       if (!res.ok) return;
       const json = await res.json();
       setUserData(json);
@@ -71,7 +69,7 @@ export default function Header({ user, onRestrictedAction, headerRightRef }) {
       try {
         const token = localStorage.getItem('token');
         if (token) {
-          await fetch('http://localhost:3000/nextread/notificaciones/marcar-leidas', {
+          await api.get('/nextread/notificaciones/marcar-leidas', {
             method: 'POST', headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' }
           });
         }

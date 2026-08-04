@@ -2,7 +2,7 @@
 import React, { useState } from "react";
 import { useToast } from './ToastProvider';
 import { useParams } from "react-router-dom";
-import axios from "axios";
+import api from '../services/api';
 import { Bookmark, Heart, Clock, PlusCircle, Book } from "lucide-react"; // iconos más lindos
 
 export default function InfoLibro({ libro, onRestrictedAction, actionRef, onOpenChooseList }) {
@@ -15,7 +15,7 @@ export default function InfoLibro({ libro, onRestrictedAction, actionRef, onOpen
     const [hoverRating, setHoverRating] = useState(0);
     const toast = useToast();
 
-    const API_BASE = "http://localhost:3000/nextread";
+    const API_BASE = "/nextread";
 
     const validarToken = () => {
         const token = localStorage.getItem("token");
@@ -35,7 +35,7 @@ export default function InfoLibro({ libro, onRestrictedAction, actionRef, onOpen
         if (!auth) return;
 
         try {
-            const response = await axios.post(
+            const response = await api.post(
                 `${API_BASE}/usuario/${tipoLista}/${id}`,
                 {},
                 { headers: { Authorization: `Bearer ${auth.token}` } }
@@ -59,7 +59,7 @@ export default function InfoLibro({ libro, onRestrictedAction, actionRef, onOpen
         if (!auth) return;
 
         try {
-            const response = await axios.post(
+            const response = await api.post(
                 `${API_BASE}/resena/${id}`,
                 { puntuacion: rating },
                 { headers: { Authorization: `Bearer ${auth.token}` } }

@@ -1,9 +1,9 @@
 
 // File: src/components/settings/AdminBanUser.jsx
 import React, { useEffect, useState } from 'react';
-import axios from 'axios';
+import api from '../../services/api';
 
-const API_BASE = 'http://localhost:3000/nextread';
+const API_BASE = '/nextread';
 
 export default function AdminBanUser() {
   const [query, setQuery] = useState('');
@@ -20,7 +20,7 @@ export default function AdminBanUser() {
       setLoadingSearch(true);
       try {
         const token = localStorage.getItem('token');
-        const res = await axios.get(`${API_BASE}/buscar-usuario?q=${encodeURIComponent(query)}`, { headers: token ? { Authorization: `Bearer ${token}` } : {} });
+        const res = await api.get(`${API_BASE}/buscar-usuario?q=${encodeURIComponent(query)}`, { headers: token ? { Authorization: `Bearer ${token}` } : {} });
         // Normalizar ids a números para evitar problemas de comparación
         const normalized = (res.data.results || []).map(u => ({ ...u, id: u.id ? Number(u.id) : u.id }));
         setResults(normalized);
@@ -45,7 +45,7 @@ export default function AdminBanUser() {
       const token = localStorage.getItem('token');
       if (!token) return setMessage({ type: 'error', text: 'No autenticado' });
 
-      const res = await axios.patch(`${API_BASE}/admin/ban/${selectedUser.id}`, { descargo: reason }, { headers: { Authorization: `Bearer ${token}` } });
+      const res = await api.patch(`${API_BASE}/admin/ban/${selectedUser.id}`, { descargo: reason });
       setMessage({ type: 'success', text: res.data.message || 'Usuario baneado correctamente' });
       // opcional: actualizar lista
       setResults(prev => prev.filter(u => u.id !== selectedUser.id));

@@ -2,6 +2,7 @@
 import React, { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import Header from "../components/header";
+import api from "../services/api";
 import "../pagescss/userProfile.css";
 
 export default function UserProfile() {
@@ -18,13 +19,10 @@ export default function UserProfile() {
   useEffect(() => {
     async function fetchUser() {
       try {
-        const res = await fetch(
-          `http://localhost:3000/nextread/buscar-usuario?q=${username}`
-        );
+        const res = await api.get(`/nextread/buscar-usuario?q=${encodeURIComponent(username)}`);
+        const data = res.data;
 
-        if (!res.ok) throw new Error("No se pudo obtener el usuario");
-
-        const data = await res.json();
+        if (!data.results || data.results.length === 0) throw new Error("Usuario no encontrado");
 
         if (!data.results || data.results.length === 0)
           throw new Error("Usuario no encontrado");
@@ -83,11 +81,8 @@ export default function UserProfile() {
       }
       
       // Traer los seguidores de idUser y ver si currentUser está en la lista
-      const res = await fetch(
-        `http://localhost:3000/nextread/user/${idUser}/seguidores`,
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-      const data = await res.json();
+      const res = await api.get(`/nextread/user/${idUser}/seguidores`);
+      const data = res.data;
       
       // Si currentUser está en la lista de seguidores, significa que currentUser sigue a idUser
       const siguiendo = data.seguidores && data.seguidores.some(s => s.usuario.id === currentUser.id);
@@ -111,16 +106,13 @@ export default function UserProfile() {
     }
 
     const url = isFollowing
-      ? `http://localhost:3000/nextread/dejar-seguir/${user.id}`
-      : `http://localhost:3000/nextread/seguir/${user.id}`;
+      ? `/nextread/dejar-seguir/${user.id}`
+      : `/nextread/seguir/${user.id}`;
 
     try {
-      const res = await fetch(url, {
-        method: "POST",
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      const res = await api.post(url);
 
-      if (res.ok) {
+      if (res.status >= 200 && res.status < 300) {
         // Actualizar UI inmediatamente
         const newFollowState = !isFollowing;
         setIsFollowing(newFollowState);

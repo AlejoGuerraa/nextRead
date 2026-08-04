@@ -1,7 +1,7 @@
 // Acceso.jsx
 import React, { useEffect, useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import axios from 'axios';
+import api from '../services/api';
 
 import icono from '../assets/libroIcono.png';
 import CatalogoIcon from '../assets/1LogoAcceso.png';
@@ -80,7 +80,7 @@ export default function Acceso() {
     }
 
     try {
-      const response = await axios.post("http://localhost:3000/nextread/login", loginForm);
+      const response = await api.post("/nextread/login", loginForm);
 
       localStorage.setItem(
         "user",
@@ -156,7 +156,7 @@ export default function Acceso() {
 
   const handleFinishGustos = async (bannerUrl) => {
     try {
-      await axios.post('http://localhost:3000/nextread/register', {
+      await api.post('/nextread/register', {
         nombre: registerForm.nombre,
         apellido: registerForm.apellido,
         correo: registerForm.correo,
@@ -168,7 +168,7 @@ export default function Acceso() {
         descripcion: registerForm.descripcion,
       });
 
-      const loginResponse = await axios.post('http://localhost:3000/nextread/login', {
+      const loginResponse = await api.post('/nextread/login', {
         correo: registerForm.correo,
         contrasena: registerForm.contrasena,
       });

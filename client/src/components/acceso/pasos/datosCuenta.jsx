@@ -1,6 +1,6 @@
 import { useState } from "react";
 
-import axios from "axios";
+import api from '../../../services/api';
 
 import { Eye, EyeOff } from "lucide-react";
 
@@ -23,9 +23,9 @@ export const Step1 = ({ form, errors, onChange, next, openLogin }) => {
 
       try {
 
-        const response = await axios.get(
+        const response = await api.get(
 
-          `http://localhost:3000/nextread/check-email?correo=${encodeURIComponent(newEmail)}`
+          `/nextread/check-email?correo=${encodeURIComponent(newEmail)}`
 
         );
 

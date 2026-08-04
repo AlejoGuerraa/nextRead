@@ -1,9 +1,9 @@
 import React, { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
-import axios from "axios";
+import api from '../services/api';
 import { useToast } from './ToastProvider';
 
-const API_BASE = "http://localhost:3000/nextread";
+const API_BASE = "/nextread";
 
 function starsFromRating(r) {
     const n = Number(r) || 0;
@@ -42,7 +42,7 @@ export default function Resenas() {
     const fetchReviews = async () => {
         setLoading(true);
         try {
-            const res = await axios.get(`${API_BASE}/resenas/${id}`);
+            const res = await api.get(`${API_BASE}/resenas/${id}`);
             setReviews(res.data || []);
             setError(null);
         } catch (err) {
@@ -77,7 +77,7 @@ export default function Resenas() {
             try {
                 const token = localStorage.getItem('token');
                 if (!token) return;
-                const res = await axios.get(`${API_BASE}/user`, { headers: { Authorization: `Bearer ${token}` } });
+                const res = await api.get(`${API_BASE}/user`);
                 if (res?.data) {
                     setCurrentUser(res.data);
                     // keep localStorage in sync
@@ -100,10 +100,9 @@ export default function Resenas() {
 
         setSubmitting(true);
         try {
-            await axios.post(
+            await api.post(
                 `${API_BASE}/resena/${id}`,
-                { puntuacion: rating, comentario: comment },
-                { headers: { Authorization: `Bearer ${token}` } }
+                { puntuacion: rating, comentario: comment }
             );
 
             setComment("");
@@ -138,9 +137,7 @@ export default function Resenas() {
 
             if (isAlreadyLiked) {
                 // Ya likeado: hacer DELETE al servidor para quitar like
-                await axios.delete(`${API_BASE}/resena/${idNum}/like`, {
-                    headers: { Authorization: `Bearer ${token}` }
-                });
+                await api.delete(`${API_BASE}/resena/${idNum}/like`);
 
                 // Actualizar estado local
                 const newLiked = likedResenas.filter(id => Number(id) !== idNum);
@@ -151,9 +148,7 @@ export default function Resenas() {
                 setReviews(prev => prev.map(r => r.id === idNum ? { ...r, likes: Math.max(0, (r.likes || 0) - 1) } : r));
             } else {
                 // No likeado: hacer POST al servidor para agregar like
-                const res = await axios.post(`${API_BASE}/resena/${idNum}/like`, null, {
-                    headers: { Authorization: `Bearer ${token}` }
-                });
+                const res = await api.post(`${API_BASE}/resena/${idNum}/like`, null);
 
                 // Actualizar estado local
                 const newLiked = Array.from(new Set([...likedResenas.map(Number), idNum]));
@@ -200,7 +195,7 @@ export default function Resenas() {
                 return;
             }
 
-            await axios.delete(`${API_BASE}/admin/resena/${modalResenaId}`, {
+            await api.delete(`${API_BASE}/admin/resena/${modalResenaId}`, {
                 headers: { Authorization: `Bearer ${token}` },
                 data: { descargo: modalDescargo }
             });

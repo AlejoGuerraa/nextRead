@@ -1,7 +1,7 @@
 // src/components/acceso/modalLogin.jsx
 import { Modal } from "./modal";
 import React, { useState } from 'react';
-import axios from "axios";
+import api from '../../services/api';
 import { Eye, EyeOff } from 'lucide-react';
 
 export const LoginModal = ({ open, close, loginForm, error, onChange, submit, openRegister }) => {
@@ -23,7 +23,7 @@ export const LoginModal = ({ open, close, loginForm, error, onChange, submit, op
         setRecoveryLoading(true);
 
         try {
-            const response = await axios.post("http://localhost:3000/api/forgot-password", {
+            const response = await api.post("/api/forgot-password", {
                 email: recoveryEmail
             });
 

@@ -1,7 +1,8 @@
 // src/pages/perfil.jsx
 import React, { useEffect, useState } from "react";
-import axios from "axios";
+import api from '../services/api';
 import { useNavigate } from "react-router-dom";
+import { logoutAndRedirect } from "../services/authService";
 
 import "../pagescss/perfil.css";
 import "../pagescss/modals.css";
@@ -36,8 +37,8 @@ export default function Perfil() {
       return;
     }
 
-    axios
-      .get("http://localhost:3000/nextread/user", {
+    api
+      .get("/nextread/user", {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -55,15 +56,13 @@ export default function Perfil() {
   const refreshUser = () => {
     const token = localStorage.getItem("token");
     if (!token) return;
-    axios.get("http://localhost:3000/nextread/user", { headers: { Authorization: `Bearer ${token}` } })
+    api.get("/nextread/user")
       .then(res => setUser(res.data))
       .catch(err => console.error('Error refrescando usuario', err));
   };
 
   const handleLogout = () => {
-    localStorage.removeItem("user");
-    localStorage.removeItem("token");
-    navigate("/acceso");
+    logoutAndRedirect(navigate);
   };
 
   const handleBookCardClick = (bookId) => {

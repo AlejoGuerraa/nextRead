@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 
-import axios from 'axios';
+import api from '../../../services/api';
 
 
 export const Step3 = ({ form, errors, onChange, avatarOptions, toggleAvatar, next, back, showPicker }) => {
@@ -16,7 +16,7 @@ export const Step3 = ({ form, errors, onChange, avatarOptions, toggleAvatar, nex
 
         axios
 
-            .get('http://localhost:3000/nextread/iconos')
+            .get('/nextread/iconos')
 
             .then((res) => {
 

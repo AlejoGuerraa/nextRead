@@ -1,7 +1,7 @@
 // src/pages/Libro.jsx
 import React, { useEffect, useRef, useState } from "react";
 import { useParams } from "react-router-dom";
-import axios from "axios";
+import api from '../services/api';
 
 import InfoLibro from "../components/infoLibro";
 import ElegirListaModal from "../components/listasUsuario/elegirListaModal";
@@ -13,7 +13,7 @@ import RestrictionPopover from "../components/popOver";
 import "../pagescss/libro.css";
 import "../pagescss/modals.css";
 
-const API_BASE = "http://localhost:3000/nextread";
+const API_BASE = "/nextread";
 
 const safeParseGeneros = (generosData) => {
   if (Array.isArray(generosData)) return generosData;
@@ -68,7 +68,7 @@ export default function Libro() {
     try {
       const token = localStorage.getItem('token');
       if (token) {
-        axios.get(`${API_BASE}/user`, { headers: { Authorization: `Bearer ${token}` } })
+        api.get(`${API_BASE}/user`)
           .then(res => setFullUser(res.data))
           .catch(err => console.error('Error fetching full user', err));
       }
@@ -94,7 +94,7 @@ export default function Libro() {
 
   // ===== FETCH LIBRO =====
   useEffect(() => {
-    axios.get(`${API_BASE}/libro/${id}`)
+    api.get(`${API_BASE}/libro/${id}`)
       .then((res) => {
         const data = { ...res.data, generos: safeParseGeneros(res.data.generos) };
         setLibro(data);
@@ -150,7 +150,7 @@ export default function Libro() {
         // refrescar datos de usuario
         const token = localStorage.getItem('token');
         if (token) {
-          axios.get(`${API_BASE}/user`, { headers: { Authorization: `Bearer ${token}` } })
+          api.get(`${API_BASE}/user`)
             .then(res => setFullUser(res.data))
             .catch(err => console.error('Error refrescando usuario', err));
         }

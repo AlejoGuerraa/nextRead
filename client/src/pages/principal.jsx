@@ -1,6 +1,6 @@
 // src/pages/Principal.jsx  (reemplaza tu versión actual)
 import React, { useEffect, useRef, useState, useMemo } from "react";
-import axios from "axios";
+import api from '../services/api';
 
 import Header from "../components/header";
 import Carousel from "../components/carrouselImagenes";
@@ -140,7 +140,7 @@ export default function Principal() {
         if (generoSeleccionado && generoSeleccionado !== "Género...")
           params.genero = generoSeleccionado;
 
-        const res = await axios.get("http://localhost:3000/nextread/tendencias", { params });
+        const res = await api.get("/nextread/tendencias", { params });
         setLibrosTendencias(res.data || []);
       } catch (e) {
         console.error("Error cargando los libros de tendencias:", e);
@@ -156,7 +156,7 @@ export default function Principal() {
     const fetchDecadasPersonalizadas = async () => {
       if (!user?.correo) {
         try {
-          const res = await axios.get("http://localhost:3000/nextread/libros/por-decada");
+          const res = await api.get("/nextread/libros/por-decada");
           setLibrosPorDecada(Array.isArray(res.data?.decades) ? res.data.decades.slice(0, 5) : []);
         } catch (e) {
           console.error("Error cargando libros por década:", e);
@@ -166,7 +166,7 @@ export default function Principal() {
       }
 
       try {
-        const res = await axios.post("http://localhost:3000/nextread/decadas-personalizadas", {
+        const res = await api.post("/nextread/decadas-personalizadas", {
           email: user.correo
         });
         setLibrosPorDecada(res.data?.decades || []);
@@ -193,8 +193,8 @@ export default function Principal() {
       setAutorMasLeidoNombre("Cargando recomendaciones...");
 
       try {
-        const res = await axios.post(
-          "http://localhost:3000/nextread/autorMasLeido",
+        const res = await api.post(
+          "/nextread/autorMasLeido",
           { email: user.correo }
         );
 
@@ -231,8 +231,8 @@ export default function Principal() {
       }
 
       try {
-        const res = await axios.get(
-          `http://localhost:3000/nextread/libros/genero-usuario/${user.id}`
+        const res = await api.get(
+          `/nextread/libros/genero-usuario/${user.id}`
         );
 
         const genero = res.data?.generoPreferido || null;
@@ -306,7 +306,7 @@ export default function Principal() {
         // Si no tenemos el objeto completo, pedirlo para obtener el título (útil para el header)
         if (!ultimoLibroObj || (ultimoLibroObj && Number(ultimoLibroObj.id ?? ultimoLibroObj.idLibro ?? 0) !== ultimoId)) {
           try {
-            const detalle = await axios.get(`http://localhost:3000/nextread/libro/${ultimoId}`);
+            const detalle = await api.get(`/nextread/libro/${ultimoId}`);
             if (detalle?.data) {
               // detalle.data ya viene con generos parseados por tu endpoint getLibroById
               setUltimoLibroObj(detalle.data);
@@ -318,8 +318,8 @@ export default function Principal() {
         }
 
         // Pedir recomendaciones usando el id del último libro
-        const res = await axios.get(
-          `http://localhost:3000/nextread/libros/recomendaciones/${user.id}/${ultimoId}`
+        const res = await api.get(
+          `/nextread/libros/recomendaciones/${user.id}/${ultimoId}`
         );
 
         setLibrosRecomendados(Array.isArray(res.data?.libros) ? res.data.libros : []);

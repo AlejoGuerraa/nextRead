@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import axios from "axios";
+import api from '../services/api';
 import { useNavigate } from "react-router-dom";
 import Header from "../components/header";
 import "../pagescss/editarPerfil.css";
@@ -52,13 +52,13 @@ const EditarPerfil = () => {
 
     // Fetch user data, banners, iconos, autores, and libros in parallel
     Promise.all([
-      axios.get("http://localhost:3000/nextread/user", {
+      api.get("/nextread/user", {
         headers: { Authorization: `Bearer ${token}` },
       }),
-      axios.get("http://localhost:3000/nextread/banners"),
-      axios.get("http://localhost:3000/nextread/iconos"),
-      axios.get("http://localhost:3000/nextread/autores"),
-      axios.get("http://localhost:3000/nextread/libros")
+      api.get("/nextread/banners"),
+      api.get("/nextread/iconos"),
+      api.get("/nextread/autores"),
+      api.get("/nextread/libros")
     ])
       .then(([userRes, bannersRes, iconosRes, autoresRes, librosRes]) => {
         const userData = userRes.data;
@@ -269,7 +269,7 @@ const EditarPerfil = () => {
     }
 
     axios
-      .patch("http://localhost:3000/nextread/user/editar", payload, {
+      .patch("/nextread/user/editar", payload, {
         headers: { Authorization: `Bearer ${token}` },
       })
       .then(() => {

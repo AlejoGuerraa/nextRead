@@ -1,6 +1,6 @@
 // File: src/components/settings/ChangePassword.jsx
 import React, { useState } from "react";
-import axios from "axios";
+import api from '../../services/api';
 
 export default function ChangePassword() {
   const [currentPwd, setCurrentPwd] = useState("");
@@ -20,8 +20,8 @@ export default function ChangePassword() {
     }
 
     try {
-      const res = await axios.patch(
-        "http://localhost:3000/nextread/user/change-password",
+      const res = await api.patch(
+        "/nextread/user/change-password",
         {
           currentPwd,
           newPwd,

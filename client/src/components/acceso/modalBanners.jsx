@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Modal } from "./modal";
-import axios from "axios";
+import api from '../../services/api';
 
 const DEFAULT_BANNER_URL = "/banners/bannerBiblioteca.jpg"; // fallback
 
@@ -14,7 +14,7 @@ export function ModalGustos({ open, close, onFinish, onBack }) {
     const fetchBanners = async () => {
       try {
         setLoading(true);
-        const res = await axios.get("http://localhost:3000/nextread/banners");
+        const res = await api.get("/nextread/banners");
         // res.data expected: [{ id, url }, ...]
         setBannerOptions((res.data || []).slice(0, 5));
       } catch (err) {
@@ -41,10 +41,9 @@ export function ModalGustos({ open, close, onFinish, onBack }) {
     try {
       const token = localStorage.getItem("token");
       if (token && finalBanner) {
-        await axios.patch(
-          "http://localhost:3000/nextread/user/editar",
-          { banner: finalBannerUrl },
-          { headers: { Authorization: `Bearer ${token}` } }
+        await api.patch(
+          "/nextread/user/editar",
+          { banner: finalBannerUrl }
         );
       }
     } catch (err) {

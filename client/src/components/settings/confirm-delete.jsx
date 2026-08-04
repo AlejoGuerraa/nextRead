@@ -1,6 +1,6 @@
 // File: src/pages/ConfirmDelete.jsx
 import React, { useEffect, useState } from "react";
-import axios from "axios";
+import api from '../../services/api';
 
 export default function ConfirmDelete() {
   const [msg, setMsg] = useState("Validando...");
@@ -12,7 +12,7 @@ export default function ConfirmDelete() {
       return;
     }
 
-    axios.post("http://localhost:3000/nextread/user/delete-account-confirm", { token })
+    api.post("/nextread/user/delete-account-confirm", { token })
       .then(() => {
         setMsg("Tu cuenta fue eliminada correctamente.");
         localStorage.clear();

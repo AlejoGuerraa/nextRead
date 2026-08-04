@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Modal } from "../acceso/modal";
 import "../../pagescss/notificaciones.css";
-import axios from "axios";
+import api from '../../services/api';
 
 export default function NotificacionesModal({ open, close, data, onRefresh, userData }) {
     const notificaciones = (userData?.notificaciones) || (data?.notificaciones) || [];
@@ -31,7 +31,7 @@ export default function NotificacionesModal({ open, close, data, onRefresh, user
             for (const id of ids) {
                 if (map[id]) continue;
                 try {
-                    const res = await axios.get(`http://localhost:3000/nextread/user/public/${id}`);
+                    const res = await api.get(`/nextread/user/public/${id}`);
                     if (res?.data) map[id] = res.data;
                 } catch (_) {}
             }

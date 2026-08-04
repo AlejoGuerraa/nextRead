@@ -1,12 +1,12 @@
 // src/components/userLists/UserFollowList.jsx
 import React, { useEffect, useState } from "react";
-import axios from "axios";
+import api from '../../services/api';
 import { useNavigate } from "react-router-dom";
 import Header from "../header";
 import Footer from "../footer";
 import "../../pagescss/seguidores-seguidos.css";
 
-const API_BASE = "http://localhost:3000/nextread";
+const API_BASE = "/nextread";
 
 export default function UserFollowList({ mode = "seguidos" }) {
   const navigate = useNavigate();
@@ -53,7 +53,7 @@ export default function UserFollowList({ mode = "seguidos" }) {
           ? `${API_BASE}/user/${currentUser.id}/seguidos`
           : `${API_BASE}/user/${currentUser.id}/seguidores`;
 
-      const res = await axios.get(endpoint, {
+      const res = await api.get(endpoint, {
         headers: { Authorization: `Bearer ${token}` },
       });
 
