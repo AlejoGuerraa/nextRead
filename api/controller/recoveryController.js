@@ -39,6 +39,11 @@ const enviarEnlaceRecuperacion = async (req, res) => {
             return res.status(400).json({ error: "Debes proporcionar un email." });
         }
 
+        // Basic email format validation
+        if (typeof email !== 'string' || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+            return res.status(400).json({ error: 'Email inválido' });
+        }
+
         // Buscar usuario por correo
         const usuario = await Usuario.findOne({ where: { correo: email } });
 

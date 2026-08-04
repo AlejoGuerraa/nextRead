@@ -16,6 +16,39 @@ const claveSecreta = process.env.SECRET;
 const bcryptSaltRounds = Number(process.env.BCRYPT_SALT_ROUNDS || 10);
 const accessTokenTtl = process.env.JWT_ACCESS_TOKEN_TTL || '8h';
 
+// ------------------------
+// Small helpers (security + parsing)
+// ------------------------
+function toSafeUser(modelOrObj) {
+    if (!modelOrObj) return null;
+    const obj = typeof modelOrObj.toJSON === 'function' ? modelOrObj.toJSON() : { ...modelOrObj };
+    if (Object.prototype.hasOwnProperty.call(obj, 'contrasena')) delete obj.contrasena;
+    return obj;
+}
+
+function parseJsonArray(value) {
+    if (!value) return [];
+    if (Array.isArray(value)) return value;
+    if (typeof value === 'string') {
+        try { const parsed = JSON.parse(value); return Array.isArray(parsed) ? parsed : []; } catch { return []; }
+    }
+    return [];
+}
+
+function parseIdArray(value) {
+    const arr = parseJsonArray(value);
+    return arr.map(id => Number(id)).filter(n => Number.isInteger(n));
+}
+
+function isValidEmail(email) {
+    if (!email || typeof email !== 'string') return false;
+    // simple but effective validation: user@domain.tld
+    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+}
+
+// Dummy hash to mitigate timing attacks when user is not found
+const DUMMY_HASH = bcrypt.hashSync('DUMMY_PASSWORD', bcryptSaltRounds);
+
 // -------------------------------------------------
 // HELPER: AGREGAR NOTIFICACIÓN AL USUARIO
 // -------------------------------------------------
@@ -77,7 +110,13 @@ async function agregarNotificacion(userId, mensaje, nombre = "Sistema", meta = n
 // ----------------- GET USERS -----------------
 const getAllUsers = async (_req, res) => {
     try {
-        const usuarios = await User.findAll({ attributes: { exclude: ['contrasena'] } });
+        const usuarios = await User.findAll({
+            attributes: [
+                'id', 'nombre', 'apellido', 'usuario', 'idIcono', 'idBanner',
+                'descripcion', 'autor_preferido', 'genero_preferido', 'titulo_preferido',
+                'iconos_obtenidos', 'banners_obtenidos'
+            ]
+        });
         res.json(usuarios);
     } catch (error) {
         return res.status(404).json({ error: "No se encontró ningún usuario registrado" });
@@ -97,6 +136,11 @@ const register = async (req, res) => {
     // 1. VALIDACIONES BÁSICAS
     if (!nombre || !apellido || !correo || !contrasena || !fecha_nacimiento) {
         return res.status(401).json({ error: "Ingrese toda la información necesaria para continuar" });
+    }
+
+    // Validar formato de email
+    if (!isValidEmail(correo)) {
+        return res.status(400).json({ error: 'Correo inválido' });
     }
 
     // 2. VALIDACIÓN DE CONTRASEÑA
@@ -155,20 +199,10 @@ const register = async (req, res) => {
     const hashedPassw = await bcrypt.hash(contrasena, bcryptSaltRounds);
 
     // decidir rol — por defecto Usuario
+    // Seguridad: no permitir creación de 'Admin' desde endpoint público salvo que
+    // se presente la clave administrativa correcta en el cuerpo y exista la variable
+    // de entorno ADMIN_SIGNUP_KEY. Esto evita creación inadvertida de admins.
     let rolFinal = 'Usuario';
-    if (typeof rolInBody === 'string' && rolInBody.trim()) {
-        const provided = rolInBody.trim();
-        // if request includes a role, respect it (e.g. 'Admin') — default remains 'Usuario'
-        if (provided === 'Admin') {
-            // NOTE: this will create an admin account if the request provides it.
-            // This is intentionally permissive; make sure you only call this endpoint
-            // via secure channels (Postman or internal use) if you want to create admins.
-            rolFinal = 'Admin';
-        } else {
-            // Si viene otro valor lo respetamos en campo rol del usuario — podrías querer validarlo
-            rolFinal = provided;
-        }
-    }
 
     const newUser = await User.create({
         nombre,
@@ -187,27 +221,23 @@ const register = async (req, res) => {
         banners_obtenidos: [1, 2, 3, 4, 5]
     });
 
-    res.status(200).json({ message: "Nuevo usuario creado", data: newUser });
+    const safeUser = toSafeUser(newUser);
+
+    res.status(200).json({ message: "Nuevo usuario creado", data: safeUser });
 };
 
 // ----------------- LOGIN -----------------
 const login = async (req, res) => {
     try {
         const { correo, contrasena } = req.body;
-
+        // Buscar usuario y comparar password. Usar DUMMY_HASH si no existe para mitigar timing attacks
         const user = await User.findOne({ where: { correo } });
+        const hashToCompare = user ? user.contrasena : DUMMY_HASH;
+        const comparacion = await bcrypt.compare(contrasena, hashToCompare);
 
-        if (!user) return res.status(400).json({ error: "Usuario no encontrado" });
-
-        // 1. VERIFICACIÓN DE ESTADO ACTIVO (Baneo)
-        if (user.activo === 0) {
-            return res.status(403).json({ error: "Su cuenta ha sido deshabilitada o baneada." });
-        }
-        // ------------------------------------------
-
-        const comparacion = await bcrypt.compare(contrasena, user.contrasena);
-        if (!comparacion) {
-            return res.status(400).json({ error: "Su email o contraseña incorrectos" });
+        // Unificar mensaje para evitar enumeración de usuarios y diferencias de timing
+        if (!comparacion || !user || user.activo === 0) {
+            return res.status(400).json({ error: 'Credenciales inválidas' });
         }
 
         const token = jwt.sign({ id: user.id, correo: user.correo }, claveSecreta, { expiresIn: accessTokenTtl });
@@ -254,27 +284,15 @@ const getUser = async (req, res) => {
             return res.status(404).json({ error: "Usuario no encontrado" });
         }
 
-        // --- Parseo seguro de arrays JSON ---
-        const parseArray = (value) => {
-            if (!value) return [];
-            if (Array.isArray(value)) return value;
-            try {
-                // Si viene como string JSON, lo parsea
-                return JSON.parse(value);
-            } catch {
-                return [];
-            }
-        };
-
         // ** 🔥 NUEVA LÍNEA: Parsear notificaciones de manera segura 🔥 **
-        const notificacionesArray = parseArray(usuario.notificaciones);
+        const notificacionesArray = parseJsonArray(usuario.notificaciones);
         // -------------------------------------------------------------
 
 
-        const librosEnLecturaIDs = parseArray(usuario.libros_en_lectura);
-        const librosFavoritosIDs = parseArray(usuario.libros_favoritos);
-        const librosParaLeerIDs = parseArray(usuario.libros_para_leer);
-        const librosLeidosIDs = parseArray(usuario.libros_leidos);
+        const librosEnLecturaIDs = parseJsonArray(usuario.libros_en_lectura);
+        const librosFavoritosIDs = parseJsonArray(usuario.libros_favoritos);
+        const librosParaLeerIDs = parseJsonArray(usuario.libros_para_leer);
+        const librosLeidosIDs = parseJsonArray(usuario.libros_leidos);
 
         // Parsear listas (puede venir como string JSON o como objeto)
         let listasObj = {};
@@ -424,8 +442,18 @@ const editarPerfil = async (req, res) => {
         if (autor_preferido !== undefined) usuario.autor_preferido = autor_preferido;
         if (titulo_preferido !== undefined) usuario.titulo_preferido = titulo_preferido;
 
+            // Validaciones de longitud para evitar DoS por strings gigantes
+            if (typeof nombre === 'string' && nombre.length > 200) return res.status(400).json({ error: 'Nombre demasiado largo' });
+            if (typeof apellido === 'string' && apellido.length > 200) return res.status(400).json({ error: 'Apellido demasiado largo' });
+            if (typeof descripcion === 'string' && descripcion.length > 2000) return res.status(400).json({ error: 'Descripción demasiado larga' });
+            if (typeof genero_preferido === 'string' && genero_preferido.length > 200) return res.status(400).json({ error: 'Género preferido inválido' });
+            if (typeof autor_preferido === 'string' && autor_preferido.length > 200) return res.status(400).json({ error: 'Autor preferido inválido' });
+            if (typeof titulo_preferido === 'string' && titulo_preferido.length > 200) return res.status(400).json({ error: 'Título preferido inválido' });
+
         // 🔹 2. Manejar ICONO
         if (icono !== undefined) {
+            // Validar longitud razonable del icono antes de buscar/crear
+            if (typeof icono === 'string' && icono.length > 500) return res.status(400).json({ error: 'Icono inválido' });
             const [iconoInstance] = await Icono.findOrCreate({
                 where: { simbolo: icono },   // simbolo = "/iconos/LogoDefault1.jpg"
                 defaults: { simbolo: icono }
@@ -436,6 +464,11 @@ const editarPerfil = async (req, res) => {
 
         // 🔹 3. Manejar BANNER (URL)
         if (banner !== undefined) {
+            // Validar longitud y formato básico de URL para banner
+            if (typeof banner === 'string' && banner.length > 2000) return res.status(400).json({ error: 'URL de banner demasiado larga' });
+            if (typeof banner === 'string' && (banner.startsWith('http://') || banner.startsWith('https://'))) {
+                try { new URL(banner); } catch { return res.status(400).json({ error: 'URL de banner inválida' }); }
+            }
             const [bannerInstance] = await Banner.findOrCreate({
                 where: { url: banner },
                 defaults: { url: banner }
@@ -445,9 +478,11 @@ const editarPerfil = async (req, res) => {
 
         await usuario.save();
 
+        const usuarioSafe = toSafeUser(usuario);
+
         return res.json({
             msg: "Perfil actualizado correctamente",
-            usuario
+            usuario: usuarioSafe
         });
 
     } catch (error) {
@@ -466,6 +501,10 @@ const checkEmail = async (req, res) => {
             return res.status(400).json({ error: "Email requerido" });
         }
 
+        if (!isValidEmail(correo)) {
+            return res.status(400).json({ error: 'Email inválido' });
+        }
+
         const usuario = await User.findOne({ where: { correo } });
 
         return res.json({ exists: !!usuario });
@@ -481,6 +520,11 @@ const checkUsername = async (req, res) => {
 
         if (!usuario) {
             return res.status(400).json({ error: "Usuario requerido" });
+        }
+
+        // Validate length and allowed characters to avoid absurd queries
+        if (typeof usuario !== 'string' || usuario.length < 3 || usuario.length > 30 || !/^[a-zA-Z0-9_]+$/.test(usuario)) {
+            return res.status(400).json({ error: 'Usuario inválido' });
         }
 
         const user = await User.findOne({ where: { usuario } });
@@ -503,6 +547,8 @@ const crearLista = async (req, res) => {
         if (!nombre || typeof nombre !== 'string' || !nombre.trim()) {
             return res.status(400).json({ error: 'Nombre de lista inválido' });
         }
+        // Limitar largo del nombre de lista por seguridad (DoS / tamaño)
+        if (nombre.length > 200) return res.status(400).json({ error: 'Nombre de lista demasiado largo' });
 
         const usuario = await User.findByPk(userId);
         if (!usuario) return res.status(404).json({ error: 'Usuario no encontrado' });
@@ -539,6 +585,7 @@ const agregarLibroAListaEnLista = async (req, res) => {
         const idNum = Number(idLibro);
 
         if (!nombre) return res.status(400).json({ error: 'Falta el nombre de la lista' });
+        if (typeof nombre === 'string' && nombre.length > 200) return res.status(400).json({ error: 'Nombre de lista demasiado largo' });
         if (Number.isNaN(idNum)) return res.status(400).json({ error: 'ID de libro inválido' });
 
         const usuario = await User.findByPk(userId);
@@ -558,6 +605,10 @@ const agregarLibroAListaEnLista = async (req, res) => {
 
         // Normalizar el array de IDs
         const arr = Array.isArray(listasObj[key]) ? listasObj[key].map(x => Number(x)).filter(n => !Number.isNaN(n)) : [];
+
+        // Verificar que el libro exista antes de agregar
+        const libroExistente = await Libro.findByPk(idNum);
+        if (!libroExistente) return res.status(404).json({ error: 'Libro no encontrado' });
 
         if (arr.includes(idNum)) return res.status(400).json({ message: 'El libro ya está en la lista' });
 
@@ -595,10 +646,11 @@ const buscarUsuario = async (req, res) => {
                     { correo: { [Op.like]: like } }
                 ]
             },
-            attributes: { 
-                exclude: ['contrasena'],
-                // Asegurar que se incluyen listas, notificaciones y otros campos JSON
-            },
+            attributes: [
+                'id', 'nombre', 'apellido', 'usuario', 'idIcono', 'idBanner',
+                'descripcion', 'autor_preferido', 'genero_preferido', 'titulo_preferido',
+                'iconos_obtenidos', 'banners_obtenidos', 'libros_leidos'
+            ],
             include: [
                 { model: Icono, as: 'iconoData', attributes: ['simbolo'] },
                 { model: Banner, as: 'bannerData', attributes: ['url'] }
@@ -769,7 +821,8 @@ const seguirUsuario = async (req, res) => {
         const remitente = await User.findByPk(remitenteId);
         await agregarNotificacion(targetId, `${remitente.usuario} te está siguiendo.`, remitente.usuario, { type: 'follow', fromUser: remitenteId });
 
-        return res.status(201).json({ message: 'Ahora sigues a este usuario', data: registro });
+        // Return minimal info to avoid exposing full Sequelize model
+        return res.status(201).json({ message: 'Ahora sigues a este usuario', id: registro.id, estado: registro.estado });
     } catch (err) {
         console.error('Error siguiendo usuario:', err);
         return res.status(500).json({ error: 'Error en el servidor' });

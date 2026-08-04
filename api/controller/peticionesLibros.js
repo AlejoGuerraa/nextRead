@@ -31,6 +31,10 @@ const agregarLibroALista = async (req, res) => {
     const usuario = await Usuario.findByPk(userId);
     if (!usuario) return res.status(404).json({ error: "Usuario no encontrado" });
 
+    // Verificar que el libro exista antes de modificar listas
+    const libroExistente = await Libro.findByPk(idNum);
+    if (!libroExistente) return res.status(404).json({ error: 'Libro no encontrado' });
+
     // Helper: normalizar cualquier campo (string JSON, array, objetos, strings)
     const normalizarLista = (lista) => {
       // Intenta parsear si es un string (esto maneja el caso de DataTypes.JSON)
@@ -135,17 +139,19 @@ const guardarPuntuacion = async (req, res) => {
   try {
     const userId = req.user.id;
     const { idLibro } = req.params;
+    const idLibroNum = Number(idLibro);
+    if (!idLibro || Number.isNaN(idLibroNum)) return res.status(400).json({ error: 'ID de libro inválido' });
     const { puntuacion, comentario } = req.body;
 
     if (!puntuacion || puntuacion < 1 || puntuacion > 5) {
       return res.status(400).json({ error: "La puntuación debe ser entre 1 y 5 estrellas." });
     }
 
-    const libro = await Libro.findByPk(idLibro);
+    const libro = await Libro.findByPk(idLibroNum);
     if (!libro) return res.status(404).json({ error: "Libro no encontrado." });
 
     let resena = await Resena.findOne({
-      where: { usuario_id: userId, libro_id: idLibro }
+      where: { usuario_id: userId, libro_id: idLibroNum }
     });
 
     if (resena) {
@@ -155,7 +161,7 @@ const guardarPuntuacion = async (req, res) => {
     } else {
       resena = await Resena.create({
         usuario_id: userId,
-        libro_id: idLibro,
+        libro_id: idLibroNum,
         puntuacion,
         comentario: comentario || ""
       });
@@ -170,7 +176,7 @@ const guardarPuntuacion = async (req, res) => {
           try { leidos = JSON.parse(leidos); } catch { leidos = []; }
         }
         if (!Array.isArray(leidos)) leidos = [];
-        const idNum = Number(idLibro);
+        const idNum = Number(idLibroNum);
         if (!leidos.includes(idNum)) {
           leidos.push(idNum);
           // dedupe and save
@@ -195,13 +201,15 @@ const guardarPuntuacion = async (req, res) => {
 const obtenerResenas = async (req, res) => {
   try {
     const { idLibro } = req.params;
+    const idLibroNum = Number(idLibro);
+    if (!idLibro || Number.isNaN(idLibroNum)) return res.status(400).json({ error: 'ID de libro inválido' });
 
-    const libro = await Libro.findByPk(idLibro);
+    const libro = await Libro.findByPk(idLibroNum);
     if (!libro) return res.status(404).json({ error: "Libro no encontrado." });
 
     // Ordenar por likes desc, luego por fecha desc. Mantener reseñas sin comentarios al final.
     const resenas = await Resena.findAll({
-      where: { libro_id: idLibro, activo: 1 },
+      where: { libro_id: idLibroNum, activo: 1 },
       include: [
         {
           model: Usuario,

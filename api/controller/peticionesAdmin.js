@@ -30,6 +30,9 @@ const banearUsuario = async (req, res) => {
 
     const { descargo } = req.body || {};
 
+    const usuarioSafe = usuario.toJSON();
+    delete usuarioSafe.contrasena;
+
     // Notificar al usuario (si existe el helper)
     try { if (agregarNotificacion) await agregarNotificacion(usuario.id, 'Has sido baneado por un administrador.', 'Sistema'); } catch (_) {}
 
@@ -56,7 +59,7 @@ const banearUsuario = async (req, res) => {
       }
     });
 
-    return res.json({ message: 'Usuario baneado correctamente', usuario });
+    return res.json({ message: 'Usuario baneado correctamente', usuario: usuarioSafe });
   } catch (err) {
     console.error('Error en banearUsuario:', err);
     return res.status(500).json({ error: 'Error en el servidor' });

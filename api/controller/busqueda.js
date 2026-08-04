@@ -351,9 +351,11 @@ const getLibrosPorDecada = async (req, res) => {
 // =======================================================
 const getLibroById = async (req, res) => {
     const { id } = req.params;
+    const idNum = Number(id);
+    if (!id || Number.isNaN(idNum)) return res.status(400).json({ message: 'ID de libro inválido.' });
 
     try {
-        let libro = await Libro.findByPk(id, {
+        let libro = await Libro.findByPk(idNum, {
             include: [{
                 model: Autor,
                 as: 'Autor',
@@ -431,7 +433,7 @@ const getDecadasPersonalizadas = async (req, res) => {
         const librosLeidos = parseArray(usuario.libros_leidos);
 
         // Combinar todos los IDs y eliminar duplicados
-        const todosLosIds = [...new Set([...librosFavoritos, ...librosEnLectura, ...librosLeidos])];
+        const todosLosIds = [...new Set([...librosFavoritos, ...librosEnLectura, ...librosLeidos].map(id => Number(id)).filter(Number.isInteger))];
 
         if (todosLosIds.length === 0) {
             // Si no tiene libros guardados, devolver todas las décadas disponibles (comportamiento por defecto)
@@ -561,8 +563,10 @@ const getGeneroPreferido = async (req, res) => {
             return res.status(404).json({ message: "Usuario no encontrado" });
         }
 
-        const idsLeidos = usuario.libros_leidos || [];
-        if (!Array.isArray(idsLeidos) || idsLeidos.length === 0) {
+        const idsLeidos = Array.isArray(usuario.libros_leidos)
+            ? usuario.libros_leidos.map(id => Number(id)).filter(Number.isInteger)
+            : [];
+        if (idsLeidos.length === 0) {
             return res.json({ generoPreferido: null, libros: [] });
         }
 
