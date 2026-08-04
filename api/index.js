@@ -35,6 +35,15 @@ const { getAuthMe } = require('./controller/authController');
 
 const isAuth = require('./middlewares/isAuth');
 const isAdmin = require('./middlewares/isAdmin');
+const validate = require('./middlewares/validate');
+
+// Schemas
+const { registerSchema, loginSchema } = require('./schemas/authSchemas');
+const { editarPerfilSchema, changePasswordSchema, changeEmailRequestSchema, deleteAccountConfirmSchema, crearListaSchema } = require('./schemas/userSchemas');
+const { guardarPuntuacionSchema } = require('./schemas/bookSchemas');
+const { forgotPasswordSchema, resetPasswordSchema } = require('./schemas/recoverySchemas');
+const { emailSchema } = require('./schemas/busquedaSchemas');
+const { banSchema } = require('./schemas/adminSchemas');
 
 // ---------------------- DB ----------------------
 
@@ -80,7 +89,6 @@ server.use(express.json());
 
 // ---------------------- RUTAS USUARIO ----------------------
 server.get('/nextread/user', isAuth, getUser);
-server.get('/nextread/allUsers', getAllUsers);
 server.get('/nextread/banners', getAllBanners);
 server.get('/nextread/iconos', getAllIconos);
 server.get('/nextread/autores', getAllAutores);
@@ -103,22 +111,24 @@ server.post('/nextread/notificaciones/marcar-leidas', isAuth, marcarNotificacion
 // Obtener usuario público por id (avatar, nombre)
 server.get('/nextread/user/public/:id', getPublicUserById);
 
-// ---------------------- ADMIN ----------------------
-server.patch('/nextread/admin/ban/:id', isAuth, isAdmin, banearUsuario);
-server.delete('/nextread/admin/resena/:id', isAuth, isAdmin, eliminarComentario);
-
 // Like a reseña
 server.post('/nextread/resena/:id/like', isAuth, likeResena);
 server.delete('/nextread/resena/:id/like', isAuth, unlikeResena);
 
+// ---------------------- ADMIN ----------------------
+server.patch('/nextread/admin/ban/:id', isAuth, isAdmin, validate(banSchema), banearUsuario);
+server.get('/nextread/allUsers', isAdmin, getAllUsers);
+server.delete('/nextread/admin/resena/:id', isAuth, isAdmin, validate(banSchema), eliminarComentario);
+
 // ---------------------- AUTH ----------------------
-server.post('/nextread/register', register);
-server.post('/nextread/login', login);
+server.post('/nextread/register', validate(registerSchema), register);
+server.post('/nextread/login', validate(loginSchema), login);
 server.get('/nextread/auth/me', isAuth, getAuthMe);
-server.patch('/nextread/user/editar', isAuth, editarPerfil);
+server.patch('/nextread/user/editar', isAuth, validate(editarPerfilSchema), editarPerfil);
 
 // ---------------------- NOTIFICACIONES ----------------------
-server.post('/nextread/notificacion/:idUsuario', async (req, res) => {
+const { notificationSchema } = require('./schemas/busquedaSchemas');
+server.post('/nextread/notificacion/:idUsuario', validate(notificationSchema), async (req, res) => {
     try {
         const { idUsuario } = req.params;
         const { mensaje } = req.body;
@@ -141,8 +151,8 @@ server.get('/nextread/buscar', buscar);
 server.get('/nextread/tendencias', getTendencias);
 server.get('/nextread/libros/por-decada', getLibrosPorDecada);
 
-server.post('/nextread/autorMasLeido', getMasDeAutor);
-server.post('/nextread/decadas-personalizadas', getDecadasPersonalizadas);
+server.post('/nextread/autorMasLeido', validate(emailSchema), getMasDeAutor);
+server.post('/nextread/decadas-personalizadas', validate(emailSchema), getDecadasPersonalizadas);
 
 server.get("/nextread/libros/genero-usuario/:idUsuario", getGeneroPreferido);
 server.get('/nextread/libro/:id', getLibroById);
@@ -151,23 +161,23 @@ server.get('/nextread/libros/recomendaciones/:idUsuario/:idLibro', getRecomendac
 
 // ---------------------- LIBROS ----------------------
 server.post('/nextread/usuario/:tipo/:idLibro', isAuth, agregarLibroALista);
-server.post('/nextread/resena/:idLibro', isAuth, guardarPuntuacion);
+server.post('/nextread/resena/:idLibro', isAuth, validate(guardarPuntuacionSchema), guardarPuntuacion);
 server.get('/nextread/resenas/:idLibro', obtenerResenas);
 
 // Listas personalizadas
-server.post('/nextread/listas', isAuth, crearLista);
+server.post('/nextread/listas', isAuth, validate(crearListaSchema), crearLista);
 server.post('/nextread/listas/:nombre/libro/:idLibro', isAuth, agregarLibroAListaEnLista);
 
 // ---------------------- RECOVERY ----------------------
-server.post('/api/forgot-password', enviarEnlaceRecuperacion);
-server.post('/api/reset-password', resetearPassword);
+server.post('/api/forgot-password', validate(forgotPasswordSchema), enviarEnlaceRecuperacion);
+server.post('/api/reset-password', validate(resetPasswordSchema), resetearPassword);
 
 // ---------------------- CONFIGURACIÓN ----------------------
-server.post("/nextread/user/change-email-request", isAuth, changeEmailRequest);
-server.get("/api/confirm-email-change", confirmEmailChange);
-server.patch('/nextread/user/change-password', isAuth, changePassword);
+server.post("/nextread/user/change-email-request", isAuth, validate(changeEmailRequestSchema), changeEmailRequest);
+server.get("/api/confirm-email-change", isAuth, confirmEmailChange);
+server.patch('/nextread/user/change-password', isAuth, validate(changePasswordSchema), changePassword);
 server.post("/nextread/user/delete-account-request", isAuth, deleteAccountRequest);
-server.post("/nextread/user/delete-account-confirm", deleteAccountConfirm);
+server.post("/nextread/user/delete-account-confirm", isAuth, validate(deleteAccountConfirmSchema), deleteAccountConfirm);
 
 // ---------------------- INIT SERVER ----------------------
 server.listen(port, '0.0.0.0', async () => {

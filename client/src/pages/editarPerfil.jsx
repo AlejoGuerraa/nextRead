@@ -268,7 +268,7 @@ const EditarPerfil = () => {
       }
     }
 
-    axios
+    api
       .patch("/nextread/user/editar", payload, {
         headers: { Authorization: `Bearer ${token}` },
       })

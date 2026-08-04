@@ -14,7 +14,7 @@ export const Step3 = ({ form, errors, onChange, avatarOptions, toggleAvatar, nex
 
     useEffect(() => {
 
-        axios
+        api
 
             .get('/nextread/iconos')
 
