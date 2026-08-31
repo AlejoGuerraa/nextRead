@@ -1,42 +1,68 @@
-const jwt = require('jsonwebtoken');
 const Usuario = require('../models/Usuario');
+const { verify_access_token } = require('../utils/jwtTokens');
 
-const claveSecreta = process.env.SECRET;
-
-const isAuth = async (req, res, next) => {
-  if (!claveSecreta) {
-    return res.status(500).json({ message: 'Configuración de autenticación incompleta' });
+function parse_bearer_token(authHeader) {
+  if (!authHeader) return { error: 'Token no proporcionado', status: 401 };
+  const parts = String(authHeader).split(' ');
+  if (parts.length !== 2 || parts[0] !== 'Bearer' || !parts[1]) {
+    return { error: 'Formato de token inválido', status: 401 };
   }
+  return { token: parts[1] };
+}
 
-  const authHeader = req.headers['authorization'];
-  if (!authHeader) return res.status(401).json({ message: 'Token no proporcionado' });
-
-  const parts = authHeader.split(' ');
-  if (parts.length !== 2 || parts[0] !== 'Bearer') {
-    return res.status(401).json({ message: 'Formato de token inválido' });
+async function load_authenticated_user(decoded) {
+  const user = await Usuario.findByPk(decoded.id, {
+    attributes: ['id', 'correo', 'rol', 'activo'],
+  });
+  if (!user) {
+    return { error: 'Token inválido', status: 401 };
   }
-
-  const token = parts[1];
-
-  try {
-    const decoded = jwt.verify(token, claveSecreta);
-    const user = await Usuario.findByPk(decoded.id);
-
-    if (!user) {
-      return res.status(403).json({ message: 'Token válido, usuario no encontrado' });
-    }
-
-    req.user = {
+  if (Number(user.activo) === 0) {
+    return { error: 'La cuenta se encuentra desactivada', status: 403 };
+  }
+  return {
+    user: {
       id: user.id,
       correo: user.correo,
       rol: user.rol,
-    };
+    },
+  };
+}
 
+/**
+ * Requires a valid access JWT, an existing user and activo !== 0.
+ * Rejects recovery / email-change / delete tokens.
+ */
+const isAuth = async (req, res, next) => {
+  const parsed = parse_bearer_token(req.headers.authorization);
+  if (parsed.error) {
+    return res.status(parsed.status).json({ message: parsed.error });
+  }
+
+  try {
+    const decoded = verify_access_token(parsed.token);
+    const loaded = await load_authenticated_user(decoded);
+    if (loaded.error) {
+      return res.status(loaded.status).json({ message: loaded.error });
+    }
+    req.user = loaded.user;
     return next();
-  } catch (err) {
-    console.error('Auth token verification error:', err);
-    return res.status(403).json({ message: 'Token inválido o expirado' });
+  } catch (_err) {
+    return res.status(401).json({ message: 'Token inválido o expirado' });
   }
 };
 
+/**
+ * If Authorization is present, applies the same rules as isAuth.
+ * If it is absent, continues as a public request.
+ */
+const optionalAuth = async (req, res, next) => {
+  if (!req.headers.authorization) {
+    return next();
+  }
+  return isAuth(req, res, next);
+};
+
 module.exports = isAuth;
+module.exports.optionalAuth = optionalAuth;
+module.exports.parse_bearer_token = parse_bearer_token;

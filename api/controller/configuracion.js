@@ -1,30 +1,45 @@
-// File: controller/changePassword.js
 const Usuario = require("../models/Usuario");
 const bcrypt = require("bcrypt");
 const sendEmail = require("../services/emailService");
-const jwt = require("jsonwebtoken");
+const {
+    TOKEN_TYPES,
+    emailTokenTtl,
+    deleteTokenTtl,
+    sign_temporal_token,
+    verify_temporal_token,
+} = require("../utils/jwtTokens");
 
-const claveTemporal = process.env.TEMPORAL_SECRET;
-const emailTokenTtl = process.env.JWT_EMAIL_TOKEN_TTL || "15m";
 const apiBaseUrl = process.env.API_URL || "http://localhost:3000";
 const frontendBaseUrl = process.env.FRONTEND_URL || "http://localhost:5173";
+const bcryptSaltRounds = Number(process.env.BCRYPT_SALT_ROUNDS || 10);
+
+function normalize_email(value) {
+    return String(value || "").trim().toLowerCase();
+}
 
 const changeEmailRequest = async (req, res) => {
     try {
-        const { newEmail } = req.body;
+        const newEmail = normalize_email(req.body.newEmail);
         const userId = req.user.id;
 
         const user = await Usuario.findByPk(userId);
-
         if (!user) {
             return res.status(404).json({ error: "Usuario no encontrado" });
         }
 
-        // Crear token temporal
-        const token = jwt.sign(
+        if (normalize_email(user.correo) === newEmail) {
+            return res.status(400).json({ error: "El nuevo correo es igual al actual" });
+        }
+
+        const taken = await Usuario.findOne({ where: { correo: newEmail } });
+        if (taken && Number(taken.id) !== Number(userId)) {
+            return res.status(400).json({ error: "El correo ya está en uso" });
+        }
+
+        const token = sign_temporal_token(
             { id: user.id, newEmail },
-            claveTemporal,
-            { expiresIn: emailTokenTtl }
+            TOKEN_TYPES.EMAIL_CHANGE,
+            emailTokenTtl
         );
 
         const link = `${apiBaseUrl}/api/confirm-email-change?token=${token}`;
@@ -58,16 +73,28 @@ const changeEmailRequest = async (req, res) => {
 const confirmEmailChange = async (req, res) => {
     try {
         const { token } = req.query;
+        const decoded = verify_temporal_token(token, TOKEN_TYPES.EMAIL_CHANGE);
 
-        const decoded = jwt.verify(token, claveTemporal);
+        if (req.user && Number(req.user.id) !== Number(decoded.id)) {
+            return res.status(403).send("No puedes confirmar el cambio de email de otra cuenta.");
+        }
+
+        const newEmail = normalize_email(decoded.newEmail);
+        if (!newEmail) {
+            return res.status(400).send("Token inválido o expirado.");
+        }
 
         const user = await Usuario.findByPk(decoded.id);
-
-        if (!user) {
+        if (!user || Number(user.activo) === 0) {
             return res.status(404).json({ error: "Usuario no encontrado" });
         }
 
-        user.correo = decoded.newEmail;
+        const taken = await Usuario.findOne({ where: { correo: newEmail } });
+        if (taken && Number(taken.id) !== Number(user.id)) {
+            return res.status(400).json({ error: "El correo ya está en uso" });
+        }
+
+        user.correo = newEmail;
         await user.save();
 
         return res.send("✔ Tu email fue cambiado correctamente.");
@@ -77,36 +104,29 @@ const confirmEmailChange = async (req, res) => {
     }
 };
 
-
-
-// =======================================================
-// 🔐 CAMBIAR CONTRASEÑA
-// =======================================================
 const changePassword = async (req, res) => {
-
     try {
         const { currentPwd, newPwd } = req.body;
         const userId = req.user.id;
 
         const usuario = await Usuario.findByPk(userId);
-
+        if (!usuario) {
+            return res.status(404).json({ error: "Usuario no encontrado" });
+        }
 
         const compare = await bcrypt.compare(currentPwd, usuario.contrasena);
-
         if (!compare) {
             return res.status(401).json({
                 error: "La contraseña actual es incorrecta."
             });
         }
 
-        const hashed = await bcrypt.hash(newPwd, 10);
-        usuario.contrasena = hashed;
+        usuario.contrasena = await bcrypt.hash(newPwd, bcryptSaltRounds);
         await usuario.save();
 
         return res.status(200).json({
             msg: "Contraseña actualizada correctamente"
         });
-
     } catch (error) {
         console.error("ERROR CHANGE PASSWORD:", error);
         return res.status(500).json({
@@ -115,10 +135,6 @@ const changePassword = async (req, res) => {
     }
 };
 
-
-// =======================================================
-// 🗑 SOLICITAR ELIMINACIÓN DE CUENTA (envía email con token)
-// =======================================================
 const deleteAccountRequest = async (req, res) => {
     try {
         const userId = req.user.id;
@@ -128,15 +144,14 @@ const deleteAccountRequest = async (req, res) => {
             return res.status(404).json({ error: "Usuario no encontrado" });
         }
 
-        const token = jwt.sign(
+        const token = sign_temporal_token(
             { id: user.id },
-            claveTemporal,
-            { expiresIn: emailTokenTtl }
+            TOKEN_TYPES.ACCOUNT_DELETE,
+            deleteTokenTtl
         );
 
         const link = `${frontendBaseUrl}/confirm-delete?token=${token}`;
 
-        // Enviar email ASYNC (NO bloquea respuesta si falla)
         setImmediate(async () => {
             try {
                 await sendEmail({
@@ -158,7 +173,6 @@ const deleteAccountRequest = async (req, res) => {
                         <p>Este enlace expira en 15 minutos.</p>
                     `
                 });
-                console.log('[DeleteAccount] Email enviado a:', user.correo);
             } catch (emailErr) {
                 console.error('[DeleteAccount] Error email (no bloquea):', emailErr.message);
             }
@@ -174,37 +188,30 @@ const deleteAccountRequest = async (req, res) => {
     }
 };
 
-
-// =======================================================
-// 🗑 CONFIRMAR ELIMINACIÓN DE CUENTA (desactivación)
-// =======================================================
 const deleteAccountConfirm = async (req, res) => {
     try {
         const { token } = req.body;
-        if (!token) {
-            return res.status(400).json({ error: "Token requerido" });
-        }
+        const decoded = verify_temporal_token(token, TOKEN_TYPES.ACCOUNT_DELETE);
 
-        const decoded = jwt.verify(token, claveTemporal);
+        if (Number(req.user.id) !== Number(decoded.id)) {
+            return res.status(403).json({ error: "No puedes desactivar otra cuenta" });
+        }
 
         const user = await Usuario.findByPk(decoded.id);
         if (!user) {
             return res.status(404).json({ error: "Usuario no encontrado" });
         }
 
-        // 🔥 DESACTIVAR CUENTA EN VEZ DE BORRARLA
         user.activo = 0;
         await user.save();
 
         return res.status(200).json({
             msg: "Tu cuenta fue desactivada exitosamente."
         });
-
     } catch (error) {
         console.error("ERROR DELETE CONFIRM:", error);
         return res.status(400).json({ error: "Token inválido o expirado" });
     }
 };
-
 
 module.exports = { changePassword, changeEmailRequest, confirmEmailChange, deleteAccountRequest, deleteAccountConfirm };

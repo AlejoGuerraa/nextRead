@@ -94,24 +94,14 @@ const getTendencias = async (req, res) => {
 // ⭐ CORREGIDO — OBTENER LIBROS DEL AUTOR MÁS LEÍDO
 // =======================================================
 const getMasDeAutor = async (req, res) => {
-    const { email } = req.body;
-
-    if (!email) {
-        return res.status(400).json({
-            message: 'Se requiere el correo electrónico (email) para identificar al usuario.'
-        });
-    }
-
     try {
-        // Buscar usuario por correo
-        const usuario = await Usuario.findOne({
-            where: { correo: email },
+        const usuario = await Usuario.findByPk(req.user.id, {
             attributes: ['id', 'libros_leidos']
         });
 
         if (!usuario) {
             return res.status(404).json({
-                message: 'Usuario no encontrado con ese correo electrónico.'
+                message: 'Usuario no encontrado.'
             });
         }
 
@@ -398,24 +388,14 @@ const getLibroById = async (req, res) => {
 // 📚 OBTENER DÉCADAS PERSONALIZADAS (basadas en gustos del usuario)
 // =======================================================
 const getDecadasPersonalizadas = async (req, res) => {
-    const { email } = req.body;
-
-    if (!email) {
-        return res.status(400).json({
-            message: 'Se requiere el correo electrónico (email) del usuario.'
-        });
-    }
-
     try {
-        // Buscar usuario por correo
-        const usuario = await Usuario.findOne({
-            where: { correo: email },
+        const usuario = await Usuario.findByPk(req.user.id, {
             attributes: ['id', 'libros_favoritos', 'libros_en_lectura', 'libros_leidos']
         });
 
         if (!usuario) {
             return res.status(404).json({
-                message: 'Usuario no encontrado con ese correo electrónico.'
+                message: 'Usuario no encontrado.'
             });
         }
 
@@ -558,9 +538,7 @@ const getDecadasPersonalizadas = async (req, res) => {
 
 const getGeneroPreferido = async (req, res) => {
     try {
-        const idUsuario = req.params.idUsuario;
-
-        const usuario = await Usuario.findByPk(idUsuario);
+        const usuario = await Usuario.findByPk(req.user.id);
         if (!usuario) {
             return res.status(404).json({ message: "Usuario no encontrado" });
         }
@@ -666,7 +644,7 @@ function fixGeneros(input) {
 
 const getRecomendacionesPorLibro = async (req, res) => {
     try {
-        const idUsuario = Number(req.params.idUsuario);
+        const idUsuario = Number(req.user.id);
         const idLibro = Number(req.params.idLibro);
 
         if (!Number.isInteger(idUsuario) || !Number.isInteger(idLibro)) {

@@ -9,13 +9,11 @@ const Seguidos = require('../models/Seguidos_seguidores');
 
 // Librerias
 const bcrypt = require('bcrypt');
-const jwt = require('jsonwebtoken');
 const { Op } = require('sequelize');
 const { escape_like } = require('../utils/querySafety');
+const { sign_access_token } = require('../utils/jwtTokens');
 
-const claveSecreta = process.env.SECRET;
 const bcryptSaltRounds = Number(process.env.BCRYPT_SALT_ROUNDS || 10);
-const accessTokenTtl = process.env.JWT_ACCESS_TOKEN_TTL || '8h';
 
 // ------------------------
 // Small helpers (security + parsing)
@@ -255,7 +253,7 @@ const login = async (req, res) => {
             return res.status(400).json({ error: 'Credenciales inválidas' });
         }
 
-        const token = jwt.sign({ id: user.id, correo: user.correo }, claveSecreta, { expiresIn: accessTokenTtl });
+        const token = sign_access_token(user.id);
 
         const userData = toSafeUser(user);
 

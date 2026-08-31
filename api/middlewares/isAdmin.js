@@ -1,39 +1,44 @@
-const jwt = require('jsonwebtoken');
 const User = require('../models/Usuario');
+const isAuth = require('./isAuth');
 
-// This middleware works similarly to `isAuth` but verifies the token
-// itself and ensures the user has role 'Admin'. Use this when routes
-// must be protected for admins only. It sets req.user with { id, correo, rol }.
-
-const claveSecreta = process.env.SECRET;
-
-const isAdmin = async (req, res, next) => {
-  if (!claveSecreta) {
-    return res.status(500).json({ message: 'Configuración de autenticación incompleta' });
-  }
+/**
+ * Allows only currently active administrators.
+ * Relies on isAuth when req.user is not already set.
+ */
+async function assert_admin(req, res, next) {
   try {
-    const authHeader = req.headers['authorization'];
-    if (!authHeader) return res.status(401).json({ message: 'Token no proporcionado' });
+    if (!req.user || !req.user.id) {
+      return res.status(401).json({ message: 'Token no proporcionado' });
+    }
 
-    const token = authHeader.split(' ')[1];
-    if (!token) return res.status(401).json({ message: 'Token no proporcionado' });
-
-    jwt.verify(token, claveSecreta, async (err, decoded) => {
-      if (err) return res.status(401).json({ message: 'Token inválido' });
-
-      const user = await User.findByPk(decoded.id);
-      if (!user) return res.status(400).json({ message: 'Usuario no encontrado' });
-
-      if (user.rol !== 'Admin') return res.status(403).json({ error: 'Acceso denegado: se requiere rol Admin' });
-
-      // attach useful fields to req.user so downstream handlers can use them
-      req.user = { id: user.id, correo: user.correo, rol: user.rol };
-      next();
+    const user = await User.findByPk(req.user.id, {
+      attributes: ['id', 'correo', 'rol', 'activo'],
     });
-  } catch (err) {
-    console.error('Error en isAdmin middleware', err);
-    return res.status(500).json({ error: 'Error interno al verificar rol' });
+
+    if (!user) {
+      return res.status(401).json({ message: 'Token inválido' });
+    }
+
+    if (Number(user.activo) === 0) {
+      return res.status(403).json({ message: 'La cuenta se encuentra desactivada' });
+    }
+
+    if (user.rol !== 'Admin') {
+      return res.status(403).json({ error: 'Acceso denegado: se requiere rol Admin' });
+    }
+
+    req.user = { id: user.id, correo: user.correo, rol: user.rol };
+    return next();
+  } catch (_err) {
+    return res.status(500).json({ error: 'Error de autorización' });
   }
+}
+
+const isAdmin = (req, res, next) => {
+  if (req.user && req.user.id) {
+    return assert_admin(req, res, next);
+  }
+  return isAuth(req, res, () => assert_admin(req, res, next));
 };
 
 module.exports = isAdmin;

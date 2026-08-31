@@ -1,16 +1,15 @@
 // controller/recoveryController.js
 
-const jwt = require('jsonwebtoken');
 const nodemailer = require('nodemailer');
 const Usuario = require('../models/Usuario');
 const bcrypt = require('bcrypt');
+const {
+    TOKEN_TYPES,
+    recoveryTokenTtl,
+    sign_temporal_token,
+    verify_temporal_token,
+} = require('../utils/jwtTokens');
 
-// ========================================================
-// CONFIGURAR NODEMAILER (GMAIL + FIX TLS)
-// ========================================================
-
-const recoveryJwtSecret = process.env.TEMPORAL_SECRET;
-const recoveryTokenTtl = process.env.JWT_RECOVERY_TOKEN_TTL || '1h';
 const emailService = process.env.EMAIL_SERVICE || 'gmail';
 const emailUser = process.env.EMAIL_USER || 'NextReadOficial@gmail.com';
 const emailFrom = process.env.EMAIL_FROM || 'NextRead <NextReadOficial@gmail.com>';
@@ -52,13 +51,14 @@ const enviarEnlaceRecuperacion = async (req, res) => {
         }
 
         // Crear token JWT con vencimiento
-        const token = jwt.sign(
-            { id: usuario.id, correo: usuario.correo },
-            recoveryJwtSecret,
-            { expiresIn: recoveryTokenTtl }
+        const token = sign_temporal_token(
+            { id: usuario.id },
+            TOKEN_TYPES.RECOVERY,
+            recoveryTokenTtl
         );
 
-        const enlace = `${process.env.FRONTEND_URL}/confirm-delete?token=${token}`;
+        const frontendBaseUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
+        const enlace = `${frontendBaseUrl}/reset-password?token=${encodeURIComponent(token)}`;
 
         // Enviar email
         await transporter.sendMail({
@@ -96,20 +96,18 @@ const resetearPassword = async (req, res) => {
 
         let decoded;
         try {
-            decoded = jwt.verify(token, recoveryJwtSecret);
-        } catch (error) {
+            decoded = verify_temporal_token(token, TOKEN_TYPES.RECOVERY);
+        } catch (_error) {
             return res.status(401).json({ error: "Token inválido o expirado." });
         }
 
-        // Buscar usuario real
         const usuario = await Usuario.findByPk(decoded.id);
-
         if (!usuario) {
             return res.status(404).json({ error: "Usuario no encontrado." });
         }
 
-        // Encriptar nueva contraseña
-        const hashed = await bcrypt.hash(newPassword, 10);
+        const bcryptSaltRounds = Number(process.env.BCRYPT_SALT_ROUNDS || 10);
+        const hashed = await bcrypt.hash(newPassword, bcryptSaltRounds);
 
         usuario.contrasena = hashed;
         await usuario.save();

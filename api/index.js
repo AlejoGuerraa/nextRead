@@ -35,6 +35,7 @@ const { getAuthMe } = require('./controller/authController');
 // ---------------------- MIDDLEWARES ----------------------
 
 const isAuth = require('./middlewares/isAuth');
+const { optionalAuth } = require('./middlewares/isAuth');
 const isAdmin = require('./middlewares/isAdmin');
 const { validateBody, validateParams, validateQuery } = require('./middlewares/validate');
 
@@ -190,7 +191,7 @@ server.delete('/nextread/resena/:id/like', isAuth, validateParams(idParamSchema)
 
 // ---------------------- ADMIN ----------------------
 server.patch('/nextread/admin/ban/:id', isAuth, isAdmin, validateParams(idParamSchema), validateBody(banSchema), banearUsuario);
-server.get('/nextread/allUsers', isAdmin, validateQuery(paginationQuerySchema), getAllUsers);
+server.get('/nextread/allUsers', isAuth, isAdmin, validateQuery(paginationQuerySchema), getAllUsers);
 server.delete('/nextread/admin/resena/:id', isAuth, isAdmin, validateParams(idParamSchema), validateBody(banSchema), eliminarComentario);
 
 // ---------------------- AUTH ----------------------
@@ -200,20 +201,12 @@ server.get('/nextread/auth/me', isAuth, getAuthMe);
 server.patch('/nextread/user/editar', isAuth, validateBody(editarPerfilSchema), editarPerfil);
 
 // ---------------------- NOTIFICACIONES ----------------------
-server.post('/nextread/notificacion/:idUsuario', isAuth, validateParams(idUsuarioParamSchema), validateBody(notificationSchema), async (req, res) => {
+server.post('/nextread/notificacion/:idUsuario', isAuth, isAdmin, validateParams(idUsuarioParamSchema), validateBody(notificationSchema), async (req, res) => {
     try {
         const targetId = Number(req.params.idUsuario);
         const { mensaje } = req.body;
 
-        if (!mensaje) {
-            return res.status(400).json({ error: "Falta el mensaje de la notificación" });
-        }
-
-        if (req.user.rol !== 'Admin' && targetId !== Number(req.user.id)) {
-            return res.status(403).json({ error: 'No tienes permisos para enviar notificaciones a otro usuario.' });
-        }
-
-        await agregarNotificacion(targetId, mensaje, req.user.rol === 'Admin' ? 'Sistema' : 'Usuario');
+        await agregarNotificacion(targetId, mensaje, 'Sistema');
         return res.status(200).json({ msg: 'Notificación enviada correctamente' });
 
     } catch (error) {
@@ -227,13 +220,13 @@ server.get('/nextread/buscar', validateQuery(searchQuerySchema), buscar);
 server.get('/nextread/tendencias', getTendencias);
 server.get('/nextread/libros/por-decada', validateQuery(decadeQuerySchema), getLibrosPorDecada);
 
-server.post('/nextread/autorMasLeido', sensitiveLimiter, validateBody(emailSchema), getMasDeAutor);
-server.post('/nextread/decadas-personalizadas', sensitiveLimiter, validateBody(emailSchema), getDecadasPersonalizadas);
+server.post('/nextread/autorMasLeido', isAuth, sensitiveLimiter, validateBody(emailSchema), getMasDeAutor);
+server.post('/nextread/decadas-personalizadas', isAuth, sensitiveLimiter, validateBody(emailSchema), getDecadasPersonalizadas);
 
-server.get("/nextread/libros/genero-usuario/:idUsuario", validateParams(idUsuarioParamSchema), getGeneroPreferido);
+server.get("/nextread/libros/genero-usuario/:idUsuario", isAuth, validateParams(idUsuarioParamSchema), getGeneroPreferido);
 server.get('/nextread/libro/:id', validateParams(idParamSchema), getLibroById);
 server.get('/nextread/libros', getAllBooks);
-server.get('/nextread/libros/recomendaciones/:idUsuario/:idLibro', validateParams(recommendationParamsSchema), getRecomendacionesPorLibro);
+server.get('/nextread/libros/recomendaciones/:idUsuario/:idLibro', isAuth, validateParams(recommendationParamsSchema), getRecomendacionesPorLibro);
 
 // ---------------------- LIBROS ----------------------
 server.post('/nextread/usuario/:tipo/:idLibro', isAuth, validateParams(listActionParamsSchema), agregarLibroALista);
@@ -250,7 +243,7 @@ server.post('/api/reset-password', sensitiveLimiter, validateBody(resetPasswordS
 
 // ---------------------- CONFIGURACIÓN ----------------------
 server.post("/nextread/user/change-email-request", isAuth, sensitiveLimiter, validateBody(changeEmailRequestSchema), changeEmailRequest);
-server.get("/api/confirm-email-change", isAuth, validateQuery(confirmEmailQuerySchema), confirmEmailChange);
+server.get("/api/confirm-email-change", optionalAuth, validateQuery(confirmEmailQuerySchema), confirmEmailChange);
 server.patch('/nextread/user/change-password', isAuth, sensitiveLimiter, validateBody(changePasswordSchema), changePassword);
 server.post("/nextread/user/delete-account-request", isAuth, sensitiveLimiter, deleteAccountRequest);
 server.post("/nextread/user/delete-account-confirm", isAuth, sensitiveLimiter, validateBody(deleteAccountConfirmSchema), deleteAccountConfirm);
