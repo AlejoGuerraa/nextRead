@@ -98,46 +98,103 @@ require('./models/indexModel');
 require('./models/Icono');
 require('./models/Banner');
 
+// ======================== ENVIRONMENT VALIDATION ========================
+// Valida que todas las variables críticas existan y sean no-vacías
+const requiredEnvVars = ['SECRET', 'TEMPORAL_SECRET'];
+const missingEnvVars = requiredEnvVars.filter(varName => !process.env[varName] || !String(process.env[varName]).trim());
+
+if (missingEnvVars.length > 0) {
+    console.error(`❌ Variables de entorno críticas faltantes: ${missingEnvVars.join(', ')}`);
+    console.error('El servidor no puede iniciar sin estas variables.');
+    process.exit(1);
+}
+
 // ---------------------------------------------------------
 const server = express();
 const port = Number(process.env.PORT || 3000);
+const NODE_ENV = process.env.NODE_ENV || 'development';
+const isProduction = NODE_ENV === 'production';
+
+// CORS: allowlist explícita
 const allowedOrigins = [process.env.FRONTEND_URL, 'http://localhost:5173', 'http://127.0.0.1:5173'].filter(Boolean);
 
+// Trust proxy: solo si está explícitamente habilitado (para Railway, Render, etc.)
+// En producción, esto es necesario para obtener la IP real detrás del proxy
+// pero debe estar explícitamente configurado
 if (process.env.TRUST_PROXY === '1' || process.env.TRUST_PROXY === 'true') {
     server.set('trust proxy', 1);
+    if (isProduction) {
+        console.log('⚠️  Trust proxy habilitado: la IP será tomada del header X-Forwarded-For');
+    }
 }
 
-if (!process.env.SECRET || !String(process.env.SECRET).trim()) {
-    throw new Error('Falta la variable de entorno SECRET requerida para JWT.');
-}
-if (!process.env.TEMPORAL_SECRET || !String(process.env.TEMPORAL_SECRET).trim()) {
-    throw new Error('Falta la variable de entorno TEMPORAL_SECRET requerida para tokens temporales.');
-}
-
-// Seguridad
-server.disable("x-powered-by");
+// ======================== SECURITY HEADERS ========================
+// Helmet: protecciones de headers HTTP
+server.disable("x-powered-by");  // No revelar que es Express
 server.use(helmet({
-    contentSecurityPolicy: false,
-    crossOriginResourcePolicy: false,
-    referrerPolicy: { policy: 'strict-origin-when-cross-origin' }
+    contentSecurityPolicy: false,  // Deshabilitado por ahora para no romper Vite/React
+    crossOriginResourcePolicy: false,  // Permite compartir recursos
+    referrerPolicy: { policy: 'strict-origin-when-cross-origin' },  // No enviar referrer innecesario
+    hsts: {
+        maxAge: 31536000,  // 1 año en segundos
+        includeSubDomains: true,
+        preload: false  // Solo en producción si está en el preload list
+    },
+    frameguard: {
+        action: 'deny'  // No permitir en iframe
+    },
+    noSniff: true,  // No sniffear MIME types
+    xssFilter: true,  // Protección XSS (legacy, pero no daña)
 }));
 
-// Logs HTTP (solo desarrollo)
-server.use(morgan("dev"));
+// ======================== HTTP LOGGING ========================
+// Morgan: registro de requests HTTP
+// En desarrollo: usa "dev" para máxima información
+// En producción: usa "combined" pero sin sensibles headers (ver configuración)
+// Nota: Morgan no registra Authorization por defecto, pero se puede filtrar si es necesario
+if (!isProduction) {
+    server.use(morgan("dev"));
+} else {
+    // En producción: usar formato "combined" (equivalente a Apache) pero más conciso
+    server.use(morgan("combined", {
+        skip: (req, res) => {
+            // Opcionalmente: saltar ciertos tipos de requests (ej: health checks)
+            return false;
+        }
+    }));
+}
 
-// CORS con allowlist controlada
+// ======================== CORS ========================
+// CORS: Cross-Origin Resource Sharing con allowlist explícita
+// Nunca usar "*" con credentials: true
+// FRONTEND_URL debe estar definido en .env para producción
+if (isProduction && !process.env.FRONTEND_URL) {
+    console.warn('⚠️  ADVERTENCIA: FRONTEND_URL no está definido en producción. CORS solo permitirá localhost.');
+}
+
 server.use(cors({
     origin: (origin, callback) => {
-        if (!origin || allowedOrigins.includes(origin)) {
+        // Sin origin header: puede ser same-site request o herramienta sin origen
+        if (!origin) {
             callback(null, true);
             return;
         }
-        callback(new Error('Origen no autorizado por CORS'));
+        
+        // Verificar contra allowlist
+        if (allowedOrigins.includes(origin)) {
+            callback(null, true);
+            return;
+        }
+        
+        // Origen no autorizado
+        const err = new Error(`CORS: Origen no autorizado: ${origin}`);
+        callback(err);
     },
     methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization"],
-    credentials: true,
+    credentials: true,  // Permitir cookies/credentials
     optionsSuccessStatus: 200,
+    maxAge: 86400,  // Pre-flight cache: 1 día
 }));
 
 server.use(express.json({ limit: '100kb' }));
@@ -231,12 +288,55 @@ server.patch('/nextread/user/change-password', isAuth, sensitiveLimiter, validat
 server.post("/nextread/user/delete-account-request", isAuth, sensitiveLimiter, deleteAccountRequest);
 server.post("/nextread/user/delete-account-confirm", isAuth, sensitiveLimiter, validateBody(deleteAccountConfirmSchema), deleteAccountConfirm);
 
+// ======================== GLOBAL ERROR HANDLER ========================
+// Middleware de error: captura TODOS los errores no capturados
+// Debe estar al final de todas las rutas
+// Nota: (err, req, res, next) - 4 parámetros es obligatorio para que Express lo reconozca como error handler
+
 server.use((err, req, res, next) => {
+    // Error de JSON payload inválido (syntax error)
     if (err instanceof SyntaxError && err.status === 400 && 'body' in err) {
-        return res.status(400).json({ error: 'Payload inválido' });
+        return res.status(400).json({ error: 'Formato de solicitud inválido' });
     }
-    console.error('Unhandled server error:', err);
-    return res.status(500).json({ error: 'Error interno del servidor' });
+
+    // Error de CORS
+    if (err.message && err.message.includes('CORS')) {
+        return res.status(403).json({ error: 'Acceso denegado (CORS)' });
+    }
+
+    // Sequelize errors: no exponer detalles SQL
+    if (err.name && (err.name === 'SequelizeError' || err.name.includes('Sequelize'))) {
+        console.error('[DB ERROR]', err.name, err.message);
+        return res.status(500).json({ error: 'Error al procesar la solicitud' });
+    }
+
+    // Validación de Zod u otros errores de validación
+    if (err.name === 'ZodError' || err.errors) {
+        console.error('[VALIDATION ERROR]', err.message);
+        return res.status(400).json({ error: 'Datos inválidos en la solicitud' });
+    }
+
+    // Errores genéricos: no revelar stack trace
+    const statusCode = err.statusCode || err.status || 500;
+    const isDev = !isProduction;
+
+    if (isDev) {
+        // En desarrollo: mostrar más información (pero no secretos)
+        console.error('[ERROR]', {
+            message: err.message,
+            method: req.method,
+            path: req.path,
+            // NO incluir: stack, body, headers, query completos
+        });
+    } else {
+        // En producción: solo lo mínimo
+        console.error('[ERROR]', err.message);
+    }
+
+    // Respuesta al cliente: siempre segura
+    return res.status(statusCode).json({
+        error: isDev ? err.message : 'Error interno del servidor'
+    });
 });
 
 // ---------------------- INIT SERVER ----------------------

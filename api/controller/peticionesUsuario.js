@@ -127,15 +127,17 @@ const getAllUsers = async (req, res) => {
             attributes: [
                 'id', 'nombre', 'apellido', 'usuario', 'idIcono', 'idBanner',
                 'descripcion', 'autor_preferido', 'genero_preferido', 'titulo_preferido',
-                'iconos_obtenidos', 'banners_obtenidos'
+                'iconos_obtenidos', 'banners_obtenidos', 'activo', 'rol'
             ],
-            limit,
-            offset,
+            // Excluir explícitamente datos sensibles
+            limit: Math.min(limit, 1000),  // Máximo 1000 usuarios
+            offset: Math.max(offset, 0),   // Offset no negativo
             order: [['id', 'ASC']],
         });
         res.json(usuarios);
     } catch (error) {
-        return res.status(404).json({ error: "No se encontró ningún usuario registrado" });
+        console.error("Error en getAllUsers:", error);
+        return res.status(500).json({ error: "Error al obtener usuarios" });
     }
 };
 
@@ -289,8 +291,8 @@ const getUser = async (req, res) => {
                 { model: Icono, as: "iconoData", attributes: ["simbolo"] },
                 { model: Banner, as: "bannerData", attributes: ["url"] }
             ],
-            // Aseguramos que la columna 'notificaciones' esté incluida
-            attributes: { exclude: ['contrasena'] } 
+            // Excluir datos sensibles
+            attributes: { exclude: ['contrasena', 'dvh'] } 
         });
 
         if (!usuario) {
