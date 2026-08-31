@@ -11,6 +11,7 @@ const Seguidos = require('../models/Seguidos_seguidores');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const { Op } = require('sequelize');
+const { escape_like } = require('../utils/querySafety');
 
 const claveSecreta = process.env.SECRET;
 const bcryptSaltRounds = Number(process.env.BCRYPT_SALT_ROUNDS || 10);
@@ -22,7 +23,8 @@ const accessTokenTtl = process.env.JWT_ACCESS_TOKEN_TTL || '8h';
 function toSafeUser(modelOrObj) {
     if (!modelOrObj) return null;
     const obj = typeof modelOrObj.toJSON === 'function' ? modelOrObj.toJSON() : { ...modelOrObj };
-    if (Object.prototype.hasOwnProperty.call(obj, 'contrasena')) delete obj.contrasena;
+    delete obj.contrasena;
+    delete obj.dvh;
     return obj;
 }
 
@@ -42,8 +44,19 @@ function parseIdArray(value) {
 
 function isValidEmail(email) {
     if (!email || typeof email !== 'string') return false;
-    // simple but effective validation: user@domain.tld
     return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+}
+
+const FOLLOW_STATES = {
+    aceptado: 'aceptado',
+    enviado: 'enviado',
+    rechazado: 'rechazado',
+    all: 'all',
+};
+
+function resolve_follow_estado(value) {
+    const estado = value || 'aceptado';
+    return FOLLOW_STATES[estado] || null;
 }
 
 // Dummy hash to mitigate timing attacks when user is not found
@@ -108,14 +121,19 @@ async function agregarNotificacion(userId, mensaje, nombre = "Sistema", meta = n
 }
 
 // ----------------- GET USERS -----------------
-const getAllUsers = async (_req, res) => {
+const getAllUsers = async (req, res) => {
     try {
+        const limit = req.query.limit ?? 50;
+        const offset = req.query.offset ?? 0;
         const usuarios = await User.findAll({
             attributes: [
                 'id', 'nombre', 'apellido', 'usuario', 'idIcono', 'idBanner',
                 'descripcion', 'autor_preferido', 'genero_preferido', 'titulo_preferido',
                 'iconos_obtenidos', 'banners_obtenidos'
-            ]
+            ],
+            limit,
+            offset,
+            order: [['id', 'ASC']],
         });
         res.json(usuarios);
     } catch (error) {
@@ -127,10 +145,7 @@ const getAllUsers = async (_req, res) => {
 const register = async (req, res) => {
     const {
         nombre, apellido, correo, usuario, contrasena, fecha_nacimiento,
-        // Recibimos el símbolo del icono y la URL del banner
         icono, banner, descripcion,
-        // opcional: permitir que se envíe rol (por ejemplo 'Admin') — si se envía 'Admin' se requiere ADMIN_SIGNUP_KEY
-        rol: rolInBody
     } = req.body;
 
     // 1. VALIDACIONES BÁSICAS
@@ -214,7 +229,7 @@ const register = async (req, res) => {
         // Usamos los IDs obtenidos/creados
         idIcono: idIcono,
         idBanner: idBanner,
-        descripcion,
+        descripcion: descripcion || '',
         rol: rolFinal,
         // Al registrarse, otorgar los iconos y banners por defecto
         iconos_obtenidos: [1, 2, 3, 4, 5, 6],
@@ -242,8 +257,7 @@ const login = async (req, res) => {
 
         const token = jwt.sign({ id: user.id, correo: user.correo }, claveSecreta, { expiresIn: accessTokenTtl });
 
-        const userData = user.get({ plain: true });
-        delete userData.contrasena;
+        const userData = toSafeUser(user);
 
         // Añadir contadores de seguimiento (seguidores/seguidos)
         try {
@@ -635,7 +649,7 @@ const buscarUsuario = async (req, res) => {
 
         if (!term) return res.status(400).json({ error: 'Falta el término de búsqueda' });
 
-        const like = `%${term}%`;
+        const like = `%${escape_like(term)}%`;
 
         const usuarios = await User.findAll({
             where: {
@@ -674,6 +688,7 @@ const buscarUsuario = async (req, res) => {
                     try { librosLeidos = JSON.parse(librosLeidos); } catch { librosLeidos = []; }
                 }
                 usuarioJSON.librosLeidos = Array.isArray(librosLeidos) ? librosLeidos.length : 0;
+                delete usuarioJSON.libros_leidos;
                 
             } catch (e) {
                 console.error('Error calculando contadores:', e);
@@ -704,7 +719,10 @@ const listarSeguidores = async (req, res) => {
         if (Number.isNaN(userId)) return res.status(400).json({ error: 'ID inválido' });
 
         // Opcional query ?estado=aceptado|enviado|all
-        const { estado = 'aceptado' } = req.query;
+        const estado = resolve_follow_estado(req.query.estado);
+        if (!estado) {
+            return res.status(400).json({ error: 'Estado inválido' });
+        }
 
         const where = { id_destinatario: userId };
         if (estado !== 'all') where.estado = estado;
@@ -739,7 +757,10 @@ const listarSeguidos = async (req, res) => {
         const userId = Number(req.params.id);
         if (Number.isNaN(userId)) return res.status(400).json({ error: 'ID inválido' });
 
-        const { estado = 'aceptado' } = req.query;
+        const estado = resolve_follow_estado(req.query.estado);
+        if (!estado) {
+            return res.status(400).json({ error: 'Estado inválido' });
+        }
 
         const where = { id_remitente: userId };
         if (estado !== 'all') where.estado = estado;

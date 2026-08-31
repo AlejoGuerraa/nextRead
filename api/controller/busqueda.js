@@ -2,6 +2,7 @@ const Usuario = require("../models/Usuario")
 const Libro = require("../models/Libro");
 const Autor = require("../models/Autor");
 const { Op, Sequelize } = require("sequelize");
+const { escape_like } = require("../utils/querySafety");
 
 // =======================================================
 // 🔍 BUSCAR LIBROS + AUTOR RELEVANTE
@@ -9,10 +10,11 @@ const { Op, Sequelize } = require("sequelize");
 const buscar = async (req, res) => {
     try {
         const search = req.query.search || "";
+        const like = `%${escape_like(search)}%`;
 
         const libros = await Libro.findAll({
             where: {
-                titulo: { [Op.like]: `%${search}%` },
+                titulo: { [Op.like]: like },
             },
             limit: 4,
             include: [
@@ -30,7 +32,7 @@ const buscar = async (req, res) => {
         if (search.length > 0) {
             const autorSugerido = await Autor.findOne({
                 where: {
-                    nombre: { [Op.like]: `%${search}%` },
+                    nombre: { [Op.like]: like },
                 },
                 attributes: ["id", "nombre", "url_cara"],
             });
@@ -612,7 +614,7 @@ const getGeneroPreferido = async (req, res) => {
         }
 
         // JSON_CONTAINS requiere '"valor"'
-        const candidate = JSON.stringify(generoPreferido);
+        const candidate = JSON.stringify(String(generoPreferido).slice(0, 120));
 
         const libros = await Libro.findAll({
             where: Sequelize.where(
@@ -692,7 +694,9 @@ const getRecomendacionesPorLibro = async (req, res) => {
         const autorId = libroBase.id_autor || null;
 
         // Condiciones por género usando JSON_CONTAINS
-        const generoConditions = generos.map(g =>
+        const generoConditions = generos
+            .filter((g) => typeof g === 'string' && g.trim().length > 0 && g.length <= 120)
+            .map(g =>
             Sequelize.where(
                 Sequelize.fn("JSON_CONTAINS", Sequelize.col("generos"), JSON.stringify(g)),
                 1

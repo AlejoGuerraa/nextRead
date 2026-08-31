@@ -2,6 +2,7 @@ const express = require('express');
 const helmet = require("helmet");
 const cors = require("cors");
 const morgan = require("morgan");
+const rateLimit = require('express-rate-limit');
 require("dotenv").config();
 
 // ---------------------- CONTROLLERS ----------------------
@@ -35,14 +36,32 @@ const { getAuthMe } = require('./controller/authController');
 
 const isAuth = require('./middlewares/isAuth');
 const isAdmin = require('./middlewares/isAdmin');
-const validate = require('./middlewares/validate');
+const { validateBody, validateParams, validateQuery } = require('./middlewares/validate');
 
 // Schemas
 const { registerSchema, loginSchema } = require('./schemas/authSchemas');
 const { editarPerfilSchema, changePasswordSchema, changeEmailRequestSchema, deleteAccountConfirmSchema, crearListaSchema } = require('./schemas/userSchemas');
 const { guardarPuntuacionSchema } = require('./schemas/bookSchemas');
 const { forgotPasswordSchema, resetPasswordSchema } = require('./schemas/recoverySchemas');
-const { emailSchema } = require('./schemas/busquedaSchemas');
+const {
+    emailSchema,
+    notificationSchema,
+    targetIdParamSchema,
+    listActionParamsSchema,
+    customListBookParamsSchema,
+    recommendationParamsSchema,
+    searchQuerySchema,
+    userSearchQuerySchema,
+    checkEmailQuerySchema,
+    checkUsernameQuerySchema,
+    decadeQuerySchema,
+    followListQuerySchema,
+    confirmEmailQuerySchema,
+    paginationQuerySchema,
+    idUsuarioParamSchema,
+    idLibroParamSchema,
+    idParamSchema
+} = require('./schemas/busquedaSchemas');
 const { banSchema } = require('./schemas/adminSchemas');
 
 // ---------------------- DB ----------------------
@@ -65,127 +84,192 @@ require('./models/Banner');
 
 // ---------------------------------------------------------
 const server = express();
-const corsOrigin = process.env.FRONTEND_URL || "http://localhost:5173";
 const port = Number(process.env.PORT || 3000);
+const allowedOrigins = [process.env.FRONTEND_URL, 'http://localhost:5173', 'http://127.0.0.1:5173'].filter(Boolean);
+
+if (!process.env.SECRET || !String(process.env.SECRET).trim()) {
+    throw new Error('Falta la variable de entorno SECRET requerida para JWT.');
+}
+if (!process.env.TEMPORAL_SECRET || !String(process.env.TEMPORAL_SECRET).trim()) {
+    throw new Error('Falta la variable de entorno TEMPORAL_SECRET requerida para tokens temporales.');
+}
+
+const generalLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000,
+    max: 300,
+    standardHeaders: true,
+    legacyHeaders: false,
+    message: { error: 'Demasiadas peticiones, intenta nuevamente más tarde.' }
+});
+const loginLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000,
+    max: 10,
+    standardHeaders: true,
+    legacyHeaders: false,
+    message: { error: 'Demasiados intentos de inicio de sesión. Intenta más tarde.' }
+});
+const registerLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000,
+    max: 10,
+    standardHeaders: true,
+    legacyHeaders: false,
+    message: { error: 'Demasiados registros desde esta conexión.' }
+});
+const sensitiveLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000,
+    max: 20,
+    standardHeaders: true,
+    legacyHeaders: false,
+    message: { error: 'Demasiadas operaciones sensibles. Intenta más tarde.' }
+});
+const checkLimiter = rateLimit({
+    windowMs: 60 * 1000,
+    max: 30,
+    standardHeaders: true,
+    legacyHeaders: false,
+    message: { error: 'Demasiadas verificaciones. Intenta más tarde.' }
+});
 
 // Seguridad
 server.disable("x-powered-by");
-server.use(helmet());
+server.use(helmet({
+    contentSecurityPolicy: false,
+    crossOriginResourcePolicy: false,
+    referrerPolicy: { policy: 'strict-origin-when-cross-origin' }
+}));
 
 // Logs HTTP (solo desarrollo)
 server.use(morgan("dev"));
 
-// CORS
-server.use(
-    cors({
-        origin: corsOrigin,
-        methods: ["GET", "POST", "PUT", "PATCH", "DELETE"],
-        credentials: true,
-    })
-);
+// CORS con allowlist controlada
+server.use(cors({
+    origin: (origin, callback) => {
+        if (!origin || allowedOrigins.includes(origin)) {
+            callback(null, true);
+            return;
+        }
+        callback(new Error('Origen no autorizado por CORS'));
+    },
+    methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization"],
+    credentials: true,
+    optionsSuccessStatus: 200,
+}));
 
-// Parseo del body
-server.use(express.json());
+server.use(express.json({ limit: '100kb' }));
+server.use(express.urlencoded({ extended: true, limit: '100kb' }));
+server.use(generalLimiter);
 
 // ---------------------- RUTAS USUARIO ----------------------
 server.get('/nextread/user', isAuth, getUser);
 server.get('/nextread/banners', getAllBanners);
 server.get('/nextread/iconos', getAllIconos);
 server.get('/nextread/autores', getAllAutores);
-server.get('/nextread/check-email', checkEmail);
-server.get('/nextread/check-username', checkUsername);
+server.get('/nextread/check-email', checkLimiter, validateQuery(checkEmailQuerySchema), checkEmail);
+server.get('/nextread/check-username', checkLimiter, validateQuery(checkUsernameQuerySchema), checkUsername);
 
 // Buscar usuario por término
-server.get('/nextread/buscar-usuario', buscarUsuario);
+server.get('/nextread/buscar-usuario', validateQuery(userSearchQuerySchema), buscarUsuario);
 
 // CRUD Seguimientos (solo seguir / dejar de seguir)
-server.get('/nextread/user/:id/seguidores', listarSeguidores);
-server.get('/nextread/user/:id/seguidos', listarSeguidos);
-server.delete('/nextread/unfollow/:targetId', isAuth, cancelarSeguido);
+server.get('/nextread/user/:id/seguidores', validateParams(idParamSchema), validateQuery(followListQuerySchema), listarSeguidores);
+server.get('/nextread/user/:id/seguidos', validateParams(idParamSchema), validateQuery(followListQuerySchema), listarSeguidos);
+server.delete('/nextread/unfollow/:targetId', isAuth, validateParams(targetIdParamSchema), cancelarSeguido);
 
 // NUEVOS: Seguir / Dejar de seguir directo (sin solicitud)
-server.post('/nextread/seguir/:targetId', isAuth, seguirUsuario);
-server.post('/nextread/dejar-seguir/:targetId', isAuth, dejarDeSeguir);
+server.post('/nextread/seguir/:targetId', isAuth, validateParams(targetIdParamSchema), seguirUsuario);
+server.post('/nextread/dejar-seguir/:targetId', isAuth, validateParams(targetIdParamSchema), dejarDeSeguir);
 // Notificaciones: marcar leídas
 server.post('/nextread/notificaciones/marcar-leidas', isAuth, marcarNotificacionesLeidas);
 // Obtener usuario público por id (avatar, nombre)
-server.get('/nextread/user/public/:id', getPublicUserById);
+server.get('/nextread/user/public/:id', validateParams(idParamSchema), getPublicUserById);
 
 // Like a reseña
-server.post('/nextread/resena/:id/like', isAuth, likeResena);
-server.delete('/nextread/resena/:id/like', isAuth, unlikeResena);
+server.post('/nextread/resena/:id/like', isAuth, validateParams(idParamSchema), likeResena);
+server.delete('/nextread/resena/:id/like', isAuth, validateParams(idParamSchema), unlikeResena);
 
 // ---------------------- ADMIN ----------------------
-server.patch('/nextread/admin/ban/:id', isAuth, isAdmin, validate(banSchema), banearUsuario);
-server.get('/nextread/allUsers', isAdmin, getAllUsers);
-server.delete('/nextread/admin/resena/:id', isAuth, isAdmin, validate(banSchema), eliminarComentario);
+server.patch('/nextread/admin/ban/:id', isAuth, isAdmin, validateParams(idParamSchema), validateBody(banSchema), banearUsuario);
+server.get('/nextread/allUsers', isAdmin, validateQuery(paginationQuerySchema), getAllUsers);
+server.delete('/nextread/admin/resena/:id', isAuth, isAdmin, validateParams(idParamSchema), validateBody(banSchema), eliminarComentario);
 
 // ---------------------- AUTH ----------------------
-server.post('/nextread/register', validate(registerSchema), register);
-server.post('/nextread/login', validate(loginSchema), login);
+server.post('/nextread/register', registerLimiter, validateBody(registerSchema), register);
+server.post('/nextread/login', loginLimiter, validateBody(loginSchema), login);
 server.get('/nextread/auth/me', isAuth, getAuthMe);
-server.patch('/nextread/user/editar', isAuth, validate(editarPerfilSchema), editarPerfil);
+server.patch('/nextread/user/editar', isAuth, validateBody(editarPerfilSchema), editarPerfil);
 
 // ---------------------- NOTIFICACIONES ----------------------
-const { notificationSchema } = require('./schemas/busquedaSchemas');
-server.post('/nextread/notificacion/:idUsuario', validate(notificationSchema), async (req, res) => {
+server.post('/nextread/notificacion/:idUsuario', isAuth, validateParams(idUsuarioParamSchema), validateBody(notificationSchema), async (req, res) => {
     try {
-        const { idUsuario } = req.params;
+        const targetId = Number(req.params.idUsuario);
         const { mensaje } = req.body;
 
         if (!mensaje) {
             return res.status(400).json({ error: "Falta el mensaje de la notificación" });
         }
 
-        await agregarNotificacion(idUsuario, mensaje);
-        return res.status(200).json({ msg: "Notificación enviada correctamente" });
+        if (req.user.rol !== 'Admin' && targetId !== Number(req.user.id)) {
+            return res.status(403).json({ error: 'No tienes permisos para enviar notificaciones a otro usuario.' });
+        }
+
+        await agregarNotificacion(targetId, mensaje, req.user.rol === 'Admin' ? 'Sistema' : 'Usuario');
+        return res.status(200).json({ msg: 'Notificación enviada correctamente' });
 
     } catch (error) {
-        console.error("Error enviando notificación:", error);
-        return res.status(500).json({ error: "Error en el servidor" });
+        console.error('Error enviando notificación:', error);
+        return res.status(500).json({ error: 'Error en el servidor' });
     }
 });
 
 // ---------------------- BÚSQUEDAS ----------------------
-server.get('/nextread/buscar', buscar);
+server.get('/nextread/buscar', validateQuery(searchQuerySchema), buscar);
 server.get('/nextread/tendencias', getTendencias);
-server.get('/nextread/libros/por-decada', getLibrosPorDecada);
+server.get('/nextread/libros/por-decada', validateQuery(decadeQuerySchema), getLibrosPorDecada);
 
-server.post('/nextread/autorMasLeido', validate(emailSchema), getMasDeAutor);
-server.post('/nextread/decadas-personalizadas', validate(emailSchema), getDecadasPersonalizadas);
+server.post('/nextread/autorMasLeido', sensitiveLimiter, validateBody(emailSchema), getMasDeAutor);
+server.post('/nextread/decadas-personalizadas', sensitiveLimiter, validateBody(emailSchema), getDecadasPersonalizadas);
 
-server.get("/nextread/libros/genero-usuario/:idUsuario", getGeneroPreferido);
-server.get('/nextread/libro/:id', getLibroById);
+server.get("/nextread/libros/genero-usuario/:idUsuario", validateParams(idUsuarioParamSchema), getGeneroPreferido);
+server.get('/nextread/libro/:id', validateParams(idParamSchema), getLibroById);
 server.get('/nextread/libros', getAllBooks);
-server.get('/nextread/libros/recomendaciones/:idUsuario/:idLibro', getRecomendacionesPorLibro);
+server.get('/nextread/libros/recomendaciones/:idUsuario/:idLibro', validateParams(recommendationParamsSchema), getRecomendacionesPorLibro);
 
 // ---------------------- LIBROS ----------------------
-server.post('/nextread/usuario/:tipo/:idLibro', isAuth, agregarLibroALista);
-server.post('/nextread/resena/:idLibro', isAuth, validate(guardarPuntuacionSchema), guardarPuntuacion);
-server.get('/nextread/resenas/:idLibro', obtenerResenas);
+server.post('/nextread/usuario/:tipo/:idLibro', isAuth, validateParams(listActionParamsSchema), agregarLibroALista);
+server.post('/nextread/resena/:idLibro', isAuth, validateParams(idLibroParamSchema), validateBody(guardarPuntuacionSchema), guardarPuntuacion);
+server.get('/nextread/resenas/:idLibro', validateParams(idLibroParamSchema), obtenerResenas);
 
 // Listas personalizadas
-server.post('/nextread/listas', isAuth, validate(crearListaSchema), crearLista);
-server.post('/nextread/listas/:nombre/libro/:idLibro', isAuth, agregarLibroAListaEnLista);
+server.post('/nextread/listas', isAuth, validateBody(crearListaSchema), crearLista);
+server.post('/nextread/listas/:nombre/libro/:idLibro', isAuth, validateParams(customListBookParamsSchema), agregarLibroAListaEnLista);
 
 // ---------------------- RECOVERY ----------------------
-server.post('/api/forgot-password', validate(forgotPasswordSchema), enviarEnlaceRecuperacion);
-server.post('/api/reset-password', validate(resetPasswordSchema), resetearPassword);
+server.post('/api/forgot-password', sensitiveLimiter, validateBody(forgotPasswordSchema), enviarEnlaceRecuperacion);
+server.post('/api/reset-password', sensitiveLimiter, validateBody(resetPasswordSchema), resetearPassword);
 
 // ---------------------- CONFIGURACIÓN ----------------------
-server.post("/nextread/user/change-email-request", isAuth, validate(changeEmailRequestSchema), changeEmailRequest);
-server.get("/api/confirm-email-change", isAuth, confirmEmailChange);
-server.patch('/nextread/user/change-password', isAuth, validate(changePasswordSchema), changePassword);
-server.post("/nextread/user/delete-account-request", isAuth, deleteAccountRequest);
-server.post("/nextread/user/delete-account-confirm", isAuth, validate(deleteAccountConfirmSchema), deleteAccountConfirm);
+server.post("/nextread/user/change-email-request", isAuth, sensitiveLimiter, validateBody(changeEmailRequestSchema), changeEmailRequest);
+server.get("/api/confirm-email-change", isAuth, validateQuery(confirmEmailQuerySchema), confirmEmailChange);
+server.patch('/nextread/user/change-password', isAuth, sensitiveLimiter, validateBody(changePasswordSchema), changePassword);
+server.post("/nextread/user/delete-account-request", isAuth, sensitiveLimiter, deleteAccountRequest);
+server.post("/nextread/user/delete-account-confirm", isAuth, sensitiveLimiter, validateBody(deleteAccountConfirmSchema), deleteAccountConfirm);
+
+server.use((err, req, res, next) => {
+    if (err instanceof SyntaxError && err.status === 400 && 'body' in err) {
+        return res.status(400).json({ error: 'Payload inválido' });
+    }
+    console.error('Unhandled server error:', err);
+    return res.status(500).json({ error: 'Error interno del servidor' });
+});
 
 // ---------------------- INIT SERVER ----------------------
 server.listen(port, '0.0.0.0', async () => {
     try {
         await sequelize.sync({ force: false, alter: false });
-        console.log("Tablas sincronizadas correctamente (alter:true)");
+        console.log('Tablas sincronizadas correctamente (alter:true)');
         console.log(`Servidor corriendo en puerto ${port}`);
     } catch (error) {
-        console.error("Error al sincronizar tablas:", error);
+        console.error('Error al sincronizar tablas:', error);
     }
 });

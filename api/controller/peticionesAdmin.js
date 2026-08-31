@@ -32,6 +32,7 @@ const banearUsuario = async (req, res) => {
 
     const usuarioSafe = usuario.toJSON();
     delete usuarioSafe.contrasena;
+    delete usuarioSafe.dvh;
 
     // Notificar al usuario (si existe el helper)
     try { if (agregarNotificacion) await agregarNotificacion(usuario.id, 'Has sido baneado por un administrador.', 'Sistema'); } catch (_) {}

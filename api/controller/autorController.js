@@ -11,7 +11,6 @@ const getAllAutores = async (_req, res) => {
     console.error("ERROR en getAllAutores:", error);
     return res.status(500).json({
       error: "Error al obtener autores",
-      mensaje: error.message,
     });
   }
 };

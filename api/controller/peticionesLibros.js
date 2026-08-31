@@ -7,14 +7,18 @@ const { agregarNotificacion } = require('./peticionesUsuario');
 
 const getAllBooks = async (_req, res) => {
   try {
-    const libros = await Libro.findAll();
+    const libros = await Libro.findAll({
+      attributes: [
+        'id', 'titulo', 'anio', 'tipo', 'descripcion', 'tema',
+        'ranking', 'generos', 'url_portada', 'id_autor', 'fecha_publicacion'
+      ],
+    });
     console.log("Libros encontrados:", libros.length);
     res.json(libros);
   } catch (error) {
     console.error("ERROR en getAllBooks:", error);
     return res.status(500).json({
       error: "Error al obtener libros",
-      mensaje: error.message,
     });
   }
 };
@@ -214,7 +218,7 @@ const obtenerResenas = async (req, res) => {
         {
           model: Usuario,
           as: 'Usuario',
-          attributes: ["id", "nombre", "apellido", "idIcono", "correo", "rol"],
+          attributes: ["id", "nombre", "apellido", "idIcono"],
           include: [
             {
               model: Icono,
@@ -228,7 +232,8 @@ const obtenerResenas = async (req, res) => {
         ["likes", "DESC"],
         [sequelize.literal("CASE WHEN comentario != '' THEN 0 ELSE 1 END"), "ASC"],
         ["fecha", "DESC"]
-      ]
+      ],
+      limit: 200
     });
 
     res.json(resenas);
