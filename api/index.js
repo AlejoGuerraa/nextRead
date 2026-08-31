@@ -2,7 +2,6 @@ const express = require('express');
 const helmet = require("helmet");
 const cors = require("cors");
 const morgan = require("morgan");
-const rateLimit = require('express-rate-limit');
 require("dotenv").config();
 
 // ---------------------- CONTROLLERS ----------------------
@@ -38,6 +37,22 @@ const isAuth = require('./middlewares/isAuth');
 const { optionalAuth } = require('./middlewares/isAuth');
 const isAdmin = require('./middlewares/isAdmin');
 const { validateBody, validateParams, validateQuery } = require('./middlewares/validate');
+const {
+    generalLimiter,
+    loginAccountLimiter,
+    loginIpLimiter,
+    registerLimiter,
+    loginLimiter,
+    forgotPasswordLimiter,
+    resetPasswordLimiter,
+    checkLimiter,
+    accountLimiter,
+    interactionLimiter,
+    searchLimiter,
+    expensiveLimiter,
+    notificationLimiter,
+    sensitiveLimiter,
+} = require('./middlewares/rateLimiters');
 
 // Schemas
 const { registerSchema, loginSchema } = require('./schemas/authSchemas');
@@ -88,48 +103,16 @@ const server = express();
 const port = Number(process.env.PORT || 3000);
 const allowedOrigins = [process.env.FRONTEND_URL, 'http://localhost:5173', 'http://127.0.0.1:5173'].filter(Boolean);
 
+if (process.env.TRUST_PROXY === '1' || process.env.TRUST_PROXY === 'true') {
+    server.set('trust proxy', 1);
+}
+
 if (!process.env.SECRET || !String(process.env.SECRET).trim()) {
     throw new Error('Falta la variable de entorno SECRET requerida para JWT.');
 }
 if (!process.env.TEMPORAL_SECRET || !String(process.env.TEMPORAL_SECRET).trim()) {
     throw new Error('Falta la variable de entorno TEMPORAL_SECRET requerida para tokens temporales.');
 }
-
-const generalLimiter = rateLimit({
-    windowMs: 15 * 60 * 1000,
-    max: 300,
-    standardHeaders: true,
-    legacyHeaders: false,
-    message: { error: 'Demasiadas peticiones, intenta nuevamente más tarde.' }
-});
-const loginLimiter = rateLimit({
-    windowMs: 15 * 60 * 1000,
-    max: 10,
-    standardHeaders: true,
-    legacyHeaders: false,
-    message: { error: 'Demasiados intentos de inicio de sesión. Intenta más tarde.' }
-});
-const registerLimiter = rateLimit({
-    windowMs: 15 * 60 * 1000,
-    max: 10,
-    standardHeaders: true,
-    legacyHeaders: false,
-    message: { error: 'Demasiados registros desde esta conexión.' }
-});
-const sensitiveLimiter = rateLimit({
-    windowMs: 15 * 60 * 1000,
-    max: 20,
-    standardHeaders: true,
-    legacyHeaders: false,
-    message: { error: 'Demasiadas operaciones sensibles. Intenta más tarde.' }
-});
-const checkLimiter = rateLimit({
-    windowMs: 60 * 1000,
-    max: 30,
-    standardHeaders: true,
-    legacyHeaders: false,
-    message: { error: 'Demasiadas verificaciones. Intenta más tarde.' }
-});
 
 // Seguridad
 server.disable("x-powered-by");
@@ -170,24 +153,24 @@ server.get('/nextread/check-email', checkLimiter, validateQuery(checkEmailQueryS
 server.get('/nextread/check-username', checkLimiter, validateQuery(checkUsernameQuerySchema), checkUsername);
 
 // Buscar usuario por término
-server.get('/nextread/buscar-usuario', validateQuery(userSearchQuerySchema), buscarUsuario);
+server.get('/nextread/buscar-usuario', searchLimiter, validateQuery(userSearchQuerySchema), buscarUsuario);
 
 // CRUD Seguimientos (solo seguir / dejar de seguir)
 server.get('/nextread/user/:id/seguidores', validateParams(idParamSchema), validateQuery(followListQuerySchema), listarSeguidores);
 server.get('/nextread/user/:id/seguidos', validateParams(idParamSchema), validateQuery(followListQuerySchema), listarSeguidos);
-server.delete('/nextread/unfollow/:targetId', isAuth, validateParams(targetIdParamSchema), cancelarSeguido);
+server.delete('/nextread/unfollow/:targetId', isAuth, interactionLimiter, validateParams(targetIdParamSchema), cancelarSeguido);
 
 // NUEVOS: Seguir / Dejar de seguir directo (sin solicitud)
-server.post('/nextread/seguir/:targetId', isAuth, validateParams(targetIdParamSchema), seguirUsuario);
-server.post('/nextread/dejar-seguir/:targetId', isAuth, validateParams(targetIdParamSchema), dejarDeSeguir);
+server.post('/nextread/seguir/:targetId', isAuth, interactionLimiter, validateParams(targetIdParamSchema), seguirUsuario);
+server.post('/nextread/dejar-seguir/:targetId', isAuth, interactionLimiter, validateParams(targetIdParamSchema), dejarDeSeguir);
 // Notificaciones: marcar leídas
-server.post('/nextread/notificaciones/marcar-leidas', isAuth, marcarNotificacionesLeidas);
+server.post('/nextread/notificaciones/marcar-leidas', isAuth, interactionLimiter, marcarNotificacionesLeidas);
 // Obtener usuario público por id (avatar, nombre)
 server.get('/nextread/user/public/:id', validateParams(idParamSchema), getPublicUserById);
 
 // Like a reseña
-server.post('/nextread/resena/:id/like', isAuth, validateParams(idParamSchema), likeResena);
-server.delete('/nextread/resena/:id/like', isAuth, validateParams(idParamSchema), unlikeResena);
+server.post('/nextread/resena/:id/like', isAuth, interactionLimiter, validateParams(idParamSchema), likeResena);
+server.delete('/nextread/resena/:id/like', isAuth, interactionLimiter, validateParams(idParamSchema), unlikeResena);
 
 // ---------------------- ADMIN ----------------------
 server.patch('/nextread/admin/ban/:id', isAuth, isAdmin, validateParams(idParamSchema), validateBody(banSchema), banearUsuario);
@@ -216,26 +199,26 @@ server.post('/nextread/notificacion/:idUsuario', isAuth, isAdmin, validateParams
 });
 
 // ---------------------- BÚSQUEDAS ----------------------
-server.get('/nextread/buscar', validateQuery(searchQuerySchema), buscar);
-server.get('/nextread/tendencias', getTendencias);
-server.get('/nextread/libros/por-decada', validateQuery(decadeQuerySchema), getLibrosPorDecada);
+server.get('/nextread/buscar', searchLimiter, validateQuery(searchQuerySchema), buscar);
+server.get('/nextread/tendencias', searchLimiter, getTendencias);
+server.get('/nextread/libros/por-decada', searchLimiter, validateQuery(decadeQuerySchema), getLibrosPorDecada);
 
 server.post('/nextread/autorMasLeido', isAuth, sensitiveLimiter, validateBody(emailSchema), getMasDeAutor);
 server.post('/nextread/decadas-personalizadas', isAuth, sensitiveLimiter, validateBody(emailSchema), getDecadasPersonalizadas);
 
-server.get("/nextread/libros/genero-usuario/:idUsuario", isAuth, validateParams(idUsuarioParamSchema), getGeneroPreferido);
+server.get("/nextread/libros/genero-usuario/:idUsuario", isAuth, expensiveLimiter, validateParams(idUsuarioParamSchema), getGeneroPreferido);
 server.get('/nextread/libro/:id', validateParams(idParamSchema), getLibroById);
 server.get('/nextread/libros', getAllBooks);
-server.get('/nextread/libros/recomendaciones/:idUsuario/:idLibro', isAuth, validateParams(recommendationParamsSchema), getRecomendacionesPorLibro);
+server.get('/nextread/libros/recomendaciones/:idUsuario/:idLibro', isAuth, expensiveLimiter, validateParams(recommendationParamsSchema), getRecomendacionesPorLibro);
 
 // ---------------------- LIBROS ----------------------
-server.post('/nextread/usuario/:tipo/:idLibro', isAuth, validateParams(listActionParamsSchema), agregarLibroALista);
-server.post('/nextread/resena/:idLibro', isAuth, validateParams(idLibroParamSchema), validateBody(guardarPuntuacionSchema), guardarPuntuacion);
+server.post('/nextread/usuario/:tipo/:idLibro', isAuth, interactionLimiter, validateParams(listActionParamsSchema), agregarLibroALista);
+server.post('/nextread/resena/:idLibro', isAuth, interactionLimiter, validateParams(idLibroParamSchema), validateBody(guardarPuntuacionSchema), guardarPuntuacion);
 server.get('/nextread/resenas/:idLibro', validateParams(idLibroParamSchema), obtenerResenas);
 
 // Listas personalizadas
-server.post('/nextread/listas', isAuth, validateBody(crearListaSchema), crearLista);
-server.post('/nextread/listas/:nombre/libro/:idLibro', isAuth, validateParams(customListBookParamsSchema), agregarLibroAListaEnLista);
+server.post('/nextread/listas', isAuth, interactionLimiter, validateBody(crearListaSchema), crearLista);
+server.post('/nextread/listas/:nombre/libro/:idLibro', isAuth, interactionLimiter, validateParams(customListBookParamsSchema), agregarLibroAListaEnLista);
 
 // ---------------------- RECOVERY ----------------------
 server.post('/api/forgot-password', sensitiveLimiter, validateBody(forgotPasswordSchema), enviarEnlaceRecuperacion);
@@ -243,7 +226,7 @@ server.post('/api/reset-password', sensitiveLimiter, validateBody(resetPasswordS
 
 // ---------------------- CONFIGURACIÓN ----------------------
 server.post("/nextread/user/change-email-request", isAuth, sensitiveLimiter, validateBody(changeEmailRequestSchema), changeEmailRequest);
-server.get("/api/confirm-email-change", optionalAuth, validateQuery(confirmEmailQuerySchema), confirmEmailChange);
+server.get("/api/confirm-email-change", optionalAuth, sensitiveLimiter, validateQuery(confirmEmailQuerySchema), confirmEmailChange);
 server.patch('/nextread/user/change-password', isAuth, sensitiveLimiter, validateBody(changePasswordSchema), changePassword);
 server.post("/nextread/user/delete-account-request", isAuth, sensitiveLimiter, deleteAccountRequest);
 server.post("/nextread/user/delete-account-confirm", isAuth, sensitiveLimiter, validateBody(deleteAccountConfirmSchema), deleteAccountConfirm);

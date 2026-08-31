@@ -46,35 +46,39 @@ const enviarEnlaceRecuperacion = async (req, res) => {
         // Buscar usuario por correo
         const usuario = await Usuario.findOne({ where: { correo: email } });
 
-        if (!usuario) {
-            return res.status(404).json({ error: "No existe un usuario con ese correo." });
+        if (usuario && Number(usuario.activo) !== 0) {
+            const token = sign_temporal_token(
+                { id: usuario.id },
+                TOKEN_TYPES.RECOVERY,
+                recoveryTokenTtl
+            );
+
+            const frontendBaseUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
+            const enlace = `${frontendBaseUrl}/reset-password?token=${encodeURIComponent(token)}`;
+
+            setImmediate(async () => {
+                try {
+                    await transporter.sendMail({
+                        from: emailFrom,
+                        to: email,
+                        subject: "Restablecimiento de contraseña - NextRead",
+                        html: `
+                            <h2>Hola ${usuario.nombre}</h2>
+                            <p>Solicitaste recuperar tu contraseña en NextRead.</p>
+                            <p>Haz clic en este enlace para continuar:</p>
+                            <a href="${enlace}" style="color:blue" target="_blank">${enlace}</a>
+                            <p>Este enlace vence en <b>1 hora</b>.</p>
+                        `
+                    });
+                } catch (mailErr) {
+                    console.error('ERROR - RECUPERACIÓN (envío):', mailErr.message);
+                }
+            });
         }
 
-        // Crear token JWT con vencimiento
-        const token = sign_temporal_token(
-            { id: usuario.id },
-            TOKEN_TYPES.RECOVERY,
-            recoveryTokenTtl
-        );
-
-        const frontendBaseUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
-        const enlace = `${frontendBaseUrl}/reset-password?token=${encodeURIComponent(token)}`;
-
-        // Enviar email
-        await transporter.sendMail({
-            from: emailFrom,
-            to: email,
-            subject: "Restablecimiento de contraseña - NextRead",
-            html: `
-                <h2>Hola ${usuario.nombre}</h2>
-                <p>Solicitaste recuperar tu contraseña en NextRead.</p>
-                <p>Haz clic en este enlace para continuar:</p>
-                <a href="${enlace}" style="color:blue" target="_blank">${enlace}</a>
-                <p>Este enlace vence en <b>1 hora</b>.</p>
-            `
+        return res.json({
+            message: 'Si la cuenta existe, recibirás instrucciones.'
         });
-
-        return res.json({ message: "Correo enviado correctamente." });
 
     } catch (error) {
         console.error("ERROR - RECUPERACIÓN:", error);

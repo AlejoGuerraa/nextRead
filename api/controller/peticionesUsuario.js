@@ -166,12 +166,13 @@ const register = async (req, res) => {
         });
     }
 
-    // 3. COMPROBACIÓN DE EXISTENCIA
+    // 3. COMPROBACIÓN DE EXISTENCIA (anti-enumeración: respuesta uniforme)
     const usuarioasd = await User.findOne({ where: { usuario } });
-    if (usuarioasd) return res.status(400).json({ error: "El nombre de usuario ya está registrado" });
-
     const correoadsd = await User.findOne({ where: { correo } });
-    if (correoadsd) return res.status(400).json({ error: "El correo ya está registrado" });
+    
+    if (usuarioasd || correoadsd) {
+        return res.status(400).json({ error: "No fue posible completar el registro. Por favor intenta con otros datos." });
+    }
 
     // --- LÓGICA CLAVE: BUSCAR O CREAR ÍCONO Y BANNER ---
 
@@ -509,20 +510,25 @@ const checkEmail = async (req, res) => {
     try {
         const { correo } = req.query;
 
-        if (!correo) {
-            return res.status(400).json({ error: "Email requerido" });
+        // Respuesta uniforme: si falta o es inválido, devolver exists=false
+        if (!correo || typeof correo !== 'string') {
+            return res.json({ exists: false });
         }
 
         if (!isValidEmail(correo)) {
-            return res.status(400).json({ error: 'Email inválido' });
+            return res.json({ exists: false });
         }
 
-        const usuario = await User.findOne({ where: { correo } });
+        const usuario = await User.findOne({
+            where: { correo },
+            attributes: ['id'],
+        });
 
         return res.json({ exists: !!usuario });
     } catch (error) {
         console.error("Error al verificar email:", error);
-        return res.status(500).json({ error: "Error en el servidor" });
+        // Respuesta uniforme incluso en error
+        return res.json({ exists: false });
     }
 };
 
@@ -530,21 +536,26 @@ const checkUsername = async (req, res) => {
     try {
         const { usuario } = req.query;
 
-        if (!usuario) {
-            return res.status(400).json({ error: "Usuario requerido" });
+        // Respuesta uniforme: si falta o es inválido, devolver exists=false
+        if (!usuario || typeof usuario !== 'string') {
+            return res.json({ exists: false });
         }
 
         // Validate length and allowed characters to avoid absurd queries
-        if (typeof usuario !== 'string' || usuario.length < 3 || usuario.length > 30 || !/^[a-zA-Z0-9_]+$/.test(usuario)) {
-            return res.status(400).json({ error: 'Usuario inválido' });
+        if (usuario.length < 3 || usuario.length > 30 || !/^[a-zA-Z0-9_]+$/.test(usuario)) {
+            return res.json({ exists: false });
         }
 
-        const user = await User.findOne({ where: { usuario } });
+        const user = await User.findOne({
+            where: { usuario },
+            attributes: ['id'],
+        });
 
         return res.json({ exists: !!user });
     } catch (error) {
         console.error("Error al verificar usuario:", error);
-        return res.status(500).json({ error: "Error en el servidor" });
+        // Respuesta uniforme incluso en error
+        return res.json({ exists: false });
     }
 };
 
