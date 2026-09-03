@@ -2,7 +2,7 @@
 import React, { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import Header from "../components/header";
-import api from "../services/api";
+import { searchUsersByUsername, getUserFollowers, followUser, unfollowUser } from "../services/usersService";
 import "../pagescss/userProfile.css";
 
 export default function UserProfile() {
@@ -19,8 +19,7 @@ export default function UserProfile() {
   useEffect(() => {
     async function fetchUser() {
       try {
-        const res = await api.get(`/nextread/buscar-usuario?q=${encodeURIComponent(username)}`);
-        const data = res.data;
+        const data = await searchUsersByUsername(username);
 
         if (!data.results || data.results.length === 0) throw new Error("Usuario no encontrado");
 
@@ -81,8 +80,7 @@ export default function UserProfile() {
       }
       
       // Traer los seguidores de idUser y ver si currentUser está en la lista
-      const res = await api.get(`/nextread/user/${idUser}/seguidores`);
-      const data = res.data;
+      const data = await getUserFollowers(idUser);
       
       // Si currentUser está en la lista de seguidores, significa que currentUser sigue a idUser
       const siguiendo = data.seguidores && data.seguidores.some(s => s.usuario.id === currentUser.id);
@@ -105,17 +103,16 @@ export default function UserProfile() {
       return;
     }
 
-    const url = isFollowing
-      ? `/nextread/dejar-seguir/${user.id}`
-      : `/nextread/seguir/${user.id}`;
-
     try {
-      const res = await api.post(url);
+      if (isFollowing) {
+        await unfollowUser(user.id);
+      } else {
+        await followUser(user.id);
+      }
 
-      if (res.status >= 200 && res.status < 300) {
-        // Actualizar UI inmediatamente
-        const newFollowState = !isFollowing;
-        setIsFollowing(newFollowState);
+      // Actualizar UI inmediatamente
+      const newFollowState = !isFollowing;
+      setIsFollowing(newFollowState);
         
         // Actualizar contadores del perfil que se está viendo
         const diffFollowers = newFollowState ? 1 : -1;
@@ -131,10 +128,6 @@ export default function UserProfile() {
           currentUser.siguiendo = (currentUser.siguiendo || 0) + diffFollowing;
           localStorage.setItem('user', JSON.stringify(currentUser));
         }
-      } else {
-        const err = await res.json();
-        alert(err.error || 'Error al cambiar seguimiento');
-      }
     } catch (err) {
       console.log("Error follow:", err);
       alert('Error al cambiar seguimiento');

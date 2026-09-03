@@ -87,7 +87,11 @@ export default function Acceso() {
       setLoginOpen(false);
       navigate("/");
     } catch (err) {
-      setLoginError(err.response?.data?.error || "Credenciales incorrectas.");
+      if (err.response?.data?.code === 'ACCOUNT_DISABLED') {
+        setLoginError('Tu cuenta fue desactivada. Revisá tu correo electrónico para conocer el motivo.');
+      } else {
+        setLoginError(err.response?.data?.error || "Credenciales incorrectas.");
+      }
     }
   };
 

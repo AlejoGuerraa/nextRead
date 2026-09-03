@@ -4,7 +4,8 @@ import SearchBar from "./busqueda";
 import NotificacionesModal from "./notificaciones/NotificacionesModal";
 import { useState, useEffect } from "react";
 import { Bell, User, Settings } from "lucide-react";
-import api from "../services/api";
+import { getCurrentUser } from "../services/usersService";
+import { markNotificationsAsRead } from "../services/notificationsService";
 import { useAuth } from "../hooks/useAuth";
 
 import "../pagescss/header.css";
@@ -28,8 +29,8 @@ export default function Header({ user, onRestrictedAction, headerRightRef }) {
 
   const fetchUserData = async () => {
     try {
-      const res = await api.get('/nextread/user');
-      setUserData(res.data);
+      const data = await getCurrentUser();
+      setUserData(data);
     } catch (err) {
       console.error('Error cargando datos del usuario:', err);
     }
@@ -43,7 +44,7 @@ export default function Header({ user, onRestrictedAction, headerRightRef }) {
   const handleOpenNotif = () => {
     (async () => {
       try {
-        await api.post('/nextread/notificaciones/marcar-leidas');
+        await markNotificationsAsRead();
       } catch (e) {
         console.error('Error marcando notificaciones leidas:', e);
       } finally {

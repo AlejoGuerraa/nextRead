@@ -1,8 +1,8 @@
 // src/pages/perfil.jsx
 import React, { useEffect, useState } from "react";
-import api from '../services/api';
 import { useNavigate } from "react-router-dom";
 import { logoutAndRedirect } from "../services/authService";
+import { getCurrentUser } from "../services/usersService";
 
 import "../pagescss/perfil.css";
 import "../pagescss/modals.css";
@@ -37,14 +37,9 @@ export default function Perfil() {
       return;
     }
 
-    api
-      .get("/nextread/user", {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      })
-      .then((response) => {
-        setUser(response.data);
+    getCurrentUser()
+      .then((data) => {
+        setUser(data);
         setLoading(false);
       })
       .catch((error) => {
@@ -56,8 +51,8 @@ export default function Perfil() {
   const refreshUser = () => {
     const token = localStorage.getItem("token");
     if (!token) return;
-    api.get("/nextread/user")
-      .then(res => setUser(res.data))
+    getCurrentUser()
+      .then(data => setUser(data))
       .catch(err => console.error('Error refrescando usuario', err));
   };
 

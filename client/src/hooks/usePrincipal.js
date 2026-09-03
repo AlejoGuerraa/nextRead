@@ -1,5 +1,13 @@
 import { useEffect, useMemo, useState } from 'react';
-import api from '../services/api';
+import {
+  getTrendingBooks,
+  getBooksByDecade,
+  getDecadesPersonalizadas,
+  getAuthorMostRead,
+  getBooksByUserGenre,
+  getBookById,
+  getRecommendationsForBook,
+} from '../services/booksService';
 
 const generosRotativos = [
   { genero: 'Aventura', titulo: 'Libros para aventurarse' },
@@ -69,8 +77,8 @@ export function usePrincipal(user) {
           params.genero = generoSeleccionado;
         }
 
-        const res = await api.get('/nextread/tendencias', { params });
-        setLibrosTendencias(Array.isArray(res.data) ? res.data : []);
+        const data = await getTrendingBooks(params);
+        setLibrosTendencias(Array.isArray(data) ? data : []);
       } catch (error) {
         console.error('Error cargando los libros de tendencias:', error);
         setLibrosTendencias([]);
@@ -84,8 +92,8 @@ export function usePrincipal(user) {
     const fetchDecadasPersonalizadas = async () => {
       if (!user?.correo) {
         try {
-          const res = await api.get('/nextread/libros/por-decada');
-          setLibrosPorDecada(Array.isArray(res.data?.decades) ? res.data.decades.slice(0, 5) : []);
+          const data = await getBooksByDecade();
+          setLibrosPorDecada(Array.isArray(data?.decades) ? data.decades.slice(0, 5) : []);
         } catch (error) {
           console.error('Error cargando libros por década:', error);
           setLibrosPorDecada([]);
@@ -94,8 +102,8 @@ export function usePrincipal(user) {
       }
 
       try {
-        const res = await api.post('/nextread/decadas-personalizadas', { email: user.correo });
-        setLibrosPorDecada(Array.isArray(res.data?.decades) ? res.data.decades : []);
+        const data = await getDecadesPersonalizadas(user.correo);
+        setLibrosPorDecada(Array.isArray(data?.decades) ? data.decades : []);
       } catch (error) {
         console.error('Error cargando décadas personalizadas:', error);
         setLibrosPorDecada([]);
@@ -116,16 +124,16 @@ export function usePrincipal(user) {
       setAutorMasLeidoNombre('Cargando recomendaciones...');
 
       try {
-        const res = await api.post('/nextread/autorMasLeido', { email: user.correo });
+        const data = await getAuthorMostRead(user.correo);
 
-        if (res.data?.libros) {
-          setLibrosAutor(normalizeBookList(res.data.libros));
+        if (data?.libros) {
+          setLibrosAutor(normalizeBookList(data.libros));
 
-          const nombre = res.data.message?.match?.(/Libros de tu autor más leído: (.+)/);
+          const nombre = data.message?.match?.(/Libros de tu autor más leído: (.+)/);
           setAutorMasLeidoNombre(nombre ? nombre[1] : 'Más Libros del Autor');
         } else {
           setLibrosAutor([]);
-          setAutorMasLeidoNombre(res.data?.message || 'No hay recomendaciones');
+          setAutorMasLeidoNombre(data?.message || 'No hay recomendaciones');
         }
       } catch (error) {
         console.error('Error cargando libros del autor más leído:', error);
@@ -146,10 +154,10 @@ export function usePrincipal(user) {
       }
 
       try {
-        const res = await api.get(`/nextread/libros/genero-usuario/${user.id}`);
-        const genero = res.data?.generoPreferido || null;
+        const data = await getBooksByUserGenre(user.id);
+        const genero = data?.generoPreferido || null;
         setGeneroUsuario(genero);
-        setLibrosGeneroUsuario(Array.isArray(res.data?.libros) ? res.data.libros : []);
+        setLibrosGeneroUsuario(Array.isArray(data?.libros) ? data.libros : []);
       } catch (error) {
         console.error('Error obteniendo género preferido:', error);
         setGeneroUsuario(null);
@@ -204,8 +212,7 @@ export function usePrincipal(user) {
 
         if (!detalleLibro) {
           try {
-            const detalle = await api.get(`/nextread/libro/${ultimoId}`);
-            detalleLibro = detalle?.data || null;
+            detalleLibro = await getBookById(ultimoId);
           } catch (error) {
             console.warn('No se pudo obtener detalle del último libro leído:', error);
           }
@@ -215,10 +222,10 @@ export function usePrincipal(user) {
           setUltimoLibroObj(detalleLibro || null);
         }
 
-        const res = await api.get(`/nextread/libros/recomendaciones/${user.id}/${ultimoId}`);
+        const data = await getRecommendationsForBook(user.id, ultimoId);
 
         if (isActive) {
-          setLibrosRecomendados(Array.isArray(res.data?.libros) ? res.data.libros : []);
+          setLibrosRecomendados(Array.isArray(data?.libros) ? data.libros : []);
         }
       } catch (error) {
         console.error('Error cargando recomendaciones:', error);

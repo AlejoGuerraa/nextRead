@@ -251,9 +251,18 @@ const login = async (req, res) => {
         const hashToCompare = user ? user.contrasena : DUMMY_HASH;
         const comparacion = await bcrypt.compare(contrasena, hashToCompare);
 
-        // Unificar mensaje para evitar enumeración de usuarios y diferencias de timing
-        if (!comparacion || !user || user.activo === 0) {
+        // Mantener la protección contra timing attacks: si no existe el usuario o la contraseña es incorrecta,
+        // responder como credenciales inválidas.
+        if (!user || !comparacion) {
             return res.status(400).json({ error: 'Credenciales inválidas' });
+        }
+
+        // Separar explícitamente el caso de la cuenta desactivada para que el frontend pueda distinguirlo.
+        if (Number(user.activo) === 0) {
+            return res.status(403).json({
+                error: 'Cuenta desactivada',
+                code: 'ACCOUNT_DISABLED'
+            });
         }
 
         const token = sign_access_token(user.id);
