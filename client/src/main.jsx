@@ -10,10 +10,10 @@ import EditarPerfil from './pages/editarPerfil';
 import Seguidores from './pages/seguidores';
 import Seguidos from './pages/seguidos';
 import Configuracion from './pages/configuracion';
-import ResetPassword from './pages/ResetPassword';
+import ResetPassword from './pages/resetPassword.jsx';
 import Cookies from './pages/cookies';
 import UserProfile from './pages/UserProfile.jsx';
-import ConfirmDelete from './components/settings/confirm-delete.jsx';
+import ConfirmDelete from './components/settings/confirmDelete.jsx';
 import SobreNosotros from './pages/sobreNosotros';
 import ProtectedRoute from './components/auth/ProtectedRoute';
 
