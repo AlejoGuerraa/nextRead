@@ -20,6 +20,7 @@ import ProtectedRoute from './components/auth/ProtectedRoute';
 import { useEffect } from "react";
 import { useLocation } from "react-router-dom";
 import { ToastProvider } from './components/ToastProvider';
+import { AuthProvider } from './context/AuthContext';
 
 // Componente que gestiona el título de la página
 function TitleManager() {
@@ -71,12 +72,12 @@ const router = createBrowserRouter([
       { path: "/cookies", element: <Cookies /> },
       { path: "/nosotros", element: <SobreNosotros /> },
       { path: "/reset-password", element: <ResetPassword /> },
+      { path: "/libro/:id", element: <PaginaLibro /> },
       {
         element: <ProtectedRoute />,
         children: [
           { path: "/perfil", element: <Perfil /> },
           { path: "/perfil/editar", element: <EditarPerfil /> },
-          { path: "/libro/:id", element: <PaginaLibro /> },
           { path: "/seguidores", element: <Seguidores /> },
           { path: "/seguidos", element: <Seguidos /> },
           { path: "/configuracion", element: <Configuracion /> },
@@ -91,8 +92,10 @@ const router = createBrowserRouter([
 
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
-    <ToastProvider>
-      <RouterProvider router={router} />
-    </ToastProvider>
+    <AuthProvider>
+      <ToastProvider>
+        <RouterProvider router={router} />
+      </ToastProvider>
+    </AuthProvider>
   </React.StrictMode>
 );

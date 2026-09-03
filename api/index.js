@@ -60,23 +60,10 @@ const { editarPerfilSchema, changePasswordSchema, changeEmailRequestSchema, dele
 const { guardarPuntuacionSchema } = require('./schemas/bookSchemas');
 const { forgotPasswordSchema, resetPasswordSchema } = require('./schemas/recoverySchemas');
 const {
-    emailSchema,
-    notificationSchema,
-    targetIdParamSchema,
-    listActionParamsSchema,
-    customListBookParamsSchema,
-    recommendationParamsSchema,
-    searchQuerySchema,
-    userSearchQuerySchema,
-    checkEmailQuerySchema,
-    checkUsernameQuerySchema,
-    decadeQuerySchema,
-    followListQuerySchema,
-    confirmEmailQuerySchema,
-    paginationQuerySchema,
-    idUsuarioParamSchema,
-    idLibroParamSchema,
-    idParamSchema
+    emailSchema,notificationSchema,targetIdParamSchema,listActionParamsSchema,customListBookParamsSchema,
+    recommendationParamsSchema,searchQuerySchema,userSearchQuerySchema,checkEmailQuerySchema,checkUsernameQuerySchema,
+    decadeQuerySchema,followListQuerySchema,confirmEmailQuerySchema,paginationQuerySchema,idUsuarioParamSchema,
+    idLibroParamSchema,idParamSchema
 } = require('./schemas/busquedaSchemas');
 const { banSchema } = require('./schemas/adminSchemas');
 

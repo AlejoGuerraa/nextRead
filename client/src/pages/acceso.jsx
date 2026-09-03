@@ -2,6 +2,7 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import api from '../services/api';
+import { useAuth } from '../hooks/useAuth';
 
 import icono from '../assets/libroIcono.png';
 import CatalogoIcon from '../assets/1LogoAcceso.png';
@@ -26,6 +27,7 @@ export default function Acceso() {
   const navigate = useNavigate();
   const location = useLocation();
   const params = new URLSearchParams(location.search);
+  const { login } = useAuth();
 
   const [loginOpen, setLoginOpen] = useState(false);
   const [registerOpen, setRegisterOpen] = useState(false);
@@ -80,16 +82,7 @@ export default function Acceso() {
     }
 
     try {
-      const response = await api.post("/nextread/login", loginForm);
-
-      localStorage.setItem(
-        "user",
-        JSON.stringify({ ...response.data, correo: loginForm.correo })
-      );
-      // Store token separately so other components can read it via localStorage.getItem('token')
-      if (response.data && response.data.token) {
-        localStorage.setItem('token', response.data.token);
-      }
+      await login(loginForm);
 
       setLoginOpen(false);
       navigate("/");
@@ -168,19 +161,10 @@ export default function Acceso() {
         descripcion: registerForm.descripcion,
       });
 
-      const loginResponse = await api.post('/nextread/login', {
+      await login({
         correo: registerForm.correo,
         contrasena: registerForm.contrasena,
       });
-
-      localStorage.setItem(
-        'user',
-        JSON.stringify({ ...loginResponse.data, correo: registerForm.correo, banner: bannerUrl })
-      );
-      // Save token for authenticated requests
-      if (loginResponse.data && loginResponse.data.token) {
-        localStorage.setItem('token', loginResponse.data.token);
-      }
 
       setShowGustos(false);
       setRegisterOpen(false);

@@ -4,75 +4,46 @@ import SearchBar from "./busqueda";
 import NotificacionesModal from "./notificaciones/NotificacionesModal";
 import { useState, useEffect } from "react";
 import { Bell, User, Settings } from "lucide-react";
+import api from "../services/api";
+import { useAuth } from "../hooks/useAuth";
 
-// IMPORTAMOS LA IMAGEN
-import libroIcono from "../assets/libroIcono.png";
-
-// IMPORTAMOS EL CSS SEPARADO
 import "../pagescss/header.css";
 
 export default function Header({ user, onRestrictedAction, headerRightRef }) {
   const navigate = useNavigate();
+  const { user: authUser, isAuthenticated } = useAuth();
   const [openNotif, setOpenNotif] = useState(false);
   const [userData, setUserData] = useState(null);
   const [refreshTrigger, setRefreshTrigger] = useState(0);
 
-  // Fallback: si no se pasa user por props, intentar leer de localStorage
-  const currentUser =
-    user ||
-    (() => {
-      try {
-        const s = localStorage.getItem("user");
-        return s ? JSON.parse(s) : null;
-      } catch {
-        return null;
-      }
-    })();
+  const currentUser = user || authUser || null;
 
-  // Redirigir si la cuenta se encuentra desactivada
   useEffect(() => {
     if (!currentUser) return;
     if (currentUser.activo === 0) {
-      try {
-        localStorage.removeItem('token');
-        localStorage.removeItem('user');
-      } catch (_){ }
       alert('Tu cuenta ha sido desactivada. Serás redirigido al acceso.');
       navigate('/acceso');
     }
   }, [currentUser, navigate]);
 
-  // Cargar notificaciones del usuario actual
   const fetchUserData = async () => {
     try {
-      const token = localStorage.getItem('token');
-      if (!token) return;
       const res = await api.get('/nextread/user');
-      if (!res.ok) return;
-      const json = await res.json();
-      setUserData(json);
+      setUserData(res.data);
     } catch (err) {
       console.error('Error cargando datos del usuario:', err);
     }
   };
 
-  // Inicializar userData al montar para mostrar badge
   useEffect(() => {
     (async () => { await fetchUserData(); })();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Abrir modal y forzar refresh de notificaciones
   const handleOpenNotif = () => {
-    // Marcar notificaciones como leídas en el servidor y luego recargar datos
     (async () => {
       try {
-        const token = localStorage.getItem('token');
-        if (token) {
-          await api.get('/nextread/notificaciones/marcar-leidas', {
-            method: 'POST', headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' }
-          });
-        }
+        await api.post('/nextread/notificaciones/marcar-leidas');
       } catch (e) {
         console.error('Error marcando notificaciones leidas:', e);
       } finally {
@@ -100,7 +71,6 @@ export default function Header({ user, onRestrictedAction, headerRightRef }) {
   return (
     <>
       <header className="header-container">
-        {/* IZQUIERDA */}
         <div className="header-left">
           <div className="logo" onClick={() => navigate("/")}>
             <div className="logo-circle">
@@ -115,7 +85,6 @@ export default function Header({ user, onRestrictedAction, headerRightRef }) {
           </div>
         </div>
 
-        {/* DERECHA */}
         <div className="header-right" ref={headerRightRef}>
           <button
             className="icon-btn"

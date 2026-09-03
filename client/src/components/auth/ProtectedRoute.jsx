@@ -1,37 +1,11 @@
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import { Navigate, Outlet } from 'react-router-dom';
-import { getToken, validateSession, clearAuth } from '../../services/authService';
+import { useAuth } from '../../hooks/useAuth';
 
 export default function ProtectedRoute() {
-  const [status, setStatus] = useState('checking');
+  const { isAuthenticated, loading } = useAuth();
 
-  useEffect(() => {
-    let isMounted = true;
-
-    async function verify() {
-      const token = getToken();
-      if (!token) {
-        if (isMounted) setStatus('unauthenticated');
-        return;
-      }
-
-      try {
-        await validateSession();
-        if (isMounted) setStatus('authenticated');
-      } catch (err) {
-        clearAuth();
-        if (isMounted) setStatus('unauthenticated');
-      }
-    }
-
-    verify();
-
-    return () => {
-      isMounted = false;
-    };
-  }, []);
-
-  if (status === 'checking') {
+  if (loading) {
     return (
       <div className="protected-loading" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '50vh' }}>
         <p>Cargando tu sesión...</p>
@@ -39,7 +13,7 @@ export default function ProtectedRoute() {
     );
   }
 
-  if (status === 'unauthenticated') {
+  if (!isAuthenticated) {
     return <Navigate to="/acceso" replace />;
   }
 
