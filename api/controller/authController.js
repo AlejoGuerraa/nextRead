@@ -3,7 +3,7 @@ const Usuario = require('../models/Usuario');
 const getAuthMe = async (req, res) => {
   try {
     const user = await Usuario.findByPk(req.user.id, {
-      attributes: ['id', 'usuario', 'correo', 'rol'],
+      attributes: ['id', 'nombre', 'usuario', 'correo', 'rol', 'activo'],
     });
 
     if (!user) {

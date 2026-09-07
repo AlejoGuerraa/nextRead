@@ -212,6 +212,21 @@ const EditarPerfil = () => {
     // Validar que los campos preferidos sean válidos (si están rellenos)
     const errores = [];
 
+    const nombre = formData.nombre.trim();
+    const apellido = formData.apellido.trim();
+
+    if (!nombre) errores.push("El nombre es obligatorio");
+    else if (nombre.length < 2) errores.push("El nombre debe tener al menos 2 caracteres");
+    else if (nombre.length > 20) errores.push("El nombre no puede superar los 20 caracteres");
+
+    if (!apellido) errores.push("El apellido es obligatorio");
+    else if (apellido.length < 2) errores.push("El apellido debe tener al menos 2 caracteres");
+    else if (apellido.length > 20) errores.push("El apellido no puede superar los 20 caracteres");
+
+    if (formData.descripcion.length > 300) {
+      errores.push("La descripción no puede superar los 300 caracteres");
+    }
+
     if (formData.autor_preferido.trim().length > 0) {
       const isValid = autores.some(a => a.nombre === formData.autor_preferido.trim());
       if (!isValid) {
@@ -327,17 +342,18 @@ const EditarPerfil = () => {
 
             <label>
               Nombre:
-              <input type="text" name="nombre" value={formData.nombre} onChange={handleChange} />
+              <input type="text" name="nombre" value={formData.nombre} onChange={handleChange} maxLength={20} />
             </label>
 
             <label>
               Apellido:
-              <input type="text" name="apellido" value={formData.apellido} onChange={handleChange} />
+              <input type="text" name="apellido" value={formData.apellido} onChange={handleChange} maxLength={20} />
             </label>
 
             <label>
               Descripción:
-              <textarea name="descripcion" value={formData.descripcion} onChange={handleChange}></textarea>
+              <textarea name="descripcion" value={formData.descripcion} onChange={handleChange} maxLength={300}></textarea>
+              <span className="description-counter">{formData.descripcion.length} / 300</span>
             </label>
           </fieldset>
 

@@ -1,5 +1,5 @@
 // Acceso.jsx
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import api from '../services/api';
 import { useAuth } from '../hooks/useAuth';
@@ -97,23 +97,42 @@ export default function Acceso() {
 
   /* ------------------- REGISTRO ------------------- */
   const handleRegisterChange = (e) => {
-    setRegisterForm({ ...registerForm, [e.target.name]: e.target.value });
-    if (registerErrors[e.target.name]) {
-      setRegisterErrors((prev) => ({ ...prev, [e.target.name]: null }));
+    const { name, value } = e.target;
+    const sanitizedValue = name === 'usuario'
+      ? value.replace(/[^a-zA-Z0-9_]/g, '')
+      : value;
+
+    setRegisterForm((prev) => ({ ...prev, [name]: sanitizedValue }));
+    if (registerErrors[name]) {
+      setRegisterErrors((prev) => ({ ...prev, [name]: undefined }));
+    }
+    if (name === 'usuario' && sanitizedValue !== value) {
+      setRegisterErrors((prev) => ({
+        ...prev,
+        usuario: 'El usuario solo puede contener letras, números y guion bajo.',
+      }));
     }
   };
+
+  const handleUsernameAvailability = useCallback((message) => {
+    setRegisterErrors((prev) => ({
+      ...prev,
+      usuario: message || (prev.usuario === 'Este nombre de usuario ya está en uso' ? undefined : prev.usuario),
+    }));
+  }, []);
 
   const validateStep1 = () => {
     const newErrors = {};
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    const passwordRegex = /^(?=.*[A-Z])(?=.*\d).{8,}$/;
+    const password = registerForm.contrasena.trim();
 
-    if (!registerForm.correo) newErrors.correo = 'El correo es obligatorio.';
-    else if (!emailRegex.test(registerForm.correo)) newErrors.correo = 'Formato de correo inválido.';
+    if (!registerForm.correo.trim()) newErrors.correo = 'El correo es obligatorio.';
+    else if (!emailRegex.test(registerForm.correo.trim())) newErrors.correo = 'Formato de correo inválido.';
 
-    if (!registerForm.contrasena) newErrors.contrasena = 'La contraseña es obligatoria.';
-    else if (!passwordRegex.test(registerForm.contrasena))
-      newErrors.contrasena = 'Debe tener 8+ caracteres, 1 mayúscula y 1 número.';
+    if (!password) newErrors.contrasena = 'La contraseña es obligatoria.';
+    else if (password.length < 8) newErrors.contrasena = 'La contraseña debe tener al menos 8 caracteres.';
+    else if (password.length > 128) newErrors.contrasena = 'La contraseña es demasiado larga.';
+    else if (!/[A-Z]/.test(password)) newErrors.contrasena = 'La contraseña debe contener al menos una letra mayúscula.';
 
     if (!registerForm.repeatPassword) newErrors.repeatPassword = 'Debe repetir la contraseña.';
     else if (registerForm.contrasena !== registerForm.repeatPassword)
@@ -125,13 +144,59 @@ export default function Acceso() {
 
   const validateStep2 = () => {
     const newErrors = {};
-    if (!registerForm.nombre) newErrors.nombre = 'El nombre es obligatorio.';
-    if (!registerForm.apellido) newErrors.apellido = 'El apellido es obligatorio.';
-    if (!registerForm.usuario) newErrors.usuario = 'El usuario es obligatorio.';
-    if (!registerForm.nacimiento) newErrors.nacimiento = 'La fecha es obligatoria.';
+    const nombre = registerForm.nombre.trim();
+    const apellido = registerForm.apellido.trim();
+    const usuario = registerForm.usuario.trim();
+
+    if (!nombre) newErrors.nombre = 'El nombre es obligatorio.';
+    else if (nombre.length < 2) newErrors.nombre = 'El nombre debe tener al menos 2 caracteres.';
+    else if (nombre.length > 20) newErrors.nombre = 'El nombre no puede superar los 20 caracteres.';
+
+    if (!apellido) newErrors.apellido = 'El apellido es obligatorio.';
+    else if (apellido.length < 2) newErrors.apellido = 'El apellido debe tener al menos 2 caracteres.';
+    else if (apellido.length > 20) newErrors.apellido = 'El apellido no puede superar los 20 caracteres.';
+
+    if (!usuario) newErrors.usuario = 'El usuario es obligatorio.';
+    else if (usuario.length < 3) newErrors.usuario = 'El usuario debe tener al menos 3 caracteres.';
+    else if (usuario.length > 50) newErrors.usuario = 'El usuario no puede superar los 50 caracteres.';
+    else if (!/^[a-zA-Z0-9_]+$/.test(usuario)) newErrors.usuario = 'El usuario solo puede contener letras, números y guion bajo.';
+
+    const dateError = validateBirthDate(registerForm.nacimiento);
+    if (dateError) newErrors.nacimiento = dateError;
+    if (registerErrors.usuario === 'Este nombre de usuario ya está en uso') {
+      newErrors.usuario = registerErrors.usuario;
+    }
 
     setRegisterErrors(newErrors);
     return Object.keys(newErrors).length === 0;
+  };
+
+  const validateStep3 = () => {
+    const newErrors = {};
+    if (registerForm.descripcion.length > 300) {
+      newErrors.descripcion = 'La descripción supera el límite de 300 caracteres.';
+    }
+    setRegisterErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
+  const validateBirthDate = (value) => {
+    if (!value) return 'La fecha de nacimiento es obligatoria.';
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) return 'La fecha de nacimiento tiene un formato inválido.';
+
+    const [year, month, day] = value.split('-').map(Number);
+    const selectedDate = new Date(year, month - 1, day);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const oldestDate = new Date(today);
+    oldestDate.setFullYear(today.getFullYear() - 120);
+
+    if (selectedDate.getFullYear() !== year || selectedDate.getMonth() !== month - 1 || selectedDate.getDate() !== day) {
+      return 'La fecha ingresada no existe.';
+    }
+    if (selectedDate > today) return 'La fecha de nacimiento no puede ser futura.';
+    if (selectedDate < oldestDate) return 'La fecha de nacimiento no puede tener más de 120 años.';
+    return null;
   };
 
   const nextRegisterStep = () => {
@@ -204,6 +269,7 @@ export default function Acceso() {
                 form={registerForm}
                 errors={registerErrors}
                 onChange={handleRegisterChange}
+                onUsernameAvailability={handleUsernameAvailability}
                 next={nextRegisterStep}
                 back={prevRegisterStep}
               />
@@ -217,7 +283,12 @@ export default function Acceso() {
                 avatarOptions={avatarOptions}
                 toggleAvatar={handleToggleAvatar}
                 showPicker={showAvatarPicker}
-                next={() => { setRegisterOpen(false); setTimeout(() => setShowGustos(true), 100); }}
+                next={() => {
+                  if (validateStep3()) {
+                    setRegisterOpen(false);
+                    setTimeout(() => setShowGustos(true), 100);
+                  }
+                }}
                 back={prevRegisterStep}
               />
             )}

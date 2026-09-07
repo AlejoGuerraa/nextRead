@@ -12,12 +12,13 @@ import "../pagescss/header.css";
 
 export default function Header({ user, onRestrictedAction, headerRightRef }) {
   const navigate = useNavigate();
-  const { user: authUser, isAuthenticated } = useAuth();
+  const { user: authUser, isAuthenticated, loading } = useAuth();
   const [openNotif, setOpenNotif] = useState(false);
   const [userData, setUserData] = useState(null);
   const [refreshTrigger, setRefreshTrigger] = useState(0);
 
-  const currentUser = user || authUser || null;
+  const currentUser = authUser || (loading ? user : null);
+  const profileName = currentUser?.nombre || currentUser?.usuario;
 
   useEffect(() => {
     if (!currentUser) return;
@@ -37,9 +38,14 @@ export default function Header({ user, onRestrictedAction, headerRightRef }) {
   };
 
   useEffect(() => {
+    if (!isAuthenticated) {
+      setUserData(null);
+      return;
+    }
+
     (async () => { await fetchUserData(); })();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [isAuthenticated]);
 
   const handleOpenNotif = () => {
     (async () => {
@@ -60,7 +66,7 @@ export default function Header({ user, onRestrictedAction, headerRightRef }) {
   };
 
   const handleIconClick = (target) => {
-    if (currentUser) {
+    if (isAuthenticated && authUser) {
       if (target === "notificaciones") handleOpenNotif();
       if (target === "perfil") navigate("/perfil");
       if (target === "configuracion") navigate("/configuracion");
@@ -107,10 +113,12 @@ export default function Header({ user, onRestrictedAction, headerRightRef }) {
           <div
             className="profile-box"
             onClick={() => handleIconClick("perfil")}
-            title={currentUser ? "Ir al perfil" : "Necesitas una cuenta"}
+            title={isAuthenticated && authUser ? "Ir al perfil" : "Necesitas una cuenta"}
           >
             <User size={22} className="user-icon" />
-            <span className="username">{currentUser?.nombre || "Invitado"}</span>
+            <span className="username">
+              {loading && !profileName ? "Cargando..." : profileName || "Invitado"}
+            </span>
           </div>
         </div>
       </header>

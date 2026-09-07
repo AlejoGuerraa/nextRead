@@ -8,14 +8,14 @@ const passwordRule = z.string()
   .refine((v) => /[A-Z]/.test(v), 'La contraseña debe contener al menos una letra mayúscula');
 
 const editarPerfilSchema = z.object({
-  nombre: z.string().trim().min(2).max(200).optional(),
-  apellido: z.string().trim().min(2).max(200).optional(),
-  descripcion: z.string().trim().max(2000).optional(),
+  nombre: z.string().trim().min(2).max(20).optional(),
+  apellido: z.string().trim().min(2).max(20).optional(),
+  descripcion: z.string().trim().max(300).optional(),
   banner: assetRefSchema.optional(),
   icono: assetRefSchema.optional(),
-  genero_preferido: z.string().trim().max(200).optional(),
-  autor_preferido: z.string().trim().max(200).optional(),
-  titulo_preferido: z.string().trim().max(200).optional(),
+  genero_preferido: z.string().trim().max(20).optional(),
+  autor_preferido: z.string().trim().max(20).optional(),
+  titulo_preferido: z.string().trim().max(50).optional(),
 }).strict();
 
 const changePasswordSchema = z.object({

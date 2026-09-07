@@ -467,12 +467,12 @@ const editarPerfil = async (req, res) => {
         if (titulo_preferido !== undefined) usuario.titulo_preferido = titulo_preferido;
 
             // Validaciones de longitud para evitar DoS por strings gigantes
-            if (typeof nombre === 'string' && nombre.length > 200) return res.status(400).json({ error: 'Nombre demasiado largo' });
-            if (typeof apellido === 'string' && apellido.length > 200) return res.status(400).json({ error: 'Apellido demasiado largo' });
-            if (typeof descripcion === 'string' && descripcion.length > 2000) return res.status(400).json({ error: 'Descripción demasiado larga' });
-            if (typeof genero_preferido === 'string' && genero_preferido.length > 200) return res.status(400).json({ error: 'Género preferido inválido' });
-            if (typeof autor_preferido === 'string' && autor_preferido.length > 200) return res.status(400).json({ error: 'Autor preferido inválido' });
-            if (typeof titulo_preferido === 'string' && titulo_preferido.length > 200) return res.status(400).json({ error: 'Título preferido inválido' });
+            if (typeof nombre === 'string' && nombre.length > 20) return res.status(400).json({ error: 'Nombre demasiado largo' });
+            if (typeof apellido === 'string' && apellido.length > 20) return res.status(400).json({ error: 'Apellido demasiado largo' });
+            if (typeof descripcion === 'string' && descripcion.length > 300) return res.status(400).json({ error: 'Descripción demasiado larga' });
+            if (typeof genero_preferido === 'string' && genero_preferido.length > 20) return res.status(400).json({ error: 'Género preferido inválido' });
+            if (typeof autor_preferido === 'string' && autor_preferido.length > 20) return res.status(400).json({ error: 'Autor preferido inválido' });
+            if (typeof titulo_preferido === 'string' && titulo_preferido.length > 50) return res.status(400).json({ error: 'Título preferido inválido' });
 
         // 🔹 2. Manejar ICONO
         if (icono !== undefined) {

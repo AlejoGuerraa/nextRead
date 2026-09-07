@@ -83,13 +83,6 @@ export const Step3 = ({ form, errors, onChange, avatarOptions, toggleAvatar, nex
     }
 
 
-    const canProceed = () => {
-
-        return form.avatar && form.descripcion && !errors.descripcion;
-
-    };
-
-
     return (
 
         <div className="step">
@@ -348,26 +341,22 @@ export const Step3 = ({ form, errors, onChange, avatarOptions, toggleAvatar, nex
 
                 onChange={onChange}
 
+                maxLength={300}
+
                 className={errors.descripcion ? 'input-error' : ''}
 
             />
 
             {errors.descripcion && <p className="error-message">{errors.descripcion}</p>}
 
+            <p className="description-counter">{form.descripcion.length} / 300</p>
+
 
             <div className="buttons">
 
                 <button className="btn-modal" onClick={back}>← Atrás</button>
 
-                <button 
-
-                    className="btn-modal" 
-
-                    onClick={next}
-
-                    disabled={!canProceed()}
-
-                >
+                <button className="btn-modal" onClick={next}>
 
                     Finalizado ➜
 

@@ -54,33 +54,6 @@ export const Step1 = ({ form, errors, onChange, next, openLogin }) => {
   };
 
 
-  const canProceed = () => {
-
-    return (
-
-      form.correo &&
-
-      form.contrasena &&
-
-      form.repeatPassword &&
-
-      !errors.correo &&
-
-      !errors.contrasena &&
-
-      !errors.repeatPassword &&
-
-      form.correo.includes("@") &&
-
-      form.contrasena.length >= 8 &&
-
-      form.contrasena === form.repeatPassword
-
-    );
-
-  };
-
-
   return (
 
     <div className="step">
@@ -314,10 +287,6 @@ export const Step1 = ({ form, errors, onChange, next, openLogin }) => {
         className="btn-modal next-btn"
 
         onClick={next}
-
-        disabled={!canProceed()}
-
-        style={{ opacity: canProceed() ? 1 : 0.5, cursor: canProceed() ? "pointer" : "not-allowed" }}
 
       >
 

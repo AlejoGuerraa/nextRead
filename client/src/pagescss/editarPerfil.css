@@ -91,6 +91,14 @@
   min-height: 90px;
 }
 
+.description-counter {
+  display: block;
+  margin-top: 6px;
+  color: #d4d4d4;
+  font-size: 13px;
+  text-align: right;
+}
+
 .form-actions {
   display: flex;
   justify-content: flex-end;
