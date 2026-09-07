@@ -7,12 +7,14 @@ import { Bell, User, Settings } from "lucide-react";
 import { getCurrentUser } from "../services/usersService";
 import { markNotificationsAsRead } from "../services/notificationsService";
 import { useAuth } from "../hooks/useAuth";
+import { useToast } from "./ToastProvider";
 
 import "../pagescss/header.css";
 
 export default function Header({ user, onRestrictedAction, headerRightRef }) {
   const navigate = useNavigate();
   const { user: authUser, isAuthenticated, loading } = useAuth();
+  const { push } = useToast();
   const [openNotif, setOpenNotif] = useState(false);
   const [userData, setUserData] = useState(null);
   const [refreshTrigger, setRefreshTrigger] = useState(0);
@@ -23,10 +25,10 @@ export default function Header({ user, onRestrictedAction, headerRightRef }) {
   useEffect(() => {
     if (!currentUser) return;
     if (currentUser.activo === 0) {
-      alert('Tu cuenta ha sido desactivada. Serás redirigido al acceso.');
+      push('Tu cuenta ha sido desactivada. Serás redirigido al acceso.', 'warning');
       navigate('/acceso');
     }
-  }, [currentUser, navigate]);
+  }, [currentUser, navigate, push]);
 
   const fetchUserData = async () => {
     try {

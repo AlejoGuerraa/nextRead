@@ -3,6 +3,7 @@ import React, { useCallback, useEffect, useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import api from '../services/api';
 import { useAuth } from '../hooks/useAuth';
+import { useToast } from '../components/ToastProvider';
 
 import icono from '../assets/libroIcono.png';
 import CatalogoIcon from '../assets/1LogoAcceso.png';
@@ -28,6 +29,7 @@ export default function Acceso() {
   const location = useLocation();
   const params = new URLSearchParams(location.search);
   const { login } = useAuth();
+  const { push } = useToast();
 
   const [loginOpen, setLoginOpen] = useState(false);
   const [registerOpen, setRegisterOpen] = useState(false);
@@ -240,7 +242,7 @@ export default function Acceso() {
       navigate('/');
     } catch (error) {
       console.error(error);
-      alert('Error al registrar usuario.');
+      push('Error al registrar usuario.', 'error');
     }
   };
 

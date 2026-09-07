@@ -5,18 +5,20 @@ import { Link, useLocation } from "react-router-dom";
 
 import Header from "../components/header";
 import Footer from "../components/footer";
+import { useToast } from "../components/ToastProvider";
 
 import ilustracionFilosofia from "../assets/ImagenSobreNosotros.png";
 
 const SobreNosotros = () => {
   const location = useLocation();
+  const { push } = useToast();
   useEffect(() => {
     window.scrollTo(0, 0);
   }, [location.pathname]);
   return (
     <>
       <Header
-        onRestrictedAction={() => alert("¡Inicia sesión para acceder!")}
+        onRestrictedAction={() => push("¡Inicia sesión para acceder!", "info")}
       />
 
       <div className="about-container section-1">

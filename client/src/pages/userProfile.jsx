@@ -3,6 +3,7 @@ import React, { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import Header from "../components/header";
 import { searchUsersByUsername, getUserFollowers, followUser, unfollowUser } from "../services/usersService";
+import { useToast } from "../components/ToastProvider";
 import "../pagescss/userProfile.css";
 
 export default function UserProfile() {
@@ -12,6 +13,7 @@ export default function UserProfile() {
   const [isFollowing, setIsFollowing] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const { push } = useToast();
 
   // --------------------------------------
   // CARGAR USUARIO
@@ -99,7 +101,7 @@ export default function UserProfile() {
 
     const token = localStorage.getItem('token');
     if (!token) {
-      alert('Debes iniciar sesión para seguir a usuarios');
+      push('Debes iniciar sesión para seguir a usuarios', 'error');
       return;
     }
 
@@ -130,7 +132,7 @@ export default function UserProfile() {
         }
     } catch (err) {
       console.log("Error follow:", err);
-      alert('Error al cambiar seguimiento');
+      push('Error al cambiar seguimiento', 'error');
     }
   };
 

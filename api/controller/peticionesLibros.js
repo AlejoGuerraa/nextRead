@@ -128,7 +128,7 @@ const agregarLibroALista = async (req, res) => {
     await usuario.save();
 
     return res.json({
-      message: `✅ Libro agregado a ${tipo}`,
+      message: `Libro agregado a ${tipo}`,
       [entry.campo]: listaActualizada // Usamos la lista actualizada local para la respuesta
     });
 
@@ -193,7 +193,7 @@ const guardarPuntuacion = async (req, res) => {
     }
 
     res.json({
-      message: "⭐ Puntuación guardada correctamente",
+      message: "Puntuación guardada correctamente",
       resena
     });
   } catch (error) {

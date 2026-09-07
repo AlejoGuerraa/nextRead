@@ -5,6 +5,7 @@ import Header from "../components/header";
 import Footer from "../components/footer";
 import RestrictionPopover from "../components/popOver";
 import { logoutAndRedirect } from "../services/authService";
+import { useToast } from "../components/ToastProvider";
 
 import ChangeEmail from "../components/settings/ChangeEmail";
 import ChangePassword from "../components/settings/ChangePassword";
@@ -26,6 +27,7 @@ export default function Configuracion() {
 
   const [user] = useState(initialUser);
   const navigate = useNavigate();
+  const { push } = useToast();
 
   // Popover para acciones restringidas
   const popoverRef = React.useRef(null);
@@ -50,14 +52,14 @@ export default function Configuracion() {
     if (!user) return;
 
     if (user.activo === 0) {
-      alert("Tu cuenta ha sido desactivada. Serás redirigido al acceso.");
+      push("Tu cuenta ha sido desactivada. Serás redirigido al acceso.", "warning");
 
       localStorage.removeItem("token");
       localStorage.removeItem("user");
 
       navigate("/acceso");
     }
-  }, [user, navigate]);
+  }, [user, navigate, push]);
 
   return (
     <div className="pagina-configuracion">

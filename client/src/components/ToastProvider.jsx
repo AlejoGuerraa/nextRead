@@ -1,4 +1,6 @@
-import React, { createContext, useContext, useState, useCallback } from 'react';
+import React, { createContext, useCallback, useContext, useEffect, useRef, useState } from 'react';
+import { AlertTriangle, CheckCircle2, Info, X, XCircle } from 'lucide-react';
+import './ToastProvider.css';
 
 const ToastContext = createContext(null);
 
@@ -8,33 +10,72 @@ export function useToast() {
 
 export function ToastProvider({ children }) {
   const [toasts, setToasts] = useState([]);
+  const timers = useRef(new Map());
+
+  const dismiss = useCallback((id) => {
+    setToasts((current) => current.map((toast) => (
+      toast.id === id ? { ...toast, leaving: true } : toast
+    )));
+
+    const removalTimer = window.setTimeout(() => {
+      setToasts((current) => current.filter((toast) => toast.id !== id));
+      timers.current.delete(id);
+    }, 180);
+
+    timers.current.set(id, removalTimer);
+  }, []);
 
   const push = useCallback((message, type = 'info', ttl = 4000) => {
     const id = Date.now() + Math.random();
-    const t = { id, message, type };
-    setToasts((s) => [...s, t]);
-    if (ttl > 0) setTimeout(() => setToasts((s) => s.filter(x => x.id !== id)), ttl);
+    const normalizedType = ['success', 'error', 'warning', 'info'].includes(type) ? type : 'info';
+    const toast = { id, message, type: normalizedType, leaving: false };
+
+    setToasts((current) => [...current.filter((item) => !item.leaving), toast].slice(-3));
+    if (ttl > 0) {
+      const timer = window.setTimeout(() => dismiss(id), ttl);
+      timers.current.set(id, timer);
+    }
+  }, [dismiss]);
+
+  const remove = useCallback((id) => {
+    const timer = timers.current.get(id);
+    if (timer) window.clearTimeout(timer);
+    timers.current.delete(id);
+    setToasts((current) => current.filter((toast) => toast.id !== id));
   }, []);
 
-  const remove = useCallback((id) => setToasts((s) => s.filter(x => x.id !== id)), []);
+  useEffect(() => () => {
+    timers.current.forEach((timer) => window.clearTimeout(timer));
+    timers.current.clear();
+  }, []);
+
+  const icons = {
+    success: CheckCircle2,
+    error: XCircle,
+    warning: AlertTriangle,
+    info: Info,
+  };
 
   return (
     <ToastContext.Provider value={{ push, remove }}>
       {children}
-      <div style={{ position: 'fixed', right: 20, top: 20, zIndex: 99999 }}>
-        {toasts.map(t => (
-          <div key={t.id} style={{
-            marginBottom: 8,
-            minWidth: 240,
-            padding: '10px 14px',
-            borderRadius: 8,
-            boxShadow: '0 6px 18px rgba(0,0,0,0.15)',
-            color: '#fff',
-            background: t.type === 'error' ? '#d64545' : t.type === 'success' ? '#2b9348' : '#406882'
-          }}>
-            {t.message}
-          </div>
-        ))}
+      <div className="toast-viewport" aria-live="polite" aria-atomic="false">
+        {toasts.map((toast) => {
+          const Icon = icons[toast.type];
+          return (
+            <div
+              key={toast.id}
+              className={`toast-item toast-item--${toast.type}${toast.leaving ? ' toast-item--leaving' : ''}`}
+              role={toast.type === 'error' ? 'alert' : 'status'}
+            >
+              <Icon className="toast-icon" size={18} aria-hidden="true" />
+              <span className="toast-message">{toast.message}</span>
+              <button className="toast-close" type="button" onClick={() => remove(toast.id)} aria-label="Cerrar aviso">
+                <X size={16} aria-hidden="true" />
+              </button>
+            </div>
+          );
+        })}
       </div>
     </ToastContext.Provider>
   );
