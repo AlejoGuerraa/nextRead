@@ -149,6 +149,16 @@
   color: #fff;
 }
 
+.profile-avatar {
+  width: 34px;
+  height: 34px;
+  flex: 0 0 34px;
+  border-radius: 50%;
+  object-fit: cover;
+  display: block;
+  background: rgba(255, 255, 255, 0.16);
+}
+
 @media (max-width: 600px) {
   .search-wrapper {
     display: none;

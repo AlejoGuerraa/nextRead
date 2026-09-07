@@ -40,7 +40,7 @@ body{font-family: Inter, "Segoe UI", Roboto, "Helvetica Neue", Arial; margin:0; 
   position:relative;
   overflow:visible;
   display:flex;
-  align-items:center; /* vertical center */
+  align-items:center;
   padding:0 40px; /* separation from margins */
   background-size:cover;
   background-position:center;
@@ -58,25 +58,27 @@ body{font-family: Inter, "Segoe UI", Roboto, "Helvetica Neue", Arial; margin:0; 
   position:relative;
   z-index:1;
   width:100%;
-  display:flex;
-  align-items:center;
-  justify-content:space-between; /* avatar left, button right */
-  gap:20px;
+  height:100%;
 }
 
 /* avatar */
 .avatar-wrapper{
+  position:absolute;
+  left:0;
+  bottom:-82px;
   width:200px;
   height:200px;
   border-radius:50%;
-  overflow:hidden;
+  overflow:visible;
   display:flex;
   align-items:center;
   justify-content:center;
   border:4px solid rgba(255,255,255,0.9);
   background:linear-gradient(180deg, rgba(255,255,255,0.12), rgba(255,255,255,0.06));
   flex-shrink:0;
+  z-index:3;
 }
+.perfil-img,
 .avatar-img{
   width:100%;
   height:100%;
@@ -84,6 +86,7 @@ body{font-family: Inter, "Segoe UI", Roboto, "Helvetica Neue", Arial; margin:0; 
   object-fit:cover;
   object-position:center;
   flex-shrink:0;
+  display:block;
 }
 .avatar-text{
   width:100%;
@@ -99,7 +102,7 @@ body{font-family: Inter, "Segoe UI", Roboto, "Helvetica Neue", Arial; margin:0; 
   word-break:break-word;
   overflow:hidden;
 }
-.avatar-ring{position:absolute;inset:-6px;border-radius:50%;box-shadow:0 6px 18px rgba(0,0,0,0.12);pointer-events:none}
+.avatar-ring{position:absolute;inset:-6px;border:2px solid rgba(255,255,255,0.72);border-radius:50%;box-shadow:0 6px 18px rgba(0,0,0,0.16);pointer-events:none}
 
 /* banner texto (nombre, username, bio) */
 .banner-text{
@@ -112,11 +115,17 @@ body{font-family: Inter, "Segoe UI", Roboto, "Helvetica Neue", Arial; margin:0; 
 
 /* botón de editar perfil */
 .banner-actions{
+  position:absolute;
+  right:0;
+  top:50%;
   display:flex;
   flex-direction:column;
   gap:12px;
   align-items:flex-end;
+  transform:translateY(-50%);
 }
+
+.profile-banner + .profile-main{margin-top:108px}
 
 /* botón desloguearse bordo */
 .btn-logout-banner{
@@ -226,19 +235,23 @@ body{font-family: Inter, "Segoe UI", Roboto, "Helvetica Neue", Arial; margin:0; 
   .profile-summary{flex-direction:column}
   .profile-right{width:100%}
   .enhanced-stats{flex-wrap:wrap;gap:12px}
-  .banner-inner{flex-direction:column;align-items:center;gap:16px}
-  .avatar-wrapper{width:180px;height:180px}
+  .banner-inner{padding:0 12px}
+  .avatar-wrapper{width:180px;height:180px;bottom:-72px}
   .banner-text{margin-left:0;text-align:center}
-  .banner-actions{align-items:center}
+  .banner-actions{right:12px;align-items:flex-end}
+  .profile-banner + .profile-main{margin-top:96px}
 }
 @media (max-width: 720px){
-  .banner-inner{padding:12px}
-  .avatar-wrapper{width:140px;height:140px}
+  .profile-banner{height:300px;padding:0 18px}
+  .banner-inner{padding:0}
+  .avatar-wrapper{width:140px;height:140px;bottom:-58px}
   .avatar-text{font-size:2rem}
   .app-title{font-size:1rem}
   .profile-main{padding:0 12px 60px}
   .book-card{width:150px}
   .btn-primary.small{padding:6px 12px}
+  .banner-actions{right:0;top:24px;transform:none;gap:8px}
+  .profile-banner + .profile-main{margin-top:78px}
 }
 
 /* small tweaks */

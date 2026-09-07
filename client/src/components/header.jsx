@@ -18,9 +18,23 @@ export default function Header({ user, onRestrictedAction, headerRightRef }) {
   const [openNotif, setOpenNotif] = useState(false);
   const [userData, setUserData] = useState(null);
   const [refreshTrigger, setRefreshTrigger] = useState(0);
+  const [avatarFailed, setAvatarFailed] = useState(false);
 
   const currentUser = authUser || (loading ? user : null);
   const profileName = currentUser?.nombre || currentUser?.usuario;
+  const profileIcon = isAuthenticated
+    ? userData?.iconoData?.simbolo || userData?.icono || currentUser?.iconoData?.simbolo || currentUser?.icono
+    : null;
+
+  const avatarSrc = (() => {
+    if (typeof profileIcon !== 'string' || !profileIcon.trim()) return null;
+    if (profileIcon.startsWith('/') || profileIcon.startsWith('http')) return profileIcon;
+    return `/iconos/${profileIcon}`;
+  })();
+
+  useEffect(() => {
+    setAvatarFailed(false);
+  }, [avatarSrc]);
 
   useEffect(() => {
     if (!currentUser) return;
@@ -117,7 +131,16 @@ export default function Header({ user, onRestrictedAction, headerRightRef }) {
             onClick={() => handleIconClick("perfil")}
             title={isAuthenticated && authUser ? "Ir al perfil" : "Necesitas una cuenta"}
           >
-            <User size={22} className="user-icon" />
+            {isAuthenticated && avatarSrc && !avatarFailed ? (
+              <img
+                src={avatarSrc}
+                alt={`Foto de perfil de ${profileName || 'usuario'}`}
+                className="profile-avatar"
+                onError={() => setAvatarFailed(true)}
+              />
+            ) : (
+              <User size={22} className="user-icon" aria-hidden="true" />
+            )}
             <span className="username">
               {loading && !profileName ? "Cargando..." : profileName || "Invitado"}
             </span>
