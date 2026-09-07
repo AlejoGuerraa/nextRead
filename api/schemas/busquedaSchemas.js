@@ -25,6 +25,10 @@ const idResenaParamSchema = z.object({
   idResena: positiveIntId,
 }).strict();
 
+const notificationIdParamSchema = z.object({
+  id: z.string().regex(/^\d{1,16}$/, 'ID de notificación inválido'),
+}).strict();
+
 const targetIdParamSchema = z.object({
   targetId: positiveIntId,
 }).strict();
@@ -92,6 +96,7 @@ module.exports = {
   idUsuarioParamSchema,
   idLibroParamSchema,
   idResenaParamSchema,
+  notificationIdParamSchema,
   targetIdParamSchema,
   listNameParamSchema,
   listActionParamsSchema,

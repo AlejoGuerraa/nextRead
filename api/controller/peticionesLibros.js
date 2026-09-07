@@ -288,9 +288,15 @@ const likeResena = async (req, res) => {
         if (usuarioActual) {
           await agregarNotificacion(
             resena.usuario_id,
-            `@${usuarioActual.usuario} le dio like a tu reseña.`,
+            `${usuarioActual.usuario} indicó que le gusta tu comentario.`,
             usuarioActual.usuario,
-            { type: 'new_like', fromUser: userId, resenaId: resenaId, bookId: resena.libro_id }
+            {
+              type: 'new_like',
+              fromUser: userId,
+              resenaId,
+              bookId: resena.libro_id,
+              commentPreview: resena.comentario || ''
+            }
           );
         }
       }

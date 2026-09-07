@@ -8,7 +8,7 @@ require("dotenv").config();
 const {
     agregarNotificacion, getAllUsers, register, login,getUser,editarPerfil,checkEmail,checkUsername,buscarUsuario,
     crearLista,agregarLibroAListaEnLista,editarLista,eliminarLista,quitarLibroDeLista,listarSeguidores,listarSeguidos,cancelarSeguido,
-    seguirUsuario,dejarDeSeguir,marcarNotificacionesLeidas, getPublicUserById
+    seguirUsuario,dejarDeSeguir,marcarNotificacionesLeidas,eliminarNotificacion,eliminarNotificaciones, getPublicUserById
 } = require('./controller/peticionesUsuario');
 
 const { banearUsuario, eliminarComentario } = require('./controller/peticionesAdmin');
@@ -63,7 +63,7 @@ const {
     emailSchema,notificationSchema,targetIdParamSchema,listActionParamsSchema,customListBookParamsSchema,customListParamsSchema,
     recommendationParamsSchema,searchQuerySchema,userSearchQuerySchema,checkEmailQuerySchema,checkUsernameQuerySchema,
     decadeQuerySchema,followListQuerySchema,confirmEmailQuerySchema,paginationQuerySchema,idUsuarioParamSchema,
-    idLibroParamSchema,idParamSchema
+    idLibroParamSchema,idParamSchema,notificationIdParamSchema
 } = require('./schemas/busquedaSchemas');
 const { banSchema } = require('./schemas/adminSchemas');
 
@@ -209,6 +209,8 @@ server.post('/nextread/seguir/:targetId', isAuth, interactionLimiter, validatePa
 server.post('/nextread/dejar-seguir/:targetId', isAuth, interactionLimiter, validateParams(targetIdParamSchema), dejarDeSeguir);
 // Notificaciones: marcar leídas
 server.post('/nextread/notificaciones/marcar-leidas', isAuth, interactionLimiter, marcarNotificacionesLeidas);
+server.delete('/nextread/notificaciones', isAuth, interactionLimiter, eliminarNotificaciones);
+server.delete('/nextread/notificaciones/:id', isAuth, interactionLimiter, validateParams(notificationIdParamSchema), eliminarNotificacion);
 // Obtener usuario público por id (avatar, nombre)
 server.get('/nextread/user/public/:id', validateParams(idParamSchema), getPublicUserById);
 

@@ -69,7 +69,7 @@ async function agregarNotificacion(userId, mensaje, nombre = "Sistema", meta = n
 
         if (!usuario) return;
 
-        let notis = [];
+        let notis = limpiarNotificaciones(parseNotificaciones(usuario.notificaciones));
 
         // `notificaciones` is stored as JSON in the DB. Sequelize may return it already parsed
         // (as an array) or as a string depending on driver/config. Handle both cases safely.
@@ -116,6 +116,22 @@ async function agregarNotificacion(userId, mensaje, nombre = "Sistema", meta = n
     } catch (err) {
         console.log("Error guardando notificación:", err);
     }
+}
+
+const NOTIFICATION_MAX_AGE_MS = 30 * 24 * 60 * 60 * 1000;
+
+function parseNotificaciones(value) {
+    if (!value) return [];
+    if (Array.isArray(value)) return value;
+    try { return JSON.parse(value) || []; } catch { return []; }
+}
+
+function limpiarNotificaciones(notificaciones) {
+    const cutoff = Date.now() - NOTIFICATION_MAX_AGE_MS;
+    return notificaciones.filter((notification) => {
+        const timestamp = Date.parse(notification?.fecha);
+        return Number.isFinite(timestamp) && timestamp >= cutoff;
+    });
 }
 
 // ----------------- GET USERS -----------------
@@ -309,7 +325,11 @@ const getUser = async (req, res) => {
         }
 
         // ** 🔥 NUEVA LÍNEA: Parsear notificaciones de manera segura 🔥 **
-        const notificacionesArray = parseJsonArray(usuario.notificaciones);
+        const notificacionesArray = limpiarNotificaciones(parseNotificaciones(usuario.notificaciones));
+        if (notificacionesArray.length !== parseNotificaciones(usuario.notificaciones).length) {
+            usuario.notificaciones = notificacionesArray;
+            await usuario.save();
+        }
         // -------------------------------------------------------------
 
 
@@ -928,7 +948,7 @@ const seguirUsuario = async (req, res) => {
 
         // Notificar
         const remitente = await User.findByPk(remitenteId);
-        await agregarNotificacion(targetId, `${remitente.usuario} te está siguiendo.`, remitente.usuario, { type: 'follow', fromUser: remitenteId });
+        await agregarNotificacion(targetId, `${remitente.usuario} comenzó a seguirte`, remitente.usuario, { type: 'follow', fromUser: remitenteId });
 
         // Return minimal info to avoid exposing full Sequelize model
         return res.status(201).json({ message: 'Ahora sigues a este usuario', id: registro.id, estado: registro.estado });
@@ -966,13 +986,7 @@ const marcarNotificacionesLeidas = async (req, res) => {
         const usuario = await User.findByPk(userId);
         if (!usuario) return res.status(404).json({ error: 'Usuario no encontrado' });
 
-        const parseNotis = (value) => {
-            if (!value) return [];
-            if (Array.isArray(value)) return value;
-            try { return JSON.parse(value); } catch { return []; }
-        };
-
-        let notis = parseNotis(usuario.notificaciones);
+        let notis = limpiarNotificaciones(parseNotificaciones(usuario.notificaciones));
         notis = notis.map(n => ({ ...n, leido: true }));
 
         usuario.notificaciones = notis;
@@ -982,6 +996,39 @@ const marcarNotificacionesLeidas = async (req, res) => {
     } catch (err) {
         console.error('Error marcando notificaciones leidas:', err);
         return res.status(500).json({ error: 'Error en el servidor' });
+    }
+};
+
+const eliminarNotificacion = async (req, res) => {
+    try {
+        const usuario = await User.findByPk(req.user.id);
+        if (!usuario) return res.status(404).json({ error: 'Usuario no encontrado' });
+
+        const notificationId = String(req.params.id);
+        const notis = limpiarNotificaciones(parseNotificaciones(usuario.notificaciones));
+        const remaining = notis.filter((notification) => String(notification.id) !== notificationId);
+        if (remaining.length === notis.length) return res.status(404).json({ error: 'Notificación no encontrada' });
+
+        usuario.notificaciones = remaining;
+        await usuario.save();
+        return res.json({ message: 'Notificación eliminada', notificaciones: remaining });
+    } catch (err) {
+        console.error('Error eliminando notificación:', err);
+        return res.status(500).json({ error: 'Error al eliminar notificación' });
+    }
+};
+
+const eliminarNotificaciones = async (req, res) => {
+    try {
+        const usuario = await User.findByPk(req.user.id);
+        if (!usuario) return res.status(404).json({ error: 'Usuario no encontrado' });
+
+        usuario.notificaciones = [];
+        await usuario.save();
+        return res.json({ message: 'Notificaciones eliminadas', notificaciones: [] });
+    } catch (err) {
+        console.error('Error eliminando notificaciones:', err);
+        return res.status(500).json({ error: 'Error al eliminar notificaciones' });
     }
 };
 
@@ -1026,6 +1073,8 @@ module.exports = {
     seguirUsuario,
     dejarDeSeguir,
     marcarNotificacionesLeidas,
+    eliminarNotificacion,
+    eliminarNotificaciones,
     getPublicUserById
 };
 

@@ -1,4 +1,5 @@
 import React, { useEffect, useRef } from "react";
+import { X } from "lucide-react";
 import "../../pagescss/modal.css";
 
 export function Modal({ openModal, closeModal, children, extraClass = "" }) {
@@ -33,8 +34,8 @@ export function Modal({ openModal, closeModal, children, extraClass = "" }) {
       className={`modal-dialog ${extraClass}`}
       onCancel={handleClose}
     >
-      <button className="close-button" onClick={handleClose}>
-        ✕
+      <button className="close-button" onClick={handleClose} aria-label="Cerrar">
+        <X size={20} aria-hidden="true" />
       </button>
 
       {children}

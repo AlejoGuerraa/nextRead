@@ -50,7 +50,7 @@ export default function BannerPerfil({ user, onEdit, onLogout, colors = {} }) {
                     <button className="btn-logout-banner" onClick={onLogout}>
                         Desloguearse
                     </button>
-                    <div className="edit-sep" aria-hidden="true">--</div>
+                    <div className="edit-sep" aria-hidden="true"></div>
                     <button className="btn-primary small" onClick={onEdit}>
                         Editar perfil
                     </button>
