@@ -1,9 +1,7 @@
 import React, { useState } from 'react';
-import api from '../services/api';
 import { useToast } from './ToastProvider';
+import { createList } from '../services/listsService';
 import '../pagescss/modals.css';
-
-const API_BASE = '/nextread';
 
 export default function CreateListModal({ isOpen, onClose, onCreated }) {
   const [nombre, setNombre] = useState('');
@@ -13,16 +11,16 @@ export default function CreateListModal({ isOpen, onClose, onCreated }) {
   if (!isOpen) return null;
 
   const handleCreate = async () => {
-    const token = localStorage.getItem('token');
-    if (!token) { toast?.push('Debes iniciar sesión', 'error'); return; }
+    if (!localStorage.getItem('token')) { toast?.push('Debes iniciar sesión', 'error'); return; }
     if (!nombre || !nombre.trim()) return toast?.push('Ingrese un nombre válido', 'error');
+    if (nombre.trim().length > 50) return toast?.push('El nombre de la lista no puede superar los 50 caracteres', 'error');
 
     setLoading(true);
     try {
-      const res = await api.post(`${API_BASE}/listas`, { nombre });
-      toast?.push(res.data.message || 'Lista creada', 'success');
+      const data = await createList(nombre.trim());
+      toast?.push(data.message || 'Lista creada', 'success');
       setNombre('');
-      if (onCreated) onCreated(res.data.listas);
+      if (onCreated) onCreated(data.listas);
       onClose();
     } catch (err) {
       console.error('Error creando lista', err);
@@ -40,11 +38,13 @@ export default function CreateListModal({ isOpen, onClose, onCreated }) {
         <h3>Crear nueva lista</h3>
         <input 
           value={nombre} 
-          onChange={e => setNombre(e.target.value)} 
+          onChange={e => setNombre(e.target.value.slice(0, 50))}
+          maxLength={50}
           onKeyPress={handleKeyPress}
           placeholder="Nombre de la lista" 
           autoFocus
         />
+        <span className="list-name-counter">{nombre.length}/50</span>
         <div className="modal-actions">
           <button className="btn" onClick={onClose}>Cancelar</button>
           <button className="btn-primary" onClick={handleCreate} disabled={loading}>{loading ? 'Creando...' : 'Crear'}</button>

@@ -15,6 +15,7 @@ import Estadisticas from "../components/perfil/estadisticas";
 import BookList from "../components/carrouselLibros";
 import Footer from "../components/footer";
 import CrearListaModal from "../components/listasUsuario/crearListaModal";
+import ListaCard from "../components/listasUsuario/ListaCard";
 
 const COLORS = {
   primary: "#1A374D",
@@ -28,6 +29,7 @@ export default function Perfil() {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const [showCreateModal, setShowCreateModal] = useState(false);
+  const [showAllLists, setShowAllLists] = useState(false);
 
   useEffect(() => {
     const token = localStorage.getItem("token");
@@ -245,17 +247,40 @@ export default function Perfil() {
           </div>
 
           {(!user.listas || Object.keys(user.listas).length === 0) ? (
-            <div className="empty-list">No tienes listas creadas. Crea una para empezar.</div>
+            <div className="profile-lists-empty">
+              <span className="profile-lists-empty-mark" aria-hidden="true" />
+              <h4>No tienes listas creadas</h4>
+              <p>Creá una lista para organizar tus próximas lecturas.</p>
+            </div>
           ) : (
-            Object.entries(user.listas).map(([name, books]) => (
-              <div className="user-list-block" key={name}>
-                <div className="list-header">
-                  <h4>{name}</h4>
-                  <span className="list-meta">{(books || []).length} libros</span>
-                </div>
-                <BookList libros={books || []} onBookClick={(id) => handleBookCardClick(id)} />
-              </div>
-            ))
+            (() => {
+              const listEntries = Object.entries(user.listas);
+              const visibleLists = showAllLists ? listEntries : listEntries.slice(0, 6);
+
+              return (
+                <>
+                  <div className="profile-lists-grid">
+                    {visibleLists.map(([name, books]) => (
+                      <ListaCard
+                        key={name}
+                        name={name}
+                        books={books || []}
+                        onUpdated={() => refreshUser()}
+                      />
+                    ))}
+                  </div>
+                  {listEntries.length > 6 && (
+                    <button
+                      className="profile-lists-toggle"
+                      type="button"
+                      onClick={() => setShowAllLists((current) => !current)}
+                    >
+                      {showAllLists ? "Mostrar menos" : "Mostrar más"}
+                    </button>
+                  )}
+                </>
+              );
+            })()
           )}
 
 

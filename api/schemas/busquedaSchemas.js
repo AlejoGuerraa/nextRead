@@ -30,7 +30,7 @@ const targetIdParamSchema = z.object({
 }).strict();
 
 const listNameParamSchema = z.object({
-  nombre: z.string().trim().min(1).max(200),
+  nombre: z.string().trim().min(1).max(50),
 }).strict();
 
 const listActionParamsSchema = z.object({
@@ -41,6 +41,10 @@ const listActionParamsSchema = z.object({
 const customListBookParamsSchema = z.object({
   nombre: z.string().trim().min(1).max(200),
   idLibro: positiveIntId,
+}).strict();
+
+const customListParamsSchema = z.object({
+  nombre: z.string().trim().min(1).max(200),
 }).strict();
 
 const recommendationParamsSchema = z.object({
@@ -91,6 +95,7 @@ module.exports = {
   targetIdParamSchema,
   listNameParamSchema,
   listActionParamsSchema,
+  customListParamsSchema,
   customListBookParamsSchema,
   recommendationParamsSchema,
   searchQuerySchema,

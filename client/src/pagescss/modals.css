@@ -182,7 +182,11 @@
 }
 
 .list-item .cover .placeholder {
-    font-size: 48px;
+    width: 28px;
+    height: 34px;
+    border: 2px solid #8eafb9;
+    border-radius: 3px 6px 6px 3px;
+    opacity: 0.7;
 }
 
 /* Metadatos del item */
@@ -217,6 +221,14 @@
     color: #999;
     padding: 40px 20px;
     font-size: 14px;
+}
+
+.modal-card .list-name-counter {
+    display: block;
+    margin-top: 5px;
+    color: #71858d;
+    font-size: 12px;
+    text-align: right;
 }
 
 /* Mensajes de estado */

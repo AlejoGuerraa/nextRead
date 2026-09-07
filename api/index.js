@@ -7,7 +7,7 @@ require("dotenv").config();
 // ---------------------- CONTROLLERS ----------------------
 const {
     agregarNotificacion, getAllUsers, register, login,getUser,editarPerfil,checkEmail,checkUsername,buscarUsuario,
-    crearLista,agregarLibroAListaEnLista,listarSeguidores,listarSeguidos,cancelarSeguido,
+    crearLista,agregarLibroAListaEnLista,editarLista,eliminarLista,quitarLibroDeLista,listarSeguidores,listarSeguidos,cancelarSeguido,
     seguirUsuario,dejarDeSeguir,marcarNotificacionesLeidas, getPublicUserById
 } = require('./controller/peticionesUsuario');
 
@@ -56,11 +56,11 @@ const {
 
 // Schemas
 const { registerSchema, loginSchema } = require('./schemas/authSchemas');
-const { editarPerfilSchema, changePasswordSchema, changeEmailRequestSchema, deleteAccountConfirmSchema, crearListaSchema } = require('./schemas/userSchemas');
+const { editarPerfilSchema, changePasswordSchema, changeEmailRequestSchema, deleteAccountConfirmSchema, crearListaSchema, editarListaSchema } = require('./schemas/userSchemas');
 const { guardarPuntuacionSchema } = require('./schemas/bookSchemas');
 const { forgotPasswordSchema, resetPasswordSchema } = require('./schemas/recoverySchemas');
 const {
-    emailSchema,notificationSchema,targetIdParamSchema,listActionParamsSchema,customListBookParamsSchema,
+    emailSchema,notificationSchema,targetIdParamSchema,listActionParamsSchema,customListBookParamsSchema,customListParamsSchema,
     recommendationParamsSchema,searchQuerySchema,userSearchQuerySchema,checkEmailQuerySchema,checkUsernameQuerySchema,
     decadeQuerySchema,followListQuerySchema,confirmEmailQuerySchema,paginationQuerySchema,idUsuarioParamSchema,
     idLibroParamSchema,idParamSchema
@@ -263,6 +263,9 @@ server.get('/nextread/resenas/:idLibro', validateParams(idLibroParamSchema), obt
 // Listas personalizadas
 server.post('/nextread/listas', isAuth, interactionLimiter, validateBody(crearListaSchema), crearLista);
 server.post('/nextread/listas/:nombre/libro/:idLibro', isAuth, interactionLimiter, validateParams(customListBookParamsSchema), agregarLibroAListaEnLista);
+server.patch('/nextread/listas/:nombre', isAuth, interactionLimiter, validateParams(customListParamsSchema), validateBody(editarListaSchema), editarLista);
+server.delete('/nextread/listas/:nombre', isAuth, interactionLimiter, validateParams(customListParamsSchema), eliminarLista);
+server.delete('/nextread/listas/:nombre/libro/:idLibro', isAuth, interactionLimiter, validateParams(customListBookParamsSchema), quitarLibroDeLista);
 
 // ---------------------- RECOVERY ----------------------
 server.post('/api/forgot-password', sensitiveLimiter, validateBody(forgotPasswordSchema), enviarEnlaceRecuperacion);

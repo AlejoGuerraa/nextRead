@@ -32,7 +32,11 @@ const deleteAccountConfirmSchema = z.object({
 }).strict();
 
 const crearListaSchema = z.object({
-  nombre: z.string().trim().min(1).max(200),
+  nombre: z.string().trim().min(1).max(50, 'El nombre de la lista no puede superar los 50 caracteres'),
+}).strict();
+
+const editarListaSchema = z.object({
+  nombre: z.string().trim().min(1).max(50, 'El nombre de la lista no puede superar los 50 caracteres'),
 }).strict();
 
 module.exports = {
@@ -41,4 +45,5 @@ module.exports = {
   changeEmailRequestSchema,
   deleteAccountConfirmSchema,
   crearListaSchema,
+  editarListaSchema,
 };

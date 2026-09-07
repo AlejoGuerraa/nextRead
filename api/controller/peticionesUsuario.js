@@ -582,7 +582,7 @@ const crearLista = async (req, res) => {
             return res.status(400).json({ error: 'Nombre de lista inválido' });
         }
         // Limitar largo del nombre de lista por seguridad (DoS / tamaño)
-        if (nombre.length > 200) return res.status(400).json({ error: 'Nombre de lista demasiado largo' });
+        if (nombre.length > 50) return res.status(400).json({ error: 'El nombre de la lista no puede superar los 50 caracteres' });
 
         const usuario = await User.findByPk(userId);
         if (!usuario) return res.status(404).json({ error: 'Usuario no encontrado' });
@@ -619,7 +619,7 @@ const agregarLibroAListaEnLista = async (req, res) => {
         const idNum = Number(idLibro);
 
         if (!nombre) return res.status(400).json({ error: 'Falta el nombre de la lista' });
-        if (typeof nombre === 'string' && nombre.length > 200) return res.status(400).json({ error: 'Nombre de lista demasiado largo' });
+        if (typeof nombre === 'string' && nombre.length > 50) return res.status(400).json({ error: 'El nombre de la lista no puede superar los 50 caracteres' });
         if (Number.isNaN(idNum)) return res.status(400).json({ error: 'ID de libro inválido' });
 
         const usuario = await User.findByPk(userId);
@@ -652,10 +652,78 @@ const agregarLibroAListaEnLista = async (req, res) => {
         usuario.listas = listasObj;
         await usuario.save();
 
-        return res.json({ message: 'Libro agregado a la lista', lista: listasObj[key] });
+        return res.json({ message: 'Libro agregado a la lista', lista: listasObj[key], listas: listasObj });
     } catch (error) {
         console.error('Error en agregarLibroAListaEnLista:', error);
         return res.status(500).json({ error: 'Error al agregar libro a la lista' });
+    }
+};
+
+const editarLista = async (req, res) => {
+    try {
+        const usuario = await User.findByPk(req.user.id);
+        if (!usuario) return res.status(404).json({ error: 'Usuario no encontrado' });
+
+        const oldName = req.params.nombre.trim();
+        const newName = req.body.nombre.trim();
+        let listasObj = typeof usuario.listas === 'string' ? JSON.parse(usuario.listas || '{}') : (usuario.listas || {});
+
+        if (!Object.prototype.hasOwnProperty.call(listasObj, oldName)) return res.status(404).json({ error: 'Lista no encontrada' });
+        if (oldName !== newName && Object.prototype.hasOwnProperty.call(listasObj, newName)) return res.status(400).json({ error: 'Ya existe una lista con ese nombre' });
+
+        if (oldName !== newName) {
+            listasObj[newName] = listasObj[oldName];
+            delete listasObj[oldName];
+            usuario.listas = listasObj;
+            await usuario.save();
+        }
+
+        return res.json({ message: 'Lista actualizada correctamente', listas: listasObj });
+    } catch (error) {
+        console.error('Error en editarLista:', error);
+        return res.status(500).json({ error: 'Error al editar la lista' });
+    }
+};
+
+const eliminarLista = async (req, res) => {
+    try {
+        const usuario = await User.findByPk(req.user.id);
+        if (!usuario) return res.status(404).json({ error: 'Usuario no encontrado' });
+
+        const name = req.params.nombre.trim();
+        let listasObj = typeof usuario.listas === 'string' ? JSON.parse(usuario.listas || '{}') : (usuario.listas || {});
+        if (!Object.prototype.hasOwnProperty.call(listasObj, name)) return res.status(404).json({ error: 'Lista no encontrada' });
+
+        delete listasObj[name];
+        usuario.listas = listasObj;
+        await usuario.save();
+        return res.json({ message: 'Lista eliminada correctamente', listas: listasObj });
+    } catch (error) {
+        console.error('Error en eliminarLista:', error);
+        return res.status(500).json({ error: 'Error al eliminar la lista' });
+    }
+};
+
+const quitarLibroDeLista = async (req, res) => {
+    try {
+        const usuario = await User.findByPk(req.user.id);
+        if (!usuario) return res.status(404).json({ error: 'Usuario no encontrado' });
+
+        const name = req.params.nombre.trim();
+        const bookId = Number(req.params.idLibro);
+        let listasObj = typeof usuario.listas === 'string' ? JSON.parse(usuario.listas || '{}') : (usuario.listas || {});
+        if (!Object.prototype.hasOwnProperty.call(listasObj, name)) return res.status(404).json({ error: 'Lista no encontrada' });
+
+        const books = Array.isArray(listasObj[name]) ? listasObj[name].map(Number).filter(Number.isInteger) : [];
+        if (!books.includes(bookId)) return res.status(404).json({ error: 'El libro no está en la lista' });
+
+        listasObj[name] = books.filter((id) => id !== bookId);
+        usuario.listas = listasObj;
+        await usuario.save();
+        return res.json({ message: 'Libro quitado de la lista', listas: listasObj });
+    } catch (error) {
+        console.error('Error en quitarLibroDeLista:', error);
+        return res.status(500).json({ error: 'Error al quitar el libro de la lista' });
     }
 };
 
@@ -949,6 +1017,9 @@ module.exports = {
     checkUsername,
     crearLista,
     agregarLibroAListaEnLista,
+    editarLista,
+    eliminarLista,
+    quitarLibroDeLista,
     listarSeguidores,
     listarSeguidos,
     cancelarSeguido,
