@@ -5,6 +5,7 @@ import '../../pagescss/modals.css';
 
 export default function CrearListaModal({ isOpen, onClose, onCreated }) {
   const [nombre, setNombre] = useState('');
+  const [isPrivate, setIsPrivate] = useState(false);
   const [loading, setLoading] = useState(false);
   const toast = useToast();
 
@@ -17,9 +18,10 @@ export default function CrearListaModal({ isOpen, onClose, onCreated }) {
 
     setLoading(true);
     try {
-      const data = await createList(nombre.trim());
+      const data = await createList(nombre.trim(), isPrivate);
       toast?.push(data.message || 'Lista creada', 'success');
       setNombre('');
+      setIsPrivate(false);
       if (onCreated) onCreated(data.listas);
       onClose();
     } catch (err) {
@@ -45,6 +47,11 @@ export default function CrearListaModal({ isOpen, onClose, onCreated }) {
           autoFocus
         />
         <span className="list-name-counter">{nombre.length}/50</span>
+        <label className="list-privacy-switch">
+          <input type="checkbox" checked={isPrivate} onChange={(event) => setIsPrivate(event.target.checked)} aria-label="Hacer lista privada" />
+          <span className="list-privacy-slider" aria-hidden="true" />
+          <span>Privada</span>
+        </label>
         <div className="modal-actions">
           <button className="btn" onClick={onClose}>Cancelar</button>
           <button className="btn-primary" onClick={handleCreate} disabled={loading}>{loading ? 'Creando...' : 'Crear'}</button>

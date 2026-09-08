@@ -1,12 +1,12 @@
 import React, { useState } from 'react';
-import { MoreVertical, Pencil, Trash2 } from 'lucide-react';
+import { MoreVertical, Pencil, Trash2, Eye, EyeOff } from 'lucide-react';
 import { useToast } from '../ToastProvider';
-import { deleteList, renameList } from '../../services/listsService';
+import { deleteList, renameList, updateListVisibility } from '../../services/listsService';
 import ListaDetalleModal from './ListaDetalleModal';
 
 const getBookCover = (book) => book?.url_portada || book?.cover || book?.imagen || null;
 
-export default function ListaCard({ name, books = [], onUpdated }) {
+export default function ListaCard({ name, books = [], isPrivate = false, onUpdated }) {
   const toast = useToast();
   const [menuOpen, setMenuOpen] = useState(false);
   const [detailOpen, setDetailOpen] = useState(false);
@@ -14,6 +14,7 @@ export default function ListaCard({ name, books = [], onUpdated }) {
   const [nextName, setNextName] = useState(name);
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [privateState, setPrivateState] = useState(isPrivate);
 
   const updateLists = (lists) => onUpdated?.(lists);
 
@@ -61,6 +62,20 @@ export default function ListaCard({ name, books = [], onUpdated }) {
     }
   };
 
+  const handleVisibility = async () => {
+    const nextValue = !privateState;
+    setLoading(true);
+    try {
+      const data = await updateListVisibility(name, nextValue);
+      setPrivateState(nextValue);
+      updateLists(data.listas);
+      setMenuOpen(false);
+      toast?.push(nextValue ? 'Lista privada' : 'Lista pública', 'success');
+    } catch (error) {
+      toast?.push(error.response?.data?.error || 'No se pudo cambiar la visibilidad', 'error');
+    } finally { setLoading(false); }
+  };
+
   return (
     <>
       <article className="profile-list-card" onClick={() => setDetailOpen(true)}>
@@ -79,6 +94,9 @@ export default function ListaCard({ name, books = [], onUpdated }) {
             <div className="profile-list-menu" role="menu">
               <button type="button" role="menuitem" onClick={() => { setNextName(name); setEditOpen(true); setMenuOpen(false); }}>
                 <Pencil size={16} aria-hidden="true" /> Cambiar nombre
+              </button>
+              <button type="button" role="menuitem" onClick={handleVisibility} disabled={loading}>
+                {privateState ? <Eye size={16} aria-hidden="true" /> : <EyeOff size={16} aria-hidden="true" />} Cambiar visibilidad
               </button>
               {confirmDelete ? (
                 <div className="profile-list-delete-confirm">

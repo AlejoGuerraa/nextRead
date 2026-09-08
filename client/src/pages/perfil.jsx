@@ -260,11 +260,12 @@ export default function Perfil() {
               return (
                 <>
                   <div className="profile-lists-grid">
-                    {visibleLists.map(([name, books]) => (
+                    {visibleLists.map(([name, list]) => (
                       <ListaCard
                         key={name}
                         name={name}
-                        books={books || []}
+                        books={list?.libros || list || []}
+                        isPrivate={list?.isPrivate === true}
                         onUpdated={() => refreshUser()}
                       />
                     ))}

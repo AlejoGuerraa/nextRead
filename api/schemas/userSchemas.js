@@ -33,10 +33,12 @@ const deleteAccountConfirmSchema = z.object({
 
 const crearListaSchema = z.object({
   nombre: z.string().trim().min(1).max(50, 'El nombre de la lista no puede superar los 50 caracteres'),
+  isPrivate: z.boolean().optional().default(false),
 }).strict();
 
 const editarListaSchema = z.object({
   nombre: z.string().trim().min(1).max(50, 'El nombre de la lista no puede superar los 50 caracteres'),
+  isPrivate: z.boolean().optional(),
 }).strict();
 
 module.exports = {

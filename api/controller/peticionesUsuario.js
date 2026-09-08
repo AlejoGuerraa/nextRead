@@ -40,6 +40,26 @@ function parseIdArray(value) {
     return arr.map(id => Number(id)).filter(n => Number.isInteger(n));
 }
 
+function parseLists(value) {
+    let lists = value;
+    if (typeof lists === 'string') {
+        try { lists = JSON.parse(lists); } catch { lists = {}; }
+    }
+    if (!lists || typeof lists !== 'object' || Array.isArray(lists)) return {};
+
+    return Object.fromEntries(Object.entries(lists).map(([name, entry]) => {
+        const books = Array.isArray(entry) ? entry : entry?.libros;
+        return [name, {
+            libros: Array.isArray(books) ? books.map(Number).filter(Number.isInteger) : [],
+            isPrivate: entry && !Array.isArray(entry) ? entry.isPrivate === true : false,
+        }];
+    }));
+}
+
+function hasDifferentListShape(value, normalized) {
+    return JSON.stringify(value) !== JSON.stringify(normalized);
+}
+
 function isValidEmail(email) {
     if (!email || typeof email !== 'string') return false;
     return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
@@ -339,18 +359,14 @@ const getUser = async (req, res) => {
         const librosLeidosIDs = parseJsonArray(usuario.libros_leidos);
 
         // Parsear listas (puede venir como string JSON o como objeto)
-        let listasObj = {};
-        // ... (resto de la lógica de listas, que parece estar bien)
-        if (usuario.listas) {
-             if (typeof usuario.listas === 'string') {
-                try { listasObj = JSON.parse(usuario.listas) || {}; } catch { listasObj = {}; }
-            } else if (typeof usuario.listas === 'object' && usuario.listas !== null) {
-                listasObj = usuario.listas;
-            }
+        const listasObj = parseLists(usuario.listas);
+        if (hasDifferentListShape(usuario.listas, listasObj)) {
+            usuario.listas = listasObj;
+            await usuario.save();
         }
 
         // Obtener todos los IDs que necesitamos cargar de la BD
-        const idsFromListas = Object.values(listasObj).flat().map(x => Number(x)).filter(n => !Number.isNaN(n));
+        const idsFromListas = Object.values(listasObj).flatMap((list) => list.libros).map(x => Number(x)).filter(n => !Number.isNaN(n));
 
         const todosLosIDs = [
             ...librosEnLecturaIDs,
@@ -404,13 +420,15 @@ const getUser = async (req, res) => {
         // Mapear listas a objetos de libro (si hay datos cargados)
         const listasMapeadas = {};
         // ... (lógica de mapeo de listas)
-        for (const [nombre, arr] of Object.entries(listasObj)) {
-            if (!Array.isArray(arr)) continue;
-            listasMapeadas[nombre] = arr
+        for (const [nombre, list] of Object.entries(listasObj)) {
+            listasMapeadas[nombre] = {
+                libros: list.libros
                 .map(id => Number(id))
                 .filter(n => !Number.isNaN(n))
                 .map(id => librosMap[id])
-                .filter(Boolean);
+                .filter(Boolean),
+                isPrivate: list.isPrivate,
+            };
         }
 
         const usuarioData = {
@@ -596,7 +614,7 @@ const checkUsername = async (req, res) => {
 const crearLista = async (req, res) => {
     try {
         const userId = req.user.id;
-        const { nombre } = req.body;
+        const { nombre, isPrivate = false } = req.body;
 
         if (!nombre || typeof nombre !== 'string' || !nombre.trim()) {
             return res.status(400).json({ error: 'Nombre de lista inválido' });
@@ -607,21 +625,14 @@ const crearLista = async (req, res) => {
         const usuario = await User.findByPk(userId);
         if (!usuario) return res.status(404).json({ error: 'Usuario no encontrado' });
 
-        let listasObj = {};
-        if (usuario.listas) {
-            if (typeof usuario.listas === 'string') {
-                try { listasObj = JSON.parse(usuario.listas) || {}; } catch { listasObj = {}; }
-            } else if (typeof usuario.listas === 'object' && usuario.listas !== null) {
-                listasObj = usuario.listas;
-            }
-        }
+        const listasObj = parseLists(usuario.listas);
 
         const key = nombre.trim();
         if (listasObj[key]) {
             return res.status(400).json({ error: 'Ya existe una lista con ese nombre' });
         }
 
-        listasObj[key] = [];
+        listasObj[key] = { libros: [], isPrivate };
         usuario.listas = listasObj;
         await usuario.save();
 
@@ -645,20 +656,13 @@ const agregarLibroAListaEnLista = async (req, res) => {
         const usuario = await User.findByPk(userId);
         if (!usuario) return res.status(404).json({ error: 'Usuario no encontrado' });
 
-        let listasObj = {};
-        if (usuario.listas) {
-            if (typeof usuario.listas === 'string') {
-                try { listasObj = JSON.parse(usuario.listas) || {}; } catch { listasObj = {}; }
-            } else if (typeof usuario.listas === 'object' && usuario.listas !== null) {
-                listasObj = usuario.listas;
-            }
-        }
+        const listasObj = parseLists(usuario.listas);
 
         const key = nombre.trim();
         if (!listasObj[key]) return res.status(404).json({ error: 'Lista no encontrada' });
 
         // Normalizar el array de IDs
-        const arr = Array.isArray(listasObj[key]) ? listasObj[key].map(x => Number(x)).filter(n => !Number.isNaN(n)) : [];
+        const arr = listasObj[key].libros;
 
         // Verificar que el libro exista antes de agregar
         const libroExistente = await Libro.findByPk(idNum);
@@ -667,7 +671,7 @@ const agregarLibroAListaEnLista = async (req, res) => {
         if (arr.includes(idNum)) return res.status(400).json({ message: 'El libro ya está en la lista' });
 
         arr.push(idNum);
-        listasObj[key] = Array.from(new Set(arr));
+        listasObj[key].libros = Array.from(new Set(arr));
 
         usuario.listas = listasObj;
         await usuario.save();
@@ -686,7 +690,7 @@ const editarLista = async (req, res) => {
 
         const oldName = req.params.nombre.trim();
         const newName = req.body.nombre.trim();
-        let listasObj = typeof usuario.listas === 'string' ? JSON.parse(usuario.listas || '{}') : (usuario.listas || {});
+        const listasObj = parseLists(usuario.listas);
 
         if (!Object.prototype.hasOwnProperty.call(listasObj, oldName)) return res.status(404).json({ error: 'Lista no encontrada' });
         if (oldName !== newName && Object.prototype.hasOwnProperty.call(listasObj, newName)) return res.status(400).json({ error: 'Ya existe una lista con ese nombre' });
@@ -694,9 +698,13 @@ const editarLista = async (req, res) => {
         if (oldName !== newName) {
             listasObj[newName] = listasObj[oldName];
             delete listasObj[oldName];
-            usuario.listas = listasObj;
-            await usuario.save();
         }
+
+        if (req.body.isPrivate !== undefined) {
+            listasObj[newName].isPrivate = req.body.isPrivate;
+        }
+        usuario.listas = listasObj;
+        await usuario.save();
 
         return res.json({ message: 'Lista actualizada correctamente', listas: listasObj });
     } catch (error) {
@@ -711,7 +719,7 @@ const eliminarLista = async (req, res) => {
         if (!usuario) return res.status(404).json({ error: 'Usuario no encontrado' });
 
         const name = req.params.nombre.trim();
-        let listasObj = typeof usuario.listas === 'string' ? JSON.parse(usuario.listas || '{}') : (usuario.listas || {});
+        const listasObj = parseLists(usuario.listas);
         if (!Object.prototype.hasOwnProperty.call(listasObj, name)) return res.status(404).json({ error: 'Lista no encontrada' });
 
         delete listasObj[name];
@@ -731,13 +739,13 @@ const quitarLibroDeLista = async (req, res) => {
 
         const name = req.params.nombre.trim();
         const bookId = Number(req.params.idLibro);
-        let listasObj = typeof usuario.listas === 'string' ? JSON.parse(usuario.listas || '{}') : (usuario.listas || {});
+        const listasObj = parseLists(usuario.listas);
         if (!Object.prototype.hasOwnProperty.call(listasObj, name)) return res.status(404).json({ error: 'Lista no encontrada' });
 
-        const books = Array.isArray(listasObj[name]) ? listasObj[name].map(Number).filter(Number.isInteger) : [];
+        const books = listasObj[name].libros;
         if (!books.includes(bookId)) return res.status(404).json({ error: 'El libro no está en la lista' });
 
-        listasObj[name] = books.filter((id) => id !== bookId);
+        listasObj[name].libros = books.filter((id) => id !== bookId);
         usuario.listas = listasObj;
         await usuario.save();
         return res.json({ message: 'Libro quitado de la lista', listas: listasObj });
@@ -771,7 +779,7 @@ const buscarUsuario = async (req, res) => {
             attributes: [
                 'id', 'nombre', 'apellido', 'usuario', 'idIcono', 'idBanner',
                 'descripcion', 'autor_preferido', 'genero_preferido', 'titulo_preferido',
-                'iconos_obtenidos', 'banners_obtenidos', 'libros_leidos'
+                'iconos_obtenidos', 'banners_obtenidos', 'libros_leidos', 'listas'
             ],
             include: [
                 { model: Icono, as: 'iconoData', attributes: ['simbolo'] },
@@ -796,13 +804,60 @@ const buscarUsuario = async (req, res) => {
                     try { librosLeidos = JSON.parse(librosLeidos); } catch { librosLeidos = []; }
                 }
                 usuarioJSON.librosLeidos = Array.isArray(librosLeidos) ? librosLeidos.length : 0;
-                delete usuarioJSON.libros_leidos;
+                const readBookIds = Array.isArray(librosLeidos) ? librosLeidos.map(Number).filter(Number.isInteger) : [];
+                const readBooks = readBookIds.length > 0
+                    ? await Libro.findAll({
+                        where: { id: readBookIds },
+                        attributes: ['id', 'titulo', 'url_portada', 'ranking', 'id_autor'],
+                        include: [{
+                            model: Resena,
+                            as: 'Resenas',
+                            required: false,
+                            where: { usuario_id: u.id, activo: 1 },
+                            attributes: ['puntuacion']
+                        }]
+                    })
+                    : [];
+                usuarioJSON.libros_leidos = readBooks.map((book) => {
+                    const data = book.toJSON();
+                    return {
+                        ...data,
+                        puntuacion_usuario: data.Resenas?.[0]?.puntuacion ?? null,
+                    };
+                });
+                const userRatings = usuarioJSON.libros_leidos
+                    .map((book) => Number(book.puntuacion_usuario))
+                    .filter((value) => Number.isFinite(value));
+                usuarioJSON.ratingPromedio = userRatings.length > 0
+                    ? Math.round((userRatings.reduce((sum, value) => sum + value, 0) / userRatings.length) * 10) / 10
+                    : null;
+                usuarioJSON.cantidadResenas = userRatings.length;
+
+                const publicLists = parseLists(u.listas);
+                const publicListEntries = Object.entries(publicLists).filter(([, list]) => !list.isPrivate);
+                const listBookIds = publicListEntries.flatMap(([, list]) => list.libros);
+                const listBooks = listBookIds.length > 0
+                    ? await Libro.findAll({ where: { id: listBookIds }, attributes: ['id', 'titulo', 'url_portada'] })
+                    : [];
+                const booksById = new Map(listBooks.map((book) => [Number(book.id), book.toJSON()]));
+                usuarioJSON.listas = publicListEntries.map(([name, list]) => ({
+                    id: `${u.id}-${name}`,
+                    nombre: name,
+                    totalLibros: list.libros.length,
+                    libros: list.libros.map((bookId) => booksById.get(Number(bookId))).filter(Boolean),
+                    portadas: list.libros.map((bookId) => booksById.get(Number(bookId))?.url_portada).filter(Boolean).slice(0, 3),
+                    isPrivate: false,
+                }));
                 
             } catch (e) {
                 console.error('Error calculando contadores:', e);
                 usuarioJSON.siguiendo = 0;
                 usuarioJSON.seguidores = 0;
                 usuarioJSON.librosLeidos = 0;
+                usuarioJSON.libros_leidos = [];
+                usuarioJSON.ratingPromedio = null;
+                usuarioJSON.cantidadResenas = 0;
+                usuarioJSON.listas = [];
             }
             return usuarioJSON;
         }));

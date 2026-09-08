@@ -70,7 +70,9 @@ export default function ChooseListModal({ isOpen, onClose, listas = {}, bookId, 
           <div className="empty">No tienes listas aún. Crea una desde tu perfil.</div>
         ) : (
           <div className="lists-grid">
-            {Object.entries(listas).map(([name, books]) => (
+            {Object.entries(listas).map(([name, list]) => {
+              const books = list?.libros || list || [];
+              return (
               <div key={name} className="list-item">
                 <div className="cover">
                   {books && books.length > 0 && books[0].url_portada ? (
@@ -89,7 +91,8 @@ export default function ChooseListModal({ isOpen, onClose, listas = {}, bookId, 
                   )}
                 </div>
               </div>
-            ))}
+              );
+            })}
           </div>
         )}
         <button className="btn-primary" type="button" onClick={() => setShowCreate(true)}>Crear nueva lista</button>

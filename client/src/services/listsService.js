@@ -1,7 +1,7 @@
 import api from './api';
 
-export const createList = async (nombre) => {
-  const response = await api.post('/nextread/listas', { nombre });
+export const createList = async (nombre, isPrivate = false) => {
+  const response = await api.post('/nextread/listas', { nombre, isPrivate });
   return response.data;
 };
 
@@ -12,6 +12,11 @@ export const addBookToList = async (listName, bookId) => {
 
 export const renameList = async (listName, newName) => {
   const response = await api.patch(`/nextread/listas/${encodeURIComponent(listName)}`, { nombre: newName });
+  return response.data;
+};
+
+export const updateListVisibility = async (listName, isPrivate) => {
+  const response = await api.patch(`/nextread/listas/${encodeURIComponent(listName)}`, { nombre: listName, isPrivate });
   return response.data;
 };
 

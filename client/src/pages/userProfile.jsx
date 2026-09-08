@@ -1,295 +1,119 @@
-// src/pages/UserProfile.jsx
-import React, { useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
+import React, { useEffect, useRef, useState } from "react";
+import { ArrowLeft, ArrowRight, BookOpen, Eye, Star, Users, X } from "lucide-react";
+import { useNavigate, useParams } from "react-router-dom";
 import Header from "../components/header";
+import Footer from "../components/footer";
 import { searchUsersByUsername, getUserFollowers, followUser, unfollowUser } from "../services/usersService";
 import { useToast } from "../components/ToastProvider";
 import "../pagescss/userProfile.css";
 
+const DEFAULT_BANNER = "https://images.unsplash.com/photo-1507842217343-583bb7270b66";
+const getAssetUrl = (value, fallback) => {
+  if (typeof value !== "string" || !value.trim()) return fallback;
+  return value.startsWith("/") || value.startsWith("http") ? value : `/${value}`;
+};
+const getBookId = (book) => book?.id || book?.id_libro || book?.book_id || null;
+const getBookCover = (book) => book?.url_portada || book?.cover || book?.imagen || null;
+
 export default function UserProfile() {
   const { username } = useParams();
+  const navigate = useNavigate();
+  const { push } = useToast();
+  const readBooksRef = useRef(null);
   const [user, setUser] = useState(null);
-  const [listas, setListas] = useState([]);
+  const [lists, setLists] = useState([]);
   const [isFollowing, setIsFollowing] = useState(false);
+  const [selectedList, setSelectedList] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const { push } = useToast();
 
-  // --------------------------------------
-  // CARGAR USUARIO
-  // --------------------------------------
   useEffect(() => {
-    async function fetchUser() {
+    let active = true;
+    const fetchUser = async () => {
+      setLoading(true);
       try {
         const data = await searchUsersByUsername(username);
-
-        if (!data.results || data.results.length === 0) throw new Error("Usuario no encontrado");
-
-        if (!data.results || data.results.length === 0)
-          throw new Error("Usuario no encontrado");
-
-        const exactUser = data.results.find((u) => u.usuario === username);
+        const exactUser = data.results?.find((item) => item.usuario === username);
         if (!exactUser) throw new Error("Usuario no encontrado");
-
+        const token = localStorage.getItem("token");
+        const currentUser = JSON.parse(localStorage.getItem("user") || "{}");
+        let following = false;
+        if (token && currentUser.id) {
+          const followersData = await getUserFollowers(exactUser.id);
+          following = followersData.seguidores?.some((item) => Number(item.usuario?.id) === Number(currentUser.id)) || false;
+        }
+        if (!active) return;
         setUser(exactUser);
-        setLoading(false);
-
-        fetchListas(exactUser.id);
-        fetchFollowState(exactUser.id);
-      } catch (err) {
-        setError(err.message);
-        setLoading(false);
+        setLists(Array.isArray(exactUser.listas) ? exactUser.listas : []);
+        setIsFollowing(following);
+        setError(null);
+      } catch (fetchError) {
+        if (active) setError(fetchError.message || "No se pudo cargar el perfil");
+      } finally {
+        if (active) setLoading(false);
       }
-    }
-
+    };
     fetchUser();
+    return () => { active = false; };
   }, [username]);
 
-  // Actualizar listas cuando user se carga
-  useEffect(() => {
-    if (user) {
-      let listasData = user.listas;
-      if (typeof listasData === 'string') {
-        try { listasData = JSON.parse(listasData); } catch { listasData = []; }
-      }
-      const listasArray = Array.isArray(listasData) ? listasData : [];
-      console.log("Listas del usuario:", listasArray);
-      setListas(listasArray);
-    } else {
-      setListas([]);
-    }
-  }, [user]);
-
-  // --------------------------------------
-  // CARGAR LISTAS DEL USUARIO
-  // (Las listas están dentro del objeto usuario desde buscarUsuario)
-  // --------------------------------------
-  const fetchListas = async (idUser) => {
-    // Esta función ya no se usa, las listas se cargan directamente del user
-    // Se mantiene por compatibilidad
-  };
-
-  // --------------------------------------
-  // Verificar si sigo al usuario (GET endpoint)
-  const fetchFollowState = async (idUser) => {
-    try {
-      const token = localStorage.getItem('token');
-      const currentUser = JSON.parse(localStorage.getItem('user') || '{}');
-      
-      if (!token || !currentUser.id) {
-        setIsFollowing(false);
-        return;
-      }
-      
-      // Traer los seguidores de idUser y ver si currentUser está en la lista
-      const data = await getUserFollowers(idUser);
-      
-      // Si currentUser está en la lista de seguidores, significa que currentUser sigue a idUser
-      const siguiendo = data.seguidores && data.seguidores.some(s => s.usuario.id === currentUser.id);
-      setIsFollowing(siguiendo);
-    } catch (err) {
-      console.log("Error follow state:", err);
-      setIsFollowing(false);
-    }
-  };
-
-  // --------------------------------------
-  // SEGUIR / DEJAR DE SEGUIR
-  // --------------------------------------
   const toggleFollow = async () => {
     if (!user) return;
-
-    const token = localStorage.getItem('token');
-    if (!token) {
-      push('Debes iniciar sesión para seguir a usuarios', 'error');
+    if (!localStorage.getItem("token")) {
+      push("Debes iniciar sesión para seguir a usuarios", "error");
       return;
     }
-
     try {
-      if (isFollowing) {
-        await unfollowUser(user.id);
-      } else {
-        await followUser(user.id);
-      }
-
-      // Actualizar UI inmediatamente
-      const newFollowState = !isFollowing;
-      setIsFollowing(newFollowState);
-        
-        // Actualizar contadores del perfil que se está viendo
-        const diffFollowers = newFollowState ? 1 : -1;
-        setUser(prev => ({
-          ...prev,
-          seguidores: (prev.seguidores || 0) + diffFollowers
-        }));
-        
-        // Actualizar contador de "siguiendo" del usuario actual en localStorage
-        const currentUser = JSON.parse(localStorage.getItem('user') || '{}');
-        if (currentUser.id) {
-          const diffFollowing = newFollowState ? 1 : -1;
-          currentUser.siguiendo = (currentUser.siguiendo || 0) + diffFollowing;
-          localStorage.setItem('user', JSON.stringify(currentUser));
-        }
-    } catch (err) {
-      console.log("Error follow:", err);
-      push('Error al cambiar seguimiento', 'error');
+      if (isFollowing) await unfollowUser(user.id);
+      else await followUser(user.id);
+      setIsFollowing((current) => !current);
+      setUser((current) => ({ ...current, seguidores: Math.max(0, (current.seguidores || 0) + (isFollowing ? -1 : 1)) }));
+    } catch (followError) {
+      push(followError.response?.data?.error || "No se pudo actualizar el seguimiento", "error");
     }
   };
 
-  // --------------------------------------
-  if (loading) return <p>Cargando perfil...</p>;
-  if (error) return <p>Error: {error}</p>;
-  if (!user) return <p>Usuario no encontrado.</p>;
+  const scrollBooks = (direction) => readBooksRef.current?.scrollBy({ left: direction * 420, behavior: "smooth" });
+  if (loading) return <div className="public-profile-state">Cargando perfil...</div>;
+  if (error) return <div className="public-profile-state public-profile-state--error">{error}</div>;
+  if (!user) return <div className="public-profile-state">Usuario no encontrado.</div>;
 
-  return (
-    <>
-      <Header />
+  const avatar = getAssetUrl(user.iconoData?.simbolo, "/iconos/LogoDefault1.jpg");
+  const banner = getAssetUrl(user.bannerData?.url, DEFAULT_BANNER);
+  const readBooks = Array.isArray(user.libros_leidos) ? user.libros_leidos : [];
+  const preferences = [["Autor preferido", user.autor_preferido], ["Género preferido", user.genero_preferido], ["Título preferido", user.titulo_preferido]].filter(([, value]) => typeof value === "string" && value.trim());
 
-      <div className="userprofile-container">
-        <div className="userprofile-card">
-
-          {/* -------- BANNER -------- */}
-          <img
-            className="userprofile-banner"
-            src={
-              user?.bannerData?.url ||
-              "https://images.unsplash.com/photo-1507842217343-583bb7270b66"
-            }
-            alt="banner"
-          />
-
-          {/* -------- AVATAR -------- */}
-          <img
-            className="userprofile-avatar"
-            src={user?.iconoData?.simbolo || "https://i.imgur.com/6VBx3io.png"}
-            alt="avatar"
-          />
-
-          {/* -------- NOMBRE Y BOTÓN -------- */}
-          <h2 className="userprofile-username">@{user.usuario}</h2>
-
-          <button
-            onClick={toggleFollow}
-            className={isFollowing ? "follow-btn unfollow" : "follow-btn"}
-          >
-            {isFollowing ? "Dejar de seguir" : "Seguir"}
-          </button>
-
-          {/* -------- BIO -------- */}
-          <p className="userprofile-bio">
-            {user.descripcion || "Este usuario aún no escribió su biografía."}
-          </p>
-
-          {/* -------- STATS -------- */}
-          <div className="stats-row">
-            <div className="stat-box">
-              <strong>{user.seguidores ?? 0}</strong>
-              <span>Seguidores</span>
-            </div>
-
-            <div className="stat-box">
-              <strong>{user.siguiendo ?? 0}</strong>
-              <span>Siguiendo</span>
-            </div>
-
-            <div className="stat-box">
-              <strong>{listas.length}</strong>
-              <span>Listas</span>
-            </div>
-
-            <div className="stat-box">
-              <strong>{user.librosLeidos || 0}</strong>
-              <span>Leídos</span>
-            </div>
-          </div>
-
-          {/* -------- INFO DEL USUARIO -------- */}
-          <div className="userprofile-section">
-            <h3 className="userprofile-section-title">Información</h3>
-
-            <p>
-              <strong>Nombre:</strong> {user.nombre} {user.apellido}
-            </p>
-
-            {/* Mostrar favoritos en lugar de email para otros usuarios */}
-            {user.usuario === (JSON.parse(localStorage.getItem('user') || '{}').usuario) ? (
-              <p>
-                <strong>Email:</strong> {user.correo}
-              </p>
-            ) : (
-              <div className="userprofile-favorites">
-                <p>
-                  <strong>Autor favorito:</strong> {user.autor_preferido && user.autor_preferido.trim() ? user.autor_preferido : "No definido"}
-                </p>
-                <p>
-                  <strong>Género favorito:</strong> {user.genero_preferido && user.genero_preferido.trim() ? user.genero_preferido : "No definido"}
-                </p>
-                <p>
-                  <strong>Libro favorito:</strong> {user.titulo_preferido && user.titulo_preferido.trim() ? user.titulo_preferido : "No definido"}
-                </p>
-              </div>
-            )}
-
-            {user.pais && (
-              <p>
-                <strong>País:</strong> {user.pais}
-              </p>
-            )}
-
-            {user.libro_favorito && (
-              <p>
-                <strong>Libro favorito:</strong> {user.libro_favorito}
-              </p>
-            )}
-
-            {user.fecha_creacion && (
-              <p>
-                <strong>Miembro desde:</strong>{" "}
-                {new Date(user.fecha_creacion).toLocaleDateString("es-AR")}
-              </p>
-            )}
-          </div>
-
-          {/* -------- LISTAS -------- */}
-          <div className="userlists-wrapper">
-            <div className="userlists-header">
-              <h3>Listas creadas por {user.usuario}</h3>
-            </div>
-
-            <div className="userlists-grid">
-              {listas.length === 0 && (
-                <p style={{ opacity: 0.7 }}>Este usuario no tiene listas aún.</p>
-              )}
-
-              {listas.map((lista) => (
-                <div key={lista.id} className="userlist-card">
-                  <div className="card-top">
-                    <h4 className="list-title">{lista.nombre}</h4>
-                    <span className="list-count">{lista.totalLibros}</span>
-                  </div>
-
-                  <div className="covers-preview">
-                    {lista.portadas?.length > 0 ? (
-                      lista.portadas.slice(0, 3).map((p, i) => (
-                        <div key={i} className="cover-mini">
-                          <img src={p} alt="libro" />
-                        </div>
-                      ))
-                    ) : (
-                      <span className="no-covers">Sin portadas</span>
-                    )}
-                  </div>
-
-                  <div className="list-footer">
-                    <button className="btn-ver">Ver lista</button>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-
-        </div>
+  return <div className="public-profile-page">
+    <Header />
+    <section className="public-profile-hero" style={{ backgroundImage: `url(${banner})` }}>
+      <div className="public-profile-hero-shade" />
+      <div className="public-profile-hero-inner">
+        <img className="public-profile-avatar" src={avatar} alt={`Avatar de ${user.usuario}`} onError={(event) => { event.currentTarget.src = "/iconos/LogoDefault1.jpg"; }} />
+        <div className="public-profile-identity"><h1>{user.nombre} {user.apellido}</h1><p className="public-profile-username">@{user.usuario}</p>{user.descripcion && <p className="public-profile-bio">{user.descripcion}</p>}</div>
+        <button type="button" className={`public-follow-button${isFollowing ? " is-following" : ""}`} onClick={toggleFollow}><Users size={17} aria-hidden="true" />{isFollowing ? "Siguiendo" : "Seguir"}</button>
       </div>
-    </>
-  );
+    </section>
+
+    <main className="public-profile-main">
+      <section className="public-profile-stats" aria-label="Estadísticas del usuario">
+        <div><BookOpen size={19} aria-hidden="true" /><strong>{user.librosLeidos || readBooks.length}</strong><span>Libros leídos</span></div>
+        <div><Star size={19} aria-hidden="true" /><strong>{user.ratingPromedio ?? "—"}</strong><span>Rating promedio</span></div>
+        <div><Users size={19} aria-hidden="true" /><strong>{user.seguidores || 0}</strong><span>Seguidores</span></div>
+        <div><Users size={19} aria-hidden="true" /><strong>{user.siguiendo || 0}</strong><span>Siguiendo</span></div>
+      </section>
+
+      <section className="public-profile-section public-reading-section">
+        <div className="public-section-heading"><div><p className="public-section-eyebrow">Actividad</p><h2>Libros leídos</h2></div><div className="public-carousel-actions"><button type="button" onClick={() => scrollBooks(-1)} aria-label="Ver libros anteriores"><ArrowLeft size={18} /></button><button type="button" onClick={() => scrollBooks(1)} aria-label="Ver más libros"><ArrowRight size={18} /></button></div></div>
+        {readBooks.length === 0 ? <div className="public-empty-state">{user.usuario} todavía no tiene libros registrados.</div> : <div className="public-books-scroll" ref={readBooksRef}>{readBooks.map((book) => { const bookId = getBookId(book); return <button className="public-book-card" type="button" key={bookId} onClick={() => bookId && navigate(`/libro/${bookId}`)}><span className="public-book-cover">{getBookCover(book) ? <img src={getBookCover(book)} alt={book.titulo || "Libro"} /> : <span />}</span><strong>{book.titulo || "Libro sin título"}</strong>{book.puntuacion_usuario && <span className="public-book-rating"><Star size={13} fill="currentColor" /> {book.puntuacion_usuario}</span>}</button>; })}</div>}
+      </section>
+
+      {lists.length > 0 && <section className="public-profile-section"><div className="public-section-heading"><div><h2>Listas</h2></div></div><div className="public-lists-grid">{lists.map((list) => <button type="button" className="public-list-card" key={list.id} onClick={() => setSelectedList(list)}><div className="public-list-covers">{(list.portadas || []).slice(0, 3).map((cover, index) => <img key={`${list.id}-${index}`} src={cover} alt="" />)}</div><div><h3>{list.nombre}</h3><span>{list.totalLibros} {list.totalLibros === 1 ? "libro" : "libros"}</span></div><Eye size={17} aria-hidden="true" /></button>)}</div></section>}
+      {lists.length === 0 && <section className="public-profile-section"><div className="public-empty-state">Este usuario todavía no tiene listas públicas.</div></section>}
+
+      {preferences.length > 0 && <section className="public-profile-section"><div className="public-section-heading"><div><p className="public-section-eyebrow">Preferencias</p><h2>Lo que le gusta leer</h2></div></div><div className="public-preferences-grid">{preferences.map(([label, value]) => <div key={label}><span>{label}</span><strong>{value}</strong></div>)}</div></section>}
+    </main>
+
+    {selectedList && <div className="list-detail-overlay" onClick={() => setSelectedList(null)}><section className="list-detail-modal public-list-detail-modal" role="dialog" aria-modal="true" aria-labelledby="public-list-detail-title" onClick={(event) => event.stopPropagation()}><header className="list-detail-header"><div><h2 id="public-list-detail-title" style={{ color: "white" }}>{selectedList.nombre}</h2><span>{selectedList.totalLibros} {selectedList.totalLibros === 1 ? "libro" : "libros"}</span></div><button className="list-icon-button" type="button" onClick={() => setSelectedList(null)} aria-label="Cerrar lista"><X size={20} aria-hidden="true" /></button></header>{(selectedList.libros || []).length === 0 ? <div className="list-detail-empty"><span className="list-empty-mark" aria-hidden="true" /><h3>Esta lista está vacía</h3></div> : <div className="list-detail-books">{selectedList.libros.map((book, index) => { const bookId = getBookId(book); return <article className="list-detail-book" key={bookId || index} onClick={() => bookId && navigate(`/libro/${bookId}`)}><div className="list-detail-cover">{getBookCover(book) ? <img src={getBookCover(book)} alt={book.titulo || "Libro"} /> : <span className="list-cover-placeholder" aria-hidden="true" />}</div><h3>{book.titulo || "Libro sin título"}</h3></article>; })}</div>}</section></div>}
+    <Footer />
+  </div>;
 }

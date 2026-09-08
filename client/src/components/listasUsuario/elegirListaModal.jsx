@@ -87,7 +87,8 @@ export default function ElegirListaModal({ isOpen, onClose, listas = {}, bookId,
               <div className="empty">No tienes listas aún.</div>
             ) : (
               <div className="lists-grid">
-                {Object.entries(listas).map(([name, books]) => {
+                {Object.entries(listas).map(([name, list]) => {
+                  const books = list?.libros || list || [];
                   const containsBook = books?.some((book) => Number(book?.id) === Number(bookId));
                   return (
                     <div key={name} className="list-item">
