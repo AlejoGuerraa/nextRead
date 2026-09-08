@@ -3,14 +3,14 @@ import React, { useState } from "react";
 import { useToast } from './ToastProvider';
 import { useParams } from "react-router-dom";
 import api from '../services/api';
+import { saveBookRating } from '../services/booksService';
 import { Bookmark, Heart, Clock, PlusCircle, Book } from "lucide-react"; // iconos más lindos
 
-export default function InfoLibro({ libro, onRestrictedAction, actionRef, onOpenChooseList }) {
+export default function InfoLibro({ libro, onRestrictedAction, actionRef, onOpenChooseList, onMarkedAsRead }) {
     const { id } = useParams();
     const { titulo, Autor, portada, generos, anio, tipo, descripcion, ranking } = libro;
     const autorNombre = Autor?.nombre || "Autor Desconocido";
 
-    const [user, setUser] = useState('')
     const [userRating, setUserRating] = useState(0);
     const [hoverRating, setHoverRating] = useState(0);
     const toast = useToast();
@@ -41,12 +41,8 @@ export default function InfoLibro({ libro, onRestrictedAction, actionRef, onOpen
                 { headers: { Authorization: `Bearer ${auth.token}` } }
             );
 
-            setUser(prev => ({
-                ...prev,
-                libros_leidos: response.data.libros_leidos
-            }));
-
             toast?.push(response.data.message || 'Libro actualizado', 'success');
+            if (tipoLista === "leido") onMarkedAsRead?.();
         } catch (error) {
             console.error("Error al agregar libro:", error);
             toast?.push(error.response?.data?.message || "Error al agregar el libro a la lista.", 'error');
@@ -59,12 +55,8 @@ export default function InfoLibro({ libro, onRestrictedAction, actionRef, onOpen
         if (!auth) return;
 
         try {
-            const response = await api.post(
-                `${API_BASE}/resena/${id}`,
-                { puntuacion: rating },
-                { headers: { Authorization: `Bearer ${auth.token}` } }
-            );
-            toast?.push(response.data.message || `Le diste ${rating} estrellas ⭐`, 'success');
+            const response = await saveBookRating(id, rating);
+            toast?.push(response.message || `Le diste ${rating} estrellas ⭐`, 'success');
         } catch (error) {
             console.error("❌ ERROR EN rating:", error);
         }

@@ -6,6 +6,7 @@ const Libro = require('./Libro');
 const Autor = require('./Autor');
 const Resena = require('./Resena');
 const ResenaLike = require('./ResenaLike');
+const RespuestaResena = require('./RespuestaResena');
 const Seguidos_Seguidores = require('./Seguidos_seguidores');
 const Logro = require('./Logro');
 const Usuario_Logro = require('./Usuario_Logro');
@@ -54,6 +55,26 @@ Usuario.hasMany(Resena, {
 Libro.hasMany(Resena, {
     foreignKey: 'libro_id',
     as: 'Resenas'
+});
+
+Resena.hasMany(RespuestaResena, {
+    foreignKey: 'resena_id',
+    as: 'Respuestas'
+});
+
+RespuestaResena.belongsTo(Resena, {
+    foreignKey: 'resena_id',
+    as: 'Resena'
+});
+
+RespuestaResena.belongsTo(Usuario, {
+    foreignKey: 'usuario_id',
+    as: 'Usuario'
+});
+
+Usuario.hasMany(RespuestaResena, {
+    foreignKey: 'usuario_id',
+    as: 'RespuestasResena'
 });
 
 // 👍 ResenaLike relationships
@@ -157,4 +178,4 @@ Usuario.belongsToMany(Usuario, {
     otherKey: 'id_remitente'
 });
 
-module.exports = { Usuario, Libro, Resena, ResenaLike, Seguidos_Seguidores, Logro, Usuario_Logro, Autor, Icono, Banner };
+module.exports = { Usuario, Libro, Resena, ResenaLike, RespuestaResena, Seguidos_Seguidores, Logro, Usuario_Logro, Autor, Icono, Banner };

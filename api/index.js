@@ -18,7 +18,7 @@ const {
 } = require('./controller/busqueda');
 
 const {
-    getAllBooks,agregarLibroALista,guardarPuntuacion,obtenerResenas,likeResena,unlikeResena
+    getAllBooks,agregarLibroALista,guardarPuntuacion,obtenerResenas,likeResena,unlikeResena,crearRespuestaResena,eliminarResenaPropia
 } = require('./controller/peticionesLibros');
 
 const { getAllBanners, getAllIconos } = require('./controller/banners');
@@ -58,12 +58,13 @@ const {
 const { registerSchema, loginSchema } = require('./schemas/authSchemas');
 const { editarPerfilSchema, changePasswordSchema, changeEmailRequestSchema, deleteAccountConfirmSchema, crearListaSchema, editarListaSchema } = require('./schemas/userSchemas');
 const { guardarPuntuacionSchema } = require('./schemas/bookSchemas');
+const { respuestaResenaSchema } = require('./schemas/reviewSchemas');
 const { forgotPasswordSchema, resetPasswordSchema } = require('./schemas/recoverySchemas');
 const {
     emailSchema,notificationSchema,targetIdParamSchema,listActionParamsSchema,customListBookParamsSchema,customListParamsSchema,
     recommendationParamsSchema,searchQuerySchema,userSearchQuerySchema,checkEmailQuerySchema,checkUsernameQuerySchema,
     decadeQuerySchema,followListQuerySchema,confirmEmailQuerySchema,paginationQuerySchema,idUsuarioParamSchema,
-    idLibroParamSchema,idParamSchema,notificationIdParamSchema
+    idLibroParamSchema,idResenaParamSchema,idParamSchema,notificationIdParamSchema
 } = require('./schemas/busquedaSchemas');
 const { banSchema } = require('./schemas/adminSchemas');
 
@@ -79,6 +80,7 @@ require('./models/Autor');
 require('./models/Logro');
 require('./models/Resena');
 require('./models/ResenaLike');
+require('./models/RespuestaResena');
 require('./models/Usuario_Logro');
 require('./models/Seguidos_seguidores');
 require('./models/indexModel');
@@ -260,7 +262,9 @@ server.get('/nextread/libros/recomendaciones/:idUsuario/:idLibro', isAuth, expen
 // ---------------------- LIBROS ----------------------
 server.post('/nextread/usuario/:tipo/:idLibro', isAuth, interactionLimiter, validateParams(listActionParamsSchema), agregarLibroALista);
 server.post('/nextread/resena/:idLibro', isAuth, interactionLimiter, validateParams(idLibroParamSchema), validateBody(guardarPuntuacionSchema), guardarPuntuacion);
-server.get('/nextread/resenas/:idLibro', validateParams(idLibroParamSchema), obtenerResenas);
+server.get('/nextread/resenas/:idLibro', optionalAuth, validateParams(idLibroParamSchema), obtenerResenas);
+server.post('/nextread/resena/:idResena/respuestas', isAuth, interactionLimiter, validateParams(idResenaParamSchema), validateBody(respuestaResenaSchema), crearRespuestaResena);
+server.delete('/nextread/resena/:id', isAuth, interactionLimiter, validateParams(idParamSchema), eliminarResenaPropia);
 
 // Listas personalizadas
 server.post('/nextread/listas', isAuth, interactionLimiter, validateBody(crearListaSchema), crearLista);

@@ -1,0 +1,29 @@
+.review-rating-picker { display: flex; align-items: center; gap: 3px; margin: 6px 0 12px; }
+.review-rating-picker button { border: 0; padding: 0; background: transparent; color: #ffb400; cursor: pointer; font-size: 22px; }
+.review-rating-picker span { margin-left: 6px; color: #406882; }
+.resena-form label { display: block; margin-bottom: 4px; }
+.resena-form textarea, .respuesta-form textarea, .admin-modal textarea { width: 100%; box-sizing: border-box; margin-bottom: 8px; }
+.review-comment-field { position: relative; }
+.review-comment-field textarea { padding-bottom: 26px; }
+.review-comment-field small { position: absolute; right: 9px; bottom: 15px; color: #6d7c84; font-size: 0.72rem; pointer-events: none; }
+.comentario { display: flex; gap: 12px; margin-bottom: 16px; }
+.comentario-avatar { width: 48px; height: 48px; flex: 0 0 48px; border-radius: 50%; object-fit: cover; }
+.comentario-contenido { min-width: 0; flex: 1; }
+.comentario-cabecera { display: flex; justify-content: space-between; gap: 12px; align-items: baseline; }
+.comentario-cabecera small { color: #6d7c84; white-space: nowrap; }
+.resena-acciones { display: flex; gap: 12px; align-items: center; margin-top: 8px; }
+.resena-acciones button { display: inline-flex; align-items: center; gap: 5px; border: 0; padding: 0; background: transparent; color: #607984; cursor: pointer; }
+.resena-acciones button.is-liked { color: #d94c4c; }
+.respuesta-form { display: flex; gap: 8px; align-items: flex-start; margin: 12px 0 12px 24px; }
+.respuesta-form button { display: inline-flex; align-items: center; gap: 5px; padding: 8px 12px; border: 0; border-radius: 6px; background: #406882; color: #fff; cursor: pointer; }
+.respuesta-form button:disabled { background: #b9c5cb; cursor: not-allowed; }
+.respuestas-lista { margin: 14px 0 0 24px; padding-left: 14px; border-left: 2px solid #d5e0e5; }
+.respuesta { display: flex; gap: 9px; margin: 12px 0; font-size: .94rem; }
+.respuesta img { width: 32px; height: 32px; border-radius: 50%; object-fit: cover; }
+.respuesta p { margin: 4px 0 0; }
+.admin-modal-overlay { position: fixed; inset: 0; z-index: 10000; display: flex; align-items: center; justify-content: center; padding: 20px; background: rgba(0, 0, 0, .45); }
+.admin-modal { position: relative; width: min(480px, 100%); padding: 22px; border-radius: 10px; background: #fff; }
+.admin-modal-close { position: absolute; top: 10px; right: 10px; border: 0; background: transparent; cursor: pointer; }
+.review-delete-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 16px; }
+.review-delete-actions button { width: auto; }
+@media (max-width: 600px) { .respuesta-form { margin-left: 0; flex-direction: column; } .respuesta-form button { align-self: flex-end; } }

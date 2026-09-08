@@ -30,6 +30,13 @@ export const getBookById = async (id) => {
   return response.data;
 };
 
+export const saveBookRating = async (bookId, rating) => {
+  const response = await api.post(`/nextread/resena/${bookId}`, {
+    puntuacion: rating,
+  });
+  return response.data;
+};
+
 export const getRecommendationsForBook = async (userId, bookId) => {
   const response = await api.get(`/nextread/libros/recomendaciones/${userId}/${bookId}`);
   return response.data;

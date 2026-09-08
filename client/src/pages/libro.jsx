@@ -4,8 +4,9 @@ import { useParams } from "react-router-dom";
 import api from '../services/api';
 
 import InfoLibro from "../components/infoLibro";
+import RatingAfterReadModal from "../components/rating/RatingAfterReadModal";
 import ElegirListaModal from "../components/listasUsuario/elegirListaModal";
-import Resenas from "../components/resenias";
+import Resenas from "../components/rating/resenias";
 import Header from "../components/header";
 import Footer from "../components/footer";
 import RestrictionPopover from "../components/popOver";
@@ -41,6 +42,7 @@ export default function Libro() {
   const [user, setUser] = useState(initialUser);
   const [fullUser, setFullUser] = useState(null);
   const [showChooseListModal, setShowChooseListModal] = useState(false);
+  const [showRatingAfterRead, setShowRatingAfterRead] = useState(false);
 
   // ==== POPOVER ====
   const actionRef = useRef(null);         // donde está el botón que dispara la restricción
@@ -124,6 +126,7 @@ export default function Libro() {
           onRestrictedAction={handleRestrictedAction}
           actionRef={actionRef}
           onOpenChooseList={() => setShowChooseListModal(true)}
+          onMarkedAsRead={() => setShowRatingAfterRead(true)}
         />
 
         {/* ==== POPOVER POSICIONADO COMO EN PRINCIPAL PERO ARRIBA Y DERECHA ==== */}
@@ -155,6 +158,13 @@ export default function Libro() {
             .catch(err => console.error('Error refrescando usuario', err));
         }
       }} />
+
+      <RatingAfterReadModal
+        isOpen={showRatingAfterRead}
+        bookId={id}
+        onClose={() => setShowRatingAfterRead(false)}
+        onSaved={() => setShowRatingAfterRead(false)}
+      />
 
       <Footer />
     </div>
