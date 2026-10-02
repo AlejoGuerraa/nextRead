@@ -1,0 +1,243 @@
+[
+  {
+    "titulo": "Historias de cronopios y de famas",
+    "fecha_publicacion": "1962-01-01",
+    "anio": 1962,
+    "tipo": "Cuento",
+    "descripcion": "Historias de cronopios y de famas (1962) es uno de los libros legendarios de Julio Cortázar. Postulación de una mirada poética capaz de enfrentar las miserias de la rutina y del sentido común; Cortázar toma aca partido por la imaginación creadora; el humor corrosivo de los surrealistas y el absurdo trascendental de la patafísica. Esta colección de cuentos; instrucciones y viñetas entrañables es una puerta de acceso privilegiada al inagotable mundo de uno de los más grandes escritores de este siglo y un antídoto seguro contra la solemnidad y el aburrimiento. Sin duda alguna; con este libro Cortázar sella un pacto de complicidad definitiva e incondicional con sus lectores.",
+    "tema": "Surrealismo",
+    "ranking": 4,
+    "generos": [
+      "Cuento",
+      "Absurdo"
+    ],
+    "url_portada": "/portadasLibros/Cortazar/HistoriasDeCronopiosYdeFamasCortazar.png",
+    "id_autor": 1
+  },
+  {
+    "titulo": "Bestiario",
+    "fecha_publicacion": "1951-01-01",
+    "anio": 1951,
+    "tipo": "Cuento",
+    "descripcion": "Ocho relatos conforman el primer libro de cuentos publicado por Julio Cortázar y la puerta de ingreso a la gran literatura. Ocho relatos en los que aparecen diferentes formas de animales: reales, simbólicos, imaginarios. Animales que son, a veces, comparaciones, metáforas de lo absurdo o analogías de lo que, de tan repugnante, no se puede nombrar.",
+    "tema": "Ficción Fantástica",
+    "ranking": 4,
+    "generos": [
+      "Cuento",
+      "Fantástico"
+    ],
+    "url_portada": "/portadasLibros/Cortazar/BestiarioCortazar.png",
+    "id_autor": 1
+  },
+  {
+    "titulo": "Todos los fuegos el fuego",
+    "fecha_publicacion": "1966-01-01",
+    "anio": 1966,
+    "tipo": "Cuento",
+    "descripcion": "Todos los fuegos el fuego 1966 ofrece ocho muestras rotundas de la plenitud creadora que alcanzan los cuentos de Cortázar. Desde la exasperada metáfora de las relaciones humanas que es La autopista del sur hasta la maestría de El otro cielo, Cortázar vuelve a abrir nuevos caminos con relatos que son referencia obligada para sus lectores y para los amantes del cuento en general. La salud de los enfermos, Reunión, La señorita Cora, La isla a mediodía, Instrucciones para John Howell y Todos los fuegos el fuego: una fiesta de la inteligencia, de la pasión y del genio.",
+    "tema": "Narrativa Breve",
+    "ranking": 4,
+    "generos": [
+      "Cuento",
+      "Drama"
+    ],
+    "url_portada": "/portadasLibros/Cortazar/TodosLosFuegosElFuegoCortazar.png",
+    "id_autor": 1
+  },
+  {
+    "titulo": "Ficciones",
+    "fecha_publicacion": "1944-01-01",
+    "anio": 1944,
+    "tipo": "Cuento",
+    "descripcion": "Ficciones reúne dos libros fundamentales de Jorge Luis Borges: El jardín de senderos que se bifurcan y Artificios. El volumen incluye cuentos policiales, relatos sobre libros y mundos imaginarios, y piezas clásicas del fantástico borgeano. Entre ellos destacan “La muerte y la brújula”, “Tlön, Uqbar, Orbis Tertius”, “Las ruinas circulares” y “El sur”, considerado por el propio autor como uno de sus mejores cuentos. Es una obra clave para entender el universo literario de Borges.",
+    "tema": "Metafísica",
+    "ranking": 4,
+    "generos": [
+      "Cuento",
+      "Filosófico"
+    ],
+    "url_portada": "/portadasLibros/Borges/FiccionesBorges.png",
+    "id_autor": 6
+  },
+  {
+    "titulo": "El Aleph",
+    "fecha_publicacion": "1949-01-01",
+    "anio": 1949,
+    "tipo": "Cuento",
+    "descripcion": "El Aleph reúne cuentos en su mayoría fantásticos, donde Borges explora temas como la identidad, el tiempo, la inmortalidad y el universo infinito. Algunos relatos nacen de crónicas policiales o escenas cotidianas; otros imaginan mundos imposibles. El cuento que da nombre al libro gira en torno a un punto del espacio —el Aleph— en el que se pueden ver simultáneamente todos los lugares y todos los tiempos, una de las ideas más emblemáticas de la obra borgeana.",
+    "tema": "Laberintos",
+    "ranking": 4,
+    "generos": [
+      "Cuento",
+      "Fantástico"
+    ],
+    "url_portada": "/portadasLibros/Borges/ElAlephBorges.png",
+    "id_autor": 6
+  },
+  {
+    "titulo": "Las Aventuras de Sherlock Holmes",
+    "fecha_publicacion": "1892-01-01",
+    "anio": 1892,
+    "tipo": "Cuento",
+    "descripcion": "Toda la obra de Conan Doyle se vio eclipsada por el éxito de las aventuras de Sherlock Holmes, que empezó a publicar por entregas en la revista Strand desde 1891, y luego reunió como libro de 12 aventuras en 1892. El acierto del autor fue elegir la forma de relatos cortos, donde ponía de relieve la extraordinaria capacidad de observación y razonamiento deductivo de este detective.",
+    "tema": "Deducción",
+    "ranking": 4,
+    "generos": [
+      "Cuento",
+      "Policial"
+    ],
+    "url_portada": "/portadasLibros/ArthurConanDoyle/LasAventurasDeSherlockHolmesDoyle.png",
+    "id_autor": 8
+  },
+  {
+    "titulo": "Novelas Ejemplares",
+    "fecha_publicacion": "1613-01-01",
+    "anio": 1613,
+    "tipo": "Cuento",
+    "descripcion": "Este volumen recoge cuatro novelas representativas de las Novelas ejemplares de Cervantes, prologadas y anotadas por expertos. La selección muestra cómo, en conjunto y por separado, estas historias combinan libertad, ejemplaridad y capacidad para hacer verosímil lo inverosímil. Cervantes renovó todos los géneros narrativos de su tiempo, sentando las bases de la novela moderna.",
+    "tema": "Moral",
+    "ranking": 4,
+    "generos": [
+      "Cuento",
+      "Didáctico"
+    ],
+    "url_portada": "/portadasLibros/MiguelDeCervantes/NovelasEjemplaresCervantes.png",
+    "id_autor": 13
+  },
+  {
+    "titulo": "Bartleby, el Escribiente",
+    "fecha_publicacion": "1853-01-01",
+    "anio": 1853,
+    "tipo": "Cuento",
+    "descripcion": "Bartleby es un copista judicial en Nueva York cuyo comportamiento desconcierta a su jefe y transforma la dinámica de la oficina. A través de este personaje, Herman Melville explora la libertad, la pasividad frente a la autoridad y la incomunicación en la sociedad moderna. La historia combina inquietud, humor y desolación, convirtiendo a Bartleby en un símbolo literario de resistencia tranquila que ha influido en autores y géneros posteriores.",
+    "tema": "Resistencia",
+    "ranking": 4,
+    "generos": [
+      "Cuento",
+      "Filosófico"
+    ],
+    "url_portada": "/portadasLibros/HermanMelville/BartlebyElEscribienteMelville.jpg",
+    "id_autor": 17
+  },
+  {
+    "titulo": "El Fantasma de Canterville",
+    "fecha_publicacion": "1887-01-01",
+    "anio": 1887,
+    "tipo": "Cuento",
+    "descripcion": "El fantasma de Canterville narra cómo la familia norteamericana Otis compra un antiguo castillo inglés, donde habita el fantasma de Lord Simon Canterville, condenado a vagar tras asesinar a su esposa y suicidarse por culpa de su crimen. La historia combina humor y misterio al mostrar el choque entre la racionalidad moderna de los Otis y las tradiciones sobrenaturales del castillo.",
+    "tema": "Humor",
+    "ranking": 4,
+    "generos": [
+      "Cuento",
+      "Humor"
+    ],
+    "url_portada": "/portadasLibros/OscarWilde/ElFantasmaDeCantervilleWilde.png",
+    "id_autor": 18
+  },
+  {
+    "titulo": "El Escarabajo De Oro",
+    "fecha_publicacion": "1843-06-21",
+    "anio": 1843,
+    "tipo": "Cuento",
+    "descripcion": "Una isla de aspecto singular, un personaje excéntrico con su gracioso acompañante y un narrador asombrado por los sucesos de los que es testigo componen el marco de esta historia de aventuras del escritor norteamericano Edgar Allan Poe. El hallazgo de un extraño escarabajo de oro desencadena una trama imprevisible en la que el misterio se combina con el ingenio para develar los enigmas propuestos en el texto. Desde leyendas de tesoros escondidos hasta el desciframiento de escrituras secretas, todos los condimentos de los relatos de aventuras están presentes en El escarabajo de oro. Una vez más, la extraordinaria capacidad de análisis de Edgar Allan Poe, famoso por sus cuentos fantásticos y por haber creado el relato policial, está al servicio de una historia que, a la manera de un juego de ingenio, atrapa a los lectores por ser un desafío para la imaginación y la inteligencia.",
+    "tema": "Misterio/Aventura",
+    "ranking": 3,
+    "generos": [
+      "Policial",
+      "Misterio",
+      "Aventura"
+    ],
+    "url_portada": "/portadasLibros/EdgarAllanPoe/ElEscarabajoDeOro.jpg",
+    "id_autor": 21
+  },
+  {
+    "titulo": "El Misterio de Marie Roget",
+    "fecha_publicacion": "1842-11-01",
+    "anio": 1842,
+    "tipo": "Cuento",
+    "descripcion": "Es la segunda narración en la que aparece el detective Auguste Dupin. Está basado en la tragedia real de Mary Cecilia Rogers sucedida en Nueva York. En el relato, la asesinada cambia su nombre al de Marie Rogêt y Poe convierte Nueva York en París. Mary Rogers era una atractiva vendedora de cigarrillos y su crimen nunca fue resuelto del todo; en el caso de Marie Rogêt, el personaje 'ficticio', se sugiere que el asesino era un marinero desechándose asimismo la especulación de la policía respecto de que Marie fuera víctima de una pandilla; sin embargo, el mismo Poe evita anunciar que acaso haya resuelto el caso de la vida real aunque algunos contemporáneos suyos vieron en el relato precisamente ello, un intento de mayor notoriedad por parte del escritor norteamericano al buscar dar solución al crímen de Mary Rogers.",
+    "ranking": 3,
+    "generos": [
+      "Misterio",
+      "Ficcion"
+    ],
+    "url_portada": "/portadasLibros/EdgarAllanPoe/ElMisterioDeMarieRoget.jpg",
+    "id_autor": 21
+  },
+  {
+    "titulo": "La Carta Robada",
+    "fecha_publicacion": "1844-12-01",
+    "anio": 1844,
+    "tipo": "Cuento",
+    "descripcion": "'La carta robada' es un cuento de Edgar Allan Poe donde el detective C. Auguste Dupin resuelve un caso aparentemente imposible: una carta robada de unas cámaras reales que se usa para chantajear a una dama. La policía, incapaz de encontrarla, no puede pensar más allá de los métodos de búsqueda convencionales. Dupin deduce que el ladrón, el ministro D, la ocultó a simple vista y la recupera con éxito, reemplazándola por una copia para entregársela a la policía",
+    "tema": "Engaño",
+    "ranking": 4,
+    "generos": [
+      "Ficcion detectivista",
+      "Misterio"
+    ],
+    "url_portada": "/portadasLibros/EdgarAllanPoe/LaCartaRobada.jpeg",
+    "id_autor": 21
+  },
+  {
+    "titulo": "Los Crimenes de la Calle Morgue",
+    "fecha_publicacion": "1841-04-01",
+    "anio": 1841,
+    "tipo": "Cuento",
+    "descripcion": "Narra la investigación de un brutal doble asesinato en París, resuelto por el detective aficionado C. Auguste Dupin y su amigo. Considerado el primer relato detectivesco de la historia, Dupin utiliza su agudeza mental y su capacidad de deducción para analizar detalles que la policía pasa por alto, llevando a la resolución de un misterio que parece imposible. El relato sienta las bases del género policial y se caracteriza por un análisis lógico y detallado para resolver el enigma.",
+    "tema": "Crimen",
+    "ranking": 4,
+    "generos": [
+      "Misterio",
+      "Ficcion detectivista",
+      "Policial"
+    ],
+    "url_portada": "/portadasLibros/EdgarAllanPoe/LosCrimenesDeLaCalleMorgue.jpg",
+    "id_autor": 21
+  },
+  {
+    "titulo": "Crónicas Marcianas",
+    "fecha_publicacion": "1950-01-01",
+    "anio": 1950,
+    "tipo": "Cuento",
+    "descripcion": "Crónicas marcianas es un clásico del siglo XX que consolidó a Ray Bradbury como uno de los grandes narradores norteamericanos. La obra reúne relatos sobre la colonización de Marte por humanos que huyen de un planeta al borde del colapso. Los colonos llevan sus sueños de vida confortable, pero también sus miedos, prejuicios y enfermedades, que amenazan a los habitantes marcianos. Escritas en los años cuarenta, estas historias combinan ciencia ficción con reflexión sobre la naturaleza humana, abordando temas como el racismo, la guerra y la censura, y ofreciendo un relato lleno de nostalgia, idealismo y crítica social.",
+    "tema": "Exploración",
+    "ranking": 4,
+    "generos": [
+      "Ciencia Ficción",
+      "Cuento"
+    ],
+    "url_portada": "/portadasLibros/RayBradbury/CronicasMarcianasBradbury.jpg",
+    "id_autor": 44
+  },
+  {
+    "titulo": "Libro de Sueños",
+    "fecha_publicacion": "1976-01-01",
+    "anio": 1976,
+    "tipo": "Cuento",
+    "descripcion": "El sueño se presenta como uno de los territorios más antiguos y complejos de la literatura. Borges reúne textos de distintas épocas y culturas para mostrar cómo la humanidad ha intentado interpretar sus visiones nocturnas y sus fantasías conscientes. El resultado es una antología que celebra el sueño como fuente de imaginación, conocimiento y tradición literaria.",
+    "tema": "Sueños",
+    "ranking": 4,
+    "generos": [
+      "Cuento",
+      "Ensayo"
+    ],
+    "url_portada": "/portadasLibros/Borges/LibroDeSueñoBorges.jpeg",
+    "id_autor": 6
+  },
+  {
+    "titulo": "El Hacedor",
+    "fecha_publicacion": "1960-01-01",
+    "anio": 1960,
+    "tipo": "Cuento",
+    "descripcion": "Es un libro misceláneo en el que Borges reúne poemas, relatos breves y reflexiones, combinando géneros y estilos distintos. En sus páginas conviven referencias de Oriente y Occidente, desde Heráclito, Homero y Dante hasta figuras profundamente argentinas como Rosas, Facundo y Juan Muraña. Esa mezcla de mundos muestra cómo lo universal y lo local se entrelazan en su obra. El resultado es un conjunto de textos muy personales que condensan muchos de los temas que atravesaron toda la escritura borgeana: el tiempo, los mitos, la memoria y la identidad.",
+    "tema": "Creación",
+    "ranking": 4,
+    "generos": [
+      "Ensayo",
+      "Poesía"
+    ],
+    "url_portada": "/portadasLibros/Borges/ElHacedorBorges.png",
+    "id_autor": 6
+  }
+]

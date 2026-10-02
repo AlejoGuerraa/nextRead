@@ -1,0 +1,17 @@
+[
+  {
+    "titulo": "Paula",
+    "fecha_publicacion": "1994-01-01",
+    "anio": 1994,
+    "tipo": "Memorias",
+    "descripcion": "Paula surge de los apuntes que Isabel Allende escribió mientras su hija estaba en coma. La obra combina memorias familiares, experiencias personales y la historia reciente de Chile, ofreciendo un emotivo retrato de la autora y de la sensibilidad femenina, que deja una profunda huella en el lector.",
+    "tema": "Biografía",
+    "ranking": 4,
+    "generos": [
+      "No Ficción",
+      "Autobiografía"
+    ],
+    "url_portada": "/portadasLibros/IsabelAllende/PaulaAllende.png",
+    "id_autor": 11
+  }
+]

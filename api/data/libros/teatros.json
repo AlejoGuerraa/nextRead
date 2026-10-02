@@ -1,0 +1,107 @@
+[
+  {
+    "titulo": "Bodas de Sangre",
+    "fecha_publicacion": "1933-01-01",
+    "anio": 1933,
+    "tipo": "Teatro",
+    "descripcion": "La obra narra la tragedia de una pareja a punto de casarse, cuya relación se ve amenazada por el regreso del primer pretendiente de la novia. En medio de viejos rencores familiares, los personajes luchan entre la libertad personal y las imposiciones sociales.",
+    "tema": "Pasión",
+    "ranking": 4,
+    "generos": [
+      "Teatro",
+      "Tragedia"
+    ],
+    "url_portada": "/portadasLibros/FedericoGarciaLorca/BodasDeSangreLorca.jpeg",
+    "id_autor": 12
+  },
+  {
+    "titulo": "La Casa de Bernarda Alba",
+    "fecha_publicacion": "1936-01-01",
+    "anio": 1936,
+    "tipo": "Teatro",
+    "descripcion": "La casa de Bernarda Alba de Federico García Lorca es un drama rural que combina lirismo y tragedia. Narra cómo una viuda encierra a sus hijas durante ocho años, generando conflictos entre autoridad y libertad, y convirtiendo la casa en el escenario de una lucha inevitable marcada por el destino y la opresión.",
+    "tema": "Represión",
+    "ranking": 3,
+    "generos": [
+      "Teatro",
+      "Drama"
+    ],
+    "url_portada": "/portadasLibros/FedericoGarciaLorca/LaCasaDeBernardaAlbaLorca.jpg",
+    "id_autor": 12
+  },
+  {
+    "titulo": "Hamlet",
+    "fecha_publicacion": "1603-01-01",
+    "anio": 1603,
+    "tipo": "Teatro",
+    "descripcion": "Esta obra de teatro gira en torno a las tribulaciones de Hamlet, cuyo padre, el rey de Dinamarca, ha muerto. Luego de que el fantasma de éste le revela que ha sido asesinado por Claudio, su hermano y actual rey (que además ha casado con la madre de Hamlet, Gertrudis), lo urge a vengarse.",
+    "tema": "Venganza",
+    "ranking": 4,
+    "generos": [
+      "Teatro",
+      "Tragedia"
+    ],
+    "url_portada": "/portadasLibros/WilliamShakespeare/HamletShakespeare.jpg",
+    "id_autor": 14
+  },
+  {
+    "titulo": "Romeo y Julieta",
+    "fecha_publicacion": "1597-01-01",
+    "anio": 1597,
+    "tipo": "Teatro",
+    "descripcion": "Tragedia de William Shakespeare sobre dos jóvenes enamorados cuyas familias son rivales. A pesar de casarse en secreto, una serie de fatalidades los lleva al suicidio, lo que finalmente reconcilia a sus familias. Es el arquetipo de los 'amantes desventurados'.",
+    "tema": "Amor Prohibido",
+    "ranking": 3,
+    "generos": [
+      "Teatro",
+      "Romance"
+    ],
+    "url_portada": "/portadasLibros/WilliamShakespeare/RomeoYJulietaShakespeare.png",
+    "id_autor": 14
+  },
+  {
+    "titulo": "Macbeth",
+    "fecha_publicacion": "1606-01-01",
+    "anio": 1606,
+    "tipo": "Teatro",
+    "descripcion": "Tragedia de William Shakespeare sobre Macbeth, un general escocés cuya ambición desmedida lo lleva a cometer actos crueles para alcanzar el poder, influenciado por Lady Macbeth. Una historia clásica sobre la ambición y sus consecuencias.",
+    "tema": "Ambición",
+    "ranking": 4,
+    "generos": [
+      "Teatro",
+      "Tragedia"
+    ],
+    "url_portada": "/portadasLibros/WilliamShakespeare/MacbethShakespeare.jpg",
+    "id_autor": 14
+  },
+  {
+    "titulo": "Sueño de una Noche de Verano",
+    "fecha_publicacion": "1600-01-01",
+    "anio": 1600,
+    "tipo": "Teatro",
+    "descripcion": "Obra de William Shakespeare escrita entre 1590 y 1601, mezcla comedia, fantasía y romance. La historia se desarrolla en un bosque encantado donde hadas, elfos y seres mágicos influyen en los enredos amorosos de los personajes humanos. Entre hechizos, malentendidos y situaciones cómicas, Shakespeare explora el amor, la ilusión y la imaginación, ofreciendo un relato divertido y poético que refleja la riqueza del teatro isabelino.",
+    "tema": "Magia",
+    "ranking": 4,
+    "generos": [
+      "Teatro",
+      "Comedia"
+    ],
+    "url_portada": "/portadasLibros/WilliamShakespeare/SueñoDeUnaNocheDeVeranoShakespeare.png",
+    "id_autor": 14
+  },
+  {
+    "titulo": "La Importancia de Llamarse Ernesto",
+    "fecha_publicacion": "1895-01-01",
+    "anio": 1895,
+    "tipo": "Teatro",
+    "descripcion": "La obra de Oscar Wilde es una sátira brillante de la sociedad victoriana y su doble moral. A través de personajes bien construidos —Algernon, Jack, las jóvenes enamoradas y Lady Bracknell—, se revelan las obsesiones por la apariencia, el estatus y el dinero. Wilde juega con la idea de los nombres y la identidad: “Ernesto” representa la seriedad que solo existe en la superficie, como fachada de lo que realmente somos. Un clásico ingenioso y mordaz que sigue siendo muy recomendable.",
+    "tema": "Sátira",
+    "ranking": 4,
+    "generos": [
+      "Teatro",
+      "Comedia"
+    ],
+    "url_portada": "/portadasLibros/OscarWilde/LaImportanciaDeLlamarseErnestoWilde.jpg",
+    "id_autor": 18
+  }
+]

@@ -1,0 +1,75 @@
+[
+  {
+    "titulo": "Inventario Uno",
+    "fecha_publicacion": "1966-01-01",
+    "anio": 1966,
+    "tipo": "Poesía",
+    "descripcion": "Inventario Uno reúne todos los poemas publicados por Mario Benedetti entre 1950 y 1985, incluidos Vientos del exilio y Geografías. Algunos textos aparecen tanto como poema y como canción, tal como fueron musicalizados. El propio Benedetti explica que la obra está ordenada desde lo más reciente hasta lo más antiguo, con la esperanza de que el lector ingrese por las páginas más nuevas y luego descubra las demás “a beneficio de inventario”. Su poesía mantiene siempre una vocación comunicativa y ese “aire de familia” que conecta con el paisaje familiar, el amor, el exilio y la capacidad de transformar la desesperanza en ilusión.",
+    "tema": "Amor",
+    "ranking": 4,
+    "generos": [
+      "Poesía"
+    ],
+    "url_portada": "/portadasLibros/Benedetti/InventarioUnoBenedetti.png",
+    "id_autor": 3
+  },
+  {
+    "titulo": "Romancero Gitano",
+    "fecha_publicacion": "1928-01-01",
+    "anio": 1928,
+    "tipo": "Poesía",
+    "descripcion": "Romancero gitano de Federico García Lorca es una obra lírica clave del siglo XX. Con sus poemas, el autor evoca la esencia de Andalucía a través de la figura del gitano, símbolo de profundidad, verdad y tradición, y refleja un mundo de emociones universales más allá de lo visible y folklórico",
+    "tema": "Cultura",
+    "ranking": 4,
+    "generos": [
+      "Poesía"
+    ],
+    "url_portada": "/portadasLibros/FedericoGarciaLorca/RomanceroGitanoLorca.jpg",
+    "id_autor": 12
+  },
+  {
+    "titulo": "Viaje del Parnaso",
+    "fecha_publicacion": "1614-01-01",
+    "anio": 1614,
+    "tipo": "Poesía",
+    "descripcion": "Este libro reúne la producción poética de Miguel de Cervantes fuera de sus novelas y obras teatrales. Incluye su único poema narrativo, un relato mítico y autobiográfico donde viaja al monte Parnaso. La edición, anotada y estudiada por Laura Fernández García, muestra el lado menos conocido del talento del autor.5",
+    "tema": "Literatura",
+    "ranking": 3,
+    "generos": [
+      "Poesía",
+      "Alegoría"
+    ],
+    "url_portada": "/portadasLibros/MiguelDeCervantes/ViajeDelParnasoCervantes.png",
+    "id_autor": 13
+  },
+  {
+    "titulo": "El Cuervo",
+    "fecha_publicacion": "1845-01-29",
+    "anio": 1845,
+    "tipo": "Poesía",
+    "descripcion": "El cuervo es un poema narrativo del escritor norteamericano Edgar Allan Poe, máximo representante de la literatura fantástica. Publicado por primera vez en 1845, el poema combina de manera extraordinaria el universo simbólico de lo misterioso y extraño con un gran sentido rítmico y musical del lenguaje poético.El poema El cuevo parte de un tópico literario común: la muerte de la mujer amada. Con este tópico como referencia, la cuestión fundamental parece girar en torno a la muerte como destino inexorable, a su aceptación.",
+    "tema": "Melancolía",
+    "ranking": 4,
+    "generos": [
+      "Poesía",
+      "Gótico"
+    ],
+    "url_portada": "/portadasLibros/EdgarAllanPoe/ElCuervoPoe.jpg",
+    "id_autor": 21
+  },
+  {
+    "titulo": "Veinte Poemas de Amor y una Cancion Desesperada",
+    "fecha_publicacion": "1924-01-01",
+    "anio": 1924,
+    "tipo": "Poesía",
+    "descripcion": "Veinte poemas de amor y una canción desesperada es un libro de juventud de Pablo Neruda, publicado en 1924 cuando tenía veinte años. Combina pasiones adolescentes con la naturaleza del sur de Chile y un profundo sentimiento amoroso, a pesar de su melancolía. Esta obra marcó el inicio de la fortuna literaria de Neruda, mostrando su paso de un modernismo en transformación a un neorromanticismo original, y su capacidad de transmitir emociones y experiencias universales a través de la poesía.",
+    "tema": "Amor",
+    "ranking": 4,
+    "generos": [
+      "Poesía",
+      "Romance"
+    ],
+    "url_portada": "/portadasLibros/PabloNeruda/VeintePoemasDeAmorNeruda.png",
+    "id_autor": 26
+  }
+]

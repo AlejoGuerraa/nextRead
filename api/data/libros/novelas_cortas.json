@@ -1,0 +1,137 @@
+[
+  {
+    "titulo": "El Perseguidor",
+    "fecha_publicacion": "1959-01-01",
+    "anio": 1959,
+    "tipo": "Novela Corta",
+    "descripcion": "El perseguidor es uno de los mayores logros literarios de Julio Cortázar y un clásico de la literatura del siglo XX. Con un trasfondo existencial magistralmente tratado, la historia describe los últimos días de Johnny Carter, virtuoso saxofonista cuya vida discurre al filo de la lucidez y la autodestrucción.",
+    "tema": "Música",
+    "ranking": 4,
+    "generos": [
+      "Novela",
+      "Jazz"
+    ],
+    "url_portada": "/portadasLibros/Cortazar/ElPerseguidorCortazar.png",
+    "id_autor": 1
+  },
+  {
+    "titulo": "Crónica de una Muerte Anunciada",
+    "fecha_publicacion": "1981-01-01",
+    "anio": 1981,
+    "tipo": "Novela Corta",
+    "descripcion": "Crónica de una muerte anunciada cuenta la historia del asesinato de Santiago Nasar, un crimen que todo el pueblo sabía que iba a ocurrir, excepto la víctima. La novela reconstruye los hechos a través de testimonios, recuerdos y documentos, mostrando cómo una cadena de malentendidos, descuidos y silencios terminó haciendo inevitable su muerte. Ambientada en un pequeño pueblo caribeño, combina elementos de investigación periodística, misterio y realismo mágico mientras explora temas como el honor, la culpa y la imposibilidad de conocer por completo la verdad.",
+    "tema": "Misterio",
+    "ranking": 3,
+    "generos": [
+      "Novela",
+      "Periodismo"
+    ],
+    "url_portada": "/portadasLibros/GabrielaMarquez/CronicaDeUnaMuerteAnunciadaMarquez.png",
+    "id_autor": 4
+  },
+  {
+    "titulo": "El Coronel no tiene quien le escriba",
+    "fecha_publicacion": "1961-01-01",
+    "anio": 1961,
+    "tipo": "Novela Corta",
+    "descripcion": "'El coronel no tiene quien le escriba' cuenta la historia de un anciano coronel retirado que, cada viernes, espera en el puerto la carta oficial que confirme la pensión militar que le corresponde por sus servicios a la patria. Vive en la pobreza junto a su esposa enferma y se aferra a la esperanza de que esa carta llegue algún día. La novela muestra la dignidad del coronel, su lucha silenciosa contra la injusticia y la indiferencia del Estado, y el modo en que la esperanza se convierte en su única forma de resistencia.",
+    "tema": "Pobreza",
+    "ranking": 4,
+    "generos": [
+      "Novela",
+      "Drama"
+    ],
+    "url_portada": "/portadasLibros/GabrielaMarquez/ElCoronelNotieneQuienLeEscribaMarquez.jpg",
+    "id_autor": 4
+  },
+  {
+    "titulo": "La Metamorfosis",
+    "fecha_publicacion": "1915-01-01",
+    "anio": 1915,
+    "tipo": "Novela Corta",
+    "descripcion": "La vida cotidiana de la familia Samsa cambia por completo una mañana de verano, cuando Gregorio, el hijo mayor y sostén económico del hogar, no se levanta para trabajar. Acostumbrado a ser solo el proveedor y poco valorado por los suyos, despierta inesperadamente transformado en un insecto gigante. Desde ese momento, su presencia altera la dinámica familiar y revela tensiones, dependencias y rechazos que siempre estuvieron allí.",
+    "tema": "Alienación",
+    "ranking": 4,
+    "generos": [
+      "Absurdo",
+      "Drama"
+    ],
+    "url_portada": "/portadasLibros/FranzKafka/LaMetamorfosisKafka.png",
+    "id_autor": 7
+  },
+  {
+    "titulo": "Cuento de Navidad",
+    "fecha_publicacion": "1843-01-01",
+    "anio": 1843,
+    "tipo": "Novela Corta",
+    "descripcion": "Ebenezer Scrooge, un hombre avaro y cruel, cambia su vida tras recibir la visita de los espíritus de las Navidades pasadas, presentes y futuras. Este clásico navideño de Dickens, con ilustraciones de Quentin Blake, ofrece una divertida y conmovedora historia sobre generosidad y transformación.",
+    "tema": "Redención",
+    "ranking": 4,
+    "generos": [
+      "Navidad",
+      "Fantasía"
+    ],
+    "url_portada": "/portadasLibros/CharlesDickens/CuentoDeNavidadDickens.jpg",
+    "id_autor": 16
+  },
+  {
+    "titulo": "Memorias del Subsuelo",
+    "fecha_publicacion": "1864-01-01",
+    "anio": 1864,
+    "tipo": "Novela Corta",
+    "descripcion": "Memorias del subsuelo permite adentrarse en las profundidades del alma humana, explorando la psicología y la intimidad del hombre frente a la realidad y la turbulencia de su época. Esta obra refleja los valores clásicos de Dostoievski, autor que conoció de primera mano los campos de Siberia, y se considera un antecedente cercano de sus posteriores novelas extensas y monumentales.",
+    "tema": "Aislamiento",
+    "ranking": 3,
+    "generos": [
+      "Existencialismo"
+    ],
+    "url_portada": "/portadasLibros/FiodorDostoevski/MemoriasDelSubsueloFiodor.jpg",
+    "id_autor": 25
+  },
+  {
+    "titulo": "Rebelión en la Granja",
+    "fecha_publicacion": "1945-08-17",
+    "anio": 1945,
+    "tipo": "Novela Corta",
+    "descripcion": "Rebelión en la granja es una sátira mordaz sobre la Revolución rusa y el estalinismo. Escrita en 1945, muestra cómo los ideales de una organización aparentemente justa pueden corromperse y cómo líderes carismáticos pueden convertirse en opresores. Orwell, con su experiencia diversa como policía, miliciano, corresponsal y editor, plasma en esta obra su aguda visión política y social, convirtiéndola en un clásico imprescindible.",
+    "tema": "Política",
+    "ranking": 4,
+    "generos": [
+      "Alegoría",
+      "Sátira"
+    ],
+    "url_portada": "/portadasLibros/GeorgeOrwell/RebelionEnLaGranjaOrwell.png",
+    "id_autor": 35
+  },
+  {
+    "titulo": "El Viejo y el Mar",
+    "fecha_publicacion": "1952-01-01",
+    "anio": 1952,
+    "tipo": "Novela Corta",
+    "descripcion": "El viejo y el mar, de Hemingway, narra con un lenguaje directo y potente la historia de un viejo pescador cubano que enfrenta la mayor prueba de su vida: la lucha incansable contra un gigantesco pez en el golfo. La obra aborda el valor frente a la derrota y el triunfo personal que surge de la adversidad.",
+    "tema": "Lucha",
+    "ranking": 3,
+    "generos": [
+      "Aventura",
+      "Ficción"
+    ],
+    "url_portada": "/portadasLibros/ErnestHemingway/ElViejoYElMarHemingway.jpeg",
+    "id_autor": 55
+  },
+  {
+    "titulo": "El Principito",
+    "fecha_publicacion": "1943-04-06",
+    "anio": 1943,
+    "tipo": "Novela Corta",
+    "descripcion": "El Principito trata de la historia de un piloto que, tras un accidente de avión en el desierto del Sahara, conoce a un pequeño príncipe de otro planeta. A través de sus conversaciones, el libro explora temas filosóficos como la amistad, el amor, la muerte y la diferencia entre la visión del mundo de los adultos y la de los niños. El principito le narra al aviador sus viajes por otros planetas, sus encuentros con personajes solitarios y su relación con una rosa en su asteroide.",
+    "ranking": 5,
+    "tema": "Reflexión",
+    "generos": [
+      "Fabula",
+      "Novela corta",
+      "Ficción especulativa"
+    ],
+    "url_portada": "/portadasLibros/Antoine de Saint-Exupéry/ElPrincipito.jpg",
+    "id_autor": 79
+  }
+]

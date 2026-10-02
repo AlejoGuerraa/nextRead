@@ -1,0 +1,17 @@
+[
+  {
+    "titulo": "Relato de un Náufrago",
+    "fecha_publicacion": "1970-01-01",
+    "anio": 1970,
+    "tipo": "Reportaje",
+    "descripcion": "Relato de un náufrago reconstruye la historia real de Luis Alejandro Velasco, un marinero que sobrevivió diez días a la deriva en una balsa en el mar Caribe después de caer de un buque militar. Gabriel García Márquez, entonces joven periodista, escuchó su testimonio y lo transformó en una narración directa y potente sobre la resistencia, el miedo y la lucha por sobrevivir. El reportaje, publicado por entregas, reveló irregularidades en la Armada colombiana y terminó generando un escándalo político.",
+    "tema": "Supervivencia",
+    "ranking": 3,
+    "generos": [
+      "No Ficción",
+      "Crónica"
+    ],
+    "url_portada": "/portadasLibros/GabrielaMarquez/RelatoDeUnNaufragoMarquez.jpg",
+    "id_autor": 4
+  }
+]

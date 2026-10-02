@@ -1,0 +1,942 @@
+[
+  {
+    "titulo": "Rayuela",
+    "fecha_publicacion": "1963-06-28",
+    "anio": 1963,
+    "tipo": "Novela",
+    "descripcion": "El amor turbulento de Oliveira y La Maga, los amigos del Club de la Serpiente, y las caminatas por París en busca del cielo y el infierno tienen su reverso en la aventura simétrica de Oliveira, Talita y Traveler en un Buenos Aires teñido por el recuerdo. La aparición de Rayuela en 1963 fue una revolución en la novelística en lengua española: por primera vez, un escritor llevó hasta las últimas consecuencias la voluntad de transgredir el orden tradicional de la historia y el lenguaje. El resultado es un libro único, abierto a múltiples lecturas, lleno de humor, riesgo y originalidad sin precedentes.",
+    "tema": "Existencialismo",
+    "ranking": 4,
+    "generos": [
+      "Ficción",
+      "Experimental"
+    ],
+    "url_portada": "/portadasLibros/Cortazar/RayuelaCortazar.jpg",
+    "id_autor": 1
+  },
+  {
+    "titulo": "El Túnel",
+    "fecha_publicacion": "1948-01-01",
+    "anio": 1948,
+    "tipo": "Novela",
+    "descripcion": "El Túnel es una novela de Ernesto Sabato que narra la obsesión del pintor Juan Pablo Castel por María Iribarne, a quien cree capaz de comprender su arte y visión del mundo. Ambientada en Buenos Aires en la década de 1940, explora la soledad, la incomunicación y la desesperación existencial, ofreciendo una profunda introspección en la mente de su protagonista y cuestionando la percepción y la naturaleza humana.",
+    "tema": "Aislamiento",
+    "ranking": 4,
+    "generos": [
+      "Novela",
+      "Psicológico"
+    ],
+    "url_portada": "/portadasLibros/Sabato/ElTunelSabato.jpg",
+    "id_autor": 2
+  },
+  {
+    "titulo": "Sobre Héroes y Tumbas",
+    "fecha_publicacion": "1961-01-01",
+    "anio": 1961,
+    "tipo": "Novela",
+    "descripcion": "Un relato sobre los últimos representantes de una familia oligárquica venida a menos. Por un lado, Martín y Alejandra, que viven una relación tortuosa y atormentada, son incapaces de escapar de un turbio destino: la genética predisposición de la familia de ella a la locura. Por otro, narra la historia de un incesto brutal en una atmósfera que asfixia a sus protagonistas..",
+    "tema": "Historia Argentina",
+    "ranking": 4,
+    "generos": [
+      "Novela",
+      "Drama"
+    ],
+    "url_portada": "/portadasLibros/Sabato/SobreHeroesYTumbasSabato.jpg",
+    "id_autor": 2
+  },
+  {
+    "titulo": "Abaddón el Exterminador",
+    "fecha_publicacion": "1974-01-01",
+    "anio": 1974,
+    "tipo": "Novela",
+    "descripcion": "Abaddón el exterminador cierra la trilogía iniciada con El túnel y continuada en Sobre héroes y tumbas. Publicada en 1974, desarrolla en su mayor escala la metáfora del «Informe sobre ciegos» y presenta una compleja estructura narrativa en la que el propio Sabato aparece como personaje. Con su mirada visionaria, la novela evoca las potencias del mal y un mundo dominado por fuerzas demoníacas, creando un relato onírico y profético que anuncia las desgracias de nuestro tiempo",
+    "tema": "Apocalipsis",
+    "ranking": 4,
+    "generos": [
+      "Ficción",
+      "Metafísico"
+    ],
+    "url_portada": "/portadasLibros/Sabato/AbaddonElExterminadorSabato.jpg",
+    "id_autor": 2
+  },
+  {
+    "titulo": "La Tregua",
+    "fecha_publicacion": "1960-01-01",
+    "anio": 1960,
+    "tipo": "Novela",
+    "descripcion": "Martín Santomé, viudo con tres hijos, en las vísperas de su jubilación comienza a registrar en un diario su vida gris y sin relieve. La vida cotidiana de la rutina en la oficina y la de un hogar desunido y crispado se verán alteradas cuando irrumpe en su rutina la joven Laura Avellaneda, su nueva empleada. Y este hombre, casi sin proponérselo, decide abrir en su vida un paréntesis luminoso.",
+    "tema": "Rutina",
+    "ranking": 4,
+    "generos": [
+      "Romance",
+      "Drama"
+    ],
+    "url_portada": "/portadasLibros/Benedetti/LaTreguaBenedetti.png",
+    "id_autor": 3
+  },
+  {
+    "titulo": "Gracias por el Fuego",
+    "fecha_publicacion": "1965-01-01",
+    "anio": 1965,
+    "tipo": "Novela",
+    "descripcion": "Ramón Budiño vive marcado por el conflicto con su padre, figura que para él representa ciertos rasgos arraigados en la sociedad uruguaya y en una clase social reacia a asumir responsabilidades. El peso del caudillismo y la sensación de que nada cambia alimentan su frustración y lo mantienen atrapado en una red de pensamientos de la que no logra liberarse. La novela ofrece una mirada profunda sobre la identidad, la herencia familiar y las limitaciones que impone una cultura inmóvil.",
+    "tema": "Política",
+    "ranking": 4,
+    "generos": [
+      "Novela",
+      "Crítica Social"
+    ],
+    "url_portada": "/portadasLibros/Benedetti/GraciasPorElFuegoBenedetti.jpg",
+    "id_autor": 3
+  },
+  {
+    "titulo": "Cien Años de Soledad",
+    "fecha_publicacion": "1967-05-30",
+    "anio": 1967,
+    "tipo": "Novela",
+    "descripcion": "Cien años de soledad cuenta la historia de la familia Buendía-Iguarán a lo largo de varias generaciones en el pueblo ficticio de Macondo. La novela sigue sus amores, tragedias, milagros, conflictos y repeticiones familiares, mezclando lo real con lo fantástico. A través de la vida de sus personajes, García Márquez muestra cómo el tiempo, la memoria, la soledad y el destino marcan la existencia de un pueblo y de una familia que parece condenada a repetir sus errores.",
+    "tema": "Realismo Mágico",
+    "ranking": 4,
+    "generos": [
+      "Realismo Mágico"
+    ],
+    "url_portada": "/portadasLibros/GabrielaMarquez/CienAniosDeSoledadMarquez.png",
+    "id_autor": 4
+  },
+  {
+    "titulo": "El Amor en los Tiempos del Cólera",
+    "fecha_publicacion": "1985-01-01",
+    "anio": 1985,
+    "tipo": "Novela",
+    "descripcion": "De lectura indispensable, esta novela ejemplar de la nueva literatura latinoamericana transcurre en Cartagena a principios del siglo xx. El premio Nobel de literatura García Márquez habla del amor, la fidelidad y el paso del tiempo a través del triángulo amoroso entre Florentino Ariza, Fermina Daza y el doctor Juvenal Urbino.",
+    "tema": "Amor",
+    "ranking": 4,
+    "generos": [
+      "Novela",
+      "Romance"
+    ],
+    "url_portada": "/portadasLibros/GabrielaMarquez/ElAmorEnLosTiemposDelColeraMarquez.png",
+    "id_autor": 4
+  },
+  {
+    "titulo": "Orgullo y Prejuicio",
+    "fecha_publicacion": "1813-01-28",
+    "anio": 1813,
+    "tipo": "Novela",
+    "descripcion": "Novela romántica clásica cuya trama se desarrolla en la Inglaterra isabelina, en una sociedad sumamente conservadora y tradicional, donde lo más importante era 'casarse bien' para conseguir la mejor posición económica y social, sin importar los sentimientos.",
+    "tema": "Matrimonio",
+    "ranking": 4,
+    "generos": [
+      "Clásico",
+      "Romance"
+    ],
+    "url_portada": "/portadasLibros/JaneAusten/OrgulloYPrejuicioAusten.png",
+    "id_autor": 5
+  },
+  {
+    "titulo": "Sentido y Sensibilidad",
+    "fecha_publicacion": "1811-01-01",
+    "anio": 1811,
+    "tipo": "Novela",
+    "descripcion": "Sentido y sensibilidad sigue la vida de las hermanas Elinor y Marianne Dashwood, cuyos caracteres opuestos representan dos maneras de enfrentar el amor y las normas sociales: la prudencia frente a la emoción. En una sociedad donde el matrimonio define el destino de una mujer, ambas deberán aprender a equilibrar sus sentimientos con las exigencias del entorno. Con ironía y sutileza, Jane Austen muestra las limitaciones impuestas a las mujeres y la lucha por encontrar estabilidad y felicidad.",
+    "tema": "Sociedad",
+    "ranking": 4,
+    "generos": [
+      "Clásico",
+      "Drama"
+    ],
+    "url_portada": "/portadasLibros/JaneAusten/SentidoYSensibilidadAusten.png",
+    "id_autor": 5
+  },
+  {
+    "titulo": "Emma",
+    "fecha_publicacion": "1815-01-01",
+    "anio": 1815,
+    "tipo": "Novela",
+    "descripcion": "Su protagonista, una joven de familia acomodada que ha manifestado su intención de no casarse jamás, se dedica sin embargo a ejercer de casamentera para los demás. Convencida de su astucia e inteligencia, trama planes que en lugar de lograr su objetivo provocan múltiples malentendidos y divertidas situaciones antes de llegar al triunfo final del amor.",
+    "tema": "Comedia",
+    "ranking": 3,
+    "generos": [
+      "Clásico",
+      "Comedia"
+    ],
+    "url_portada": "/portadasLibros/JaneAusten/EmmaAusten.png",
+    "id_autor": 5
+  },
+  {
+    "titulo": "El Proceso",
+    "fecha_publicacion": "1925-01-01",
+    "anio": 1925,
+    "tipo": "Novela",
+    "descripcion": "La novela narra la pesadilla de Josef K., un hombre acusado sin motivo por una justicia incomprensible y burocrática. Atrapado en un sistema deshumanizado, su vida se convierte en una sucesión de confusión, miedo y absurdo. Con este retrato inquietante, Kafka expone la fragilidad del individuo frente al poder y crea una de las obras más emblemáticas de la literatura moderna.",
+    "tema": "Burocracia",
+    "ranking": 4,
+    "generos": [
+      "Absurdo",
+      "Filosófico"
+    ],
+    "url_portada": "/portadasLibros/FranzKafka/ElProcesoKafka.png",
+    "id_autor": 7
+  },
+  {
+    "titulo": "El Castillo",
+    "fecha_publicacion": "1926-01-01",
+    "anio": 1926,
+    "tipo": "Novela",
+    "descripcion": "La historia sigue al agrimensor K., quien llega a un remoto pueblo para asumir un trabajo que parece imposible de concretar. Desde su primer contacto con el misterioso castillo que domina la aldea, queda atrapado en una red de trámites, evasivas y prohibiciones. A medida que intenta acercarse a las autoridades, todo se vuelve más confuso y absurdo, hasta un final marcado por la frustración y la imposibilidad, rasgo distintivo del universo kafkiano.",
+    "tema": "Poder",
+    "ranking": 4,
+    "generos": [
+      "Absurdo",
+      "Inconcluso"
+    ],
+    "url_portada": "/portadasLibros/FranzKafka/ElCastilloKafka.jpg",
+    "id_autor": 7
+  },
+  {
+    "titulo": "Estudio en Escarlata",
+    "fecha_publicacion": "1887-01-01",
+    "anio": 1887,
+    "tipo": "Novela",
+    "descripcion": "La primera aventura de Sherlock Holmes introduce su sociedad con el doctor Watson, recién llegado de Afganistán. Al instalarse juntos en el 221B Baker Street, Watson descubre el talento casi sobrenatural de Holmes para la deducción. Su primer caso en conjunto los enfrenta a un asesinato inquietante: una casa vacía, un cadáver sin heridas y una palabra escrita con sangre. Publicada en 1887, esta novela inaugura el método analítico de Holmes y sienta las bases del universo detectivesco creado por Conan Doyle.",
+    "tema": "Investigación",
+    "ranking": 4,
+    "generos": [
+      "Misterio",
+      "Policial"
+    ],
+    "url_portada": "/portadasLibros/ArthurConanDoyle/EstudioEnEscarlataDoyle.png",
+    "id_autor": 8
+  },
+  {
+    "titulo": "El Signo de los Cuatro",
+    "fecha_publicacion": "1890-01-01",
+    "anio": 1890,
+    "tipo": "Novela",
+    "descripcion": "La señorita Mary Morstan busca la ayuda de Sherlock Holmes tras recibir misteriosas perlas y una cita anónima relacionada con la desaparición de su padre. Holmes y Watson la acompañan al encuentro, que los lleva a los hermanos Sholto y a la revelación de un antiguo tesoro indio envuelto en secretos y tragedias. Así comienza un nuevo caso para el célebre detective, lleno de intrigas, pistas ocultas y ambición.",
+    "tema": "Aventura",
+    "ranking": 4,
+    "generos": [
+      "Misterio",
+      "Aventura"
+    ],
+    "url_portada": "/portadasLibros/ArthurConanDoyle/ElSignoDeLosCuatroDoyle.jpg",
+    "id_autor": 8
+  },
+  {
+    "titulo": "El Sabueso de los Baskerville",
+    "fecha_publicacion": "1902-01-01",
+    "anio": 1902,
+    "tipo": "Novela",
+    "descripcion": "La historia sigue a Sherlock Holmes y a su fiel compañero Watson mientras investigan la misteriosa maldición que persigue a la familia Baskerville. Generaciones enteras han muerto en circunstancias inexplicables, y el último heredero teme ser la próxima víctima. Con su aguda lógica y su método deductivo, Holmes se propone descubrir qué hay detrás de la leyenda del temible sabueso que acecha en los páramos, enfrentándose a uno de los casos más inquietantes de su carrera.",
+    "tema": "Sobrenatural",
+    "ranking": 4,
+    "generos": [
+      "Misterio",
+      "Gótico"
+    ],
+    "url_portada": "/portadasLibros/ArthurConanDoyle/ElSabuesoDeLosBaskerVilleDoyle.jpeg",
+    "id_autor": 8
+  },
+  {
+    "titulo": "El Mundo Perdido",
+    "fecha_publicacion": "1912-01-01",
+    "anio": 1912,
+    "tipo": "Novela",
+    "descripcion": "Una expedición a una meseta remota de Sudamérica conduce a sus protagonistas a un mundo perdido donde sobreviven criaturas prehistóricas y tribus primitivas. Con humor, aventura y toques de ciencia ficción, Conan Doyle combina sus conocimientos de historia natural con una gran imaginación para crear un relato lleno de acción y suspenso. Una historia clásica que ofrece una experiencia de lectura tan sorprendente como entretenida.",
+    "tema": "Dinosaurios",
+    "ranking": 3,
+    "generos": [
+      "Ciencia Ficción",
+      "Aventura"
+    ],
+    "url_portada": "/portadasLibros/ArthurConanDoyle/ElMundoPerdidoDoyle.jpg",
+    "id_autor": 8
+  },
+  {
+    "titulo": "El Extranjero",
+    "fecha_publicacion": "1942-01-01",
+    "anio": 1942,
+    "tipo": "Novela",
+    "descripcion": "La historia sigue a Meursault, un joven que vive sin grandes emociones ni vínculos en Argel. Su indiferencia ante todo —incluso ante la muerte de su madre— lo vuelve un extraño frente a la sociedad. Tras cometer un asesinato impulsivo, será juzgado no solo por el crimen, sino por su manera de vivir. Con un estilo simple y preciso, la novela muestra el absurdo y la falta de sentido que marcan la existencia humana.",
+    "tema": "Absurdo",
+    "ranking": 4,
+    "generos": [
+      "Existencialismo"
+    ],
+    "url_portada": "/portadasLibros/AlbertCamus/ElExtranjeroCamus.png",
+    "id_autor": 9
+  },
+  {
+    "titulo": "La Peste",
+    "fecha_publicacion": "1947-01-01",
+    "anio": 1947,
+    "tipo": "Novela",
+    "descripcion": "La novela narra cómo una epidemia de peste azota la ciudad de Orán y obliga a sus habitantes a enfrentar el miedo, el aislamiento y la muerte. A través de esta crisis, Camus reflexiona sobre la solidaridad, la resistencia y el modo en que las personas reaccionan ante el sufrimiento colectivo. Es una alegoría poderosa de los tiempos difíciles que siguieron a la Segunda Guerra Mundial.",
+    "tema": "Enfermedad",
+    "ranking": 4,
+    "generos": [
+      "Alegoría",
+      "Filosófico"
+    ],
+    "url_portada": "/portadasLibros/AlbertCamus/LaPesteCamus.jpg",
+    "id_autor": 9
+  },
+  {
+    "titulo": "Primera Memoria",
+    "fecha_publicacion": "1959-01-01",
+    "anio": 1959,
+    "tipo": "Novela",
+    "descripcion": "Primera memoria narra el paso doloroso de la infancia a la adolescencia durante los primeros meses de la Guerra Civil Española. La historia sigue a Matia, una niña enviada a vivir con su abuela en una isla, donde pasa el verano junto a su primo Borja y Manuel, un muchacho marginado del pueblo. A través de sus juegos, secretos y conflictos, Matute muestra cómo la inocencia se rompe, cómo surgen la crueldad y la lealtad, y cómo la guerra —aunque lejana— marca la vida y la madurez de los jóvenes.",
+    "tema": "Guerra Civil",
+    "ranking": 3,
+    "generos": [
+      "Novela",
+      "Histórico"
+    ],
+    "url_portada": "/portadasLibros/AnaMariaMatute/PrimeraMemoriaMatute.png",
+    "id_autor": 10
+  },
+  {
+    "titulo": "Los Mercaderes",
+    "fecha_publicacion": "1960-01-01",
+    "anio": 1960,
+    "tipo": "Novela",
+    "descripcion": "la Trilogía de Los Mercaderes, tres novelas autónomas de Ana María Matute ambientadas en los años de la Guerra Civil española. Incluye Primera memoria, donde Matia y su primo Borja atraviesan el difícil paso de la infancia a la adolescencia; Los soldados lloran de noche, que gira en torno a la figura enigmática de un soldado desaparecido; y La trampa, centrada en los monólogos inquietos que rodean la preparación de una fiesta familiar. Con personajes y atmósferas que se entrelazan, el libro ofrece una visión profunda y melancólica de la pérdida de la inocencia y la complejidad del mundo adulto.",
+    "tema": "Postguerra",
+    "ranking": 3,
+    "generos": [
+      "Novela",
+      "Drama"
+    ],
+    "url_portada": "/portadasLibros/AnaMariaMatute/LosMercaderesMatute.png",
+    "id_autor": 10
+  },
+  {
+    "titulo": "Olvidado Rey Gudú",
+    "fecha_publicacion": "1996-01-01",
+    "anio": 1996,
+    "tipo": "Novela",
+    "descripcion": "Olvidado rey Gudú es la novela más destacada de Ana María Matute. Relata el origen y la expansión del Reino de Olar, combinando fantasía y elementos legendarios. La historia sigue la vida del rey Gudú y muestra cómo influyen en el destino del reino una niña sureña de gran astucia, un viejo hechicero y una criatura subterránea. Ambientada en territorios simbólicos —el Norte misterioso, la estepa del Este y el Sur fértil—, la obra aborda temas como el poder, la ambición y el paso del tiempo..",
+    "tema": "Fantasía",
+    "ranking": 3,
+    "generos": [
+      "Fantasía",
+      "Épico"
+    ],
+    "url_portada": "/portadasLibros/AnaMariaMatute/OlvidadoReyGuduMatute.jpeg",
+    "id_autor": 10
+  },
+  {
+    "titulo": "La Casa de los Espíritus",
+    "fecha_publicacion": "1982-01-01",
+    "anio": 1982,
+    "tipo": "Novela",
+    "descripcion": "La casa de los espíritus cuenta la historia de la familia Trueba desde comienzos del siglo XX hasta tiempos recientes. Ambientada en un país latinoamericano, sigue el destino dramático y singular de varias generaciones marcadas por tensiones políticas, conflictos familiares y elementos sobrenaturales. La novela consolidó a Isabel Allende como una de las voces más importantes de la literatura latinoamericana.",
+    "tema": "Misticismo",
+    "ranking": 4,
+    "generos": [
+      "Realismo Mágico"
+    ],
+    "url_portada": "/portadasLibros/IsabelAllende/LaCasaDeLosEspiritusAllende.png",
+    "id_autor": 11
+  },
+  {
+    "titulo": "De Amor y de Sombra",
+    "fecha_publicacion": "1984-01-01",
+    "anio": 1984,
+    "tipo": "Novela",
+    "descripcion": "Relata la historia de una pareja cuyo amor surge en medio de la represión política en un país latinoamericano. A través de ellos, la novela muestra las injusticias y el sufrimiento de la época, combinando emoción, compromiso social y una mirada profundamente humana.",
+    "tema": "Dictadura",
+    "ranking": 3,
+    "generos": [
+      "Novela",
+      "Romance"
+    ],
+    "url_portada": "/portadasLibros/IsabelAllende/DeAmorYdeSombreAllende.png",
+    "id_autor": 11
+  },
+  {
+    "titulo": "Eva Luna",
+    "fecha_publicacion": "1987-01-01",
+    "anio": 1987,
+    "tipo": "Novela",
+    "descripcion": "Narra la vida de su protagonista, alter ego de la autora, mostrando cómo las historias revelan la vida y el mundo. La novela combina destino individual y colectivo con una prosa épica, consolidándose como una de las grandes obras de la literatura latinoamericana contemporánea.",
+    "tema": "Feminismo",
+    "ranking": 4,
+    "generos": [
+      "Novela",
+      "Aventura"
+    ],
+    "url_portada": "/portadasLibros/IsabelAllende/EvaLunaIsabelAllende.png",
+    "id_autor": 11
+  },
+  {
+    "titulo": "Don Quijote de la Mancha",
+    "fecha_publicacion": "1605-01-01",
+    "anio": 1605,
+    "tipo": "Novela",
+    "descripcion": "Considerada la primera novela moderna, Don Quijote de la Mancha narra las aventuras de un idealista que lucha contra un mundo hostil, mezclando humor, ironía y reflexión sobre la justicia, la amistad y el heroísmo. Esta edición íntegra, ilustrada por Gustave Doré, permite al lector adentrarse en la psicología del personaje y disfrutar de la obra maestra de Cervantes, vigente y accesible tras más de cuatro siglos.",
+    "tema": "Caballería",
+    "ranking": 4,
+    "generos": [
+      "Clásico",
+      "Sátira"
+    ],
+    "url_portada": "/portadasLibros/MiguelDeCervantes/DonQuijoteDeLaManchaCervantes.png",
+    "id_autor": 13
+  },
+  {
+    "titulo": "Al Faro",
+    "fecha_publicacion": "1927-01-01",
+    "anio": 1927,
+    "tipo": "Novela",
+    "descripcion": "La novela sigue un día en la vida de la familia Ramsay y sus amigos en una casa frente al mar, mientras planean una excursión al faro. A través de los pensamientos, voces y acciones de los personajes, Virginia Woolf explora la percepción del tiempo, la memoria y las relaciones humanas, consolidando su lugar entre los grandes de la novela moderna.",
+    "tema": "Tiempo",
+    "ranking": 3,
+    "generos": [
+      "Modernismo",
+      "Psicológico"
+    ],
+    "url_portada": "/portadasLibros/VirginiaWoolf/AlFaroWoolf.png",
+    "id_autor": 15
+  },
+  {
+    "titulo": "La Señora Dalloway",
+    "fecha_publicacion": "1925-01-01",
+    "anio": 1925,
+    "tipo": "Novela",
+    "descripcion": "La novela narra un solo día en la vida de Clarissa Dalloway, una mujer de la alta sociedad inglesa que prepara una fiesta en su casa. A través de sus acciones y de los recuerdos que surgen en flashbacks, Virginia Woolf combina prosa lírica y profundidad psicológica para explorar la memoria, la identidad y la percepción del tiempo, consolidando esta obra como un clásico de la literatura moderna.",
+    "tema": "Conciencia",
+    "ranking": 3,
+    "generos": [
+      "Modernismo",
+      "Psicológico"
+    ],
+    "url_portada": "/portadasLibros/VirginiaWoolf/LaSeñoraDallowayWoolf.jpeg",
+    "id_autor": 15
+  },
+  {
+    "titulo": "Grandes Esperanzas",
+    "fecha_publicacion": "1861-01-01",
+    "anio": 1861,
+    "tipo": "Novela",
+    "descripcion": "Esta novela trata sobre un joven humilde cuya vida cambia gracias a un misterioso benefactor y a pasiones amorosas. Combina la realidad cotidiana con la fantasía, mostrando la psicología de sus personajes y el detallado mundo humano que caracteriza la obra de Dickens.",
+    "tema": "Clases Sociales",
+    "ranking": 4,
+    "generos": [
+      "Clásico",
+      "Social"
+    ],
+    "url_portada": "/portadasLibros/CharlesDickens/GrandesEsperanzasDickens.png",
+    "id_autor": 16
+  },
+  {
+    "titulo": "Oliver Twist",
+    "fecha_publicacion": "1838-01-01",
+    "anio": 1838,
+    "tipo": "Novela",
+    "descripcion": "Narra la historia de Oliver, un huérfano de nueve años que escapa del maltrato de su aprendiz y se pierde en Londres, donde cae bajo la influencia del delincuente Fagin. Su destino cambiará de manera inesperada, entre aventuras y peligros en la ciudad.",
+    "tema": "Pobreza",
+    "ranking": 4,
+    "generos": [
+      "Clásico",
+      "Drama"
+    ],
+    "url_portada": "/portadasLibros/CharlesDickens/OliverTwistDickens.png",
+    "id_autor": 16
+  },
+  {
+    "titulo": "Historia de Dos Ciudades",
+    "fecha_publicacion": "1859-01-01",
+    "anio": 1859,
+    "tipo": "Novela",
+    "descripcion": "Inspirada en la Revolución Francesa, Dickens narra la vida en Inglaterra y Francia, mostrando los problemas sociales y políticos de su época. La novela contrasta la estabilidad inglesa con la violencia creciente en Francia, explorando sufrimiento, sacrificio y las consecuencias de la injusticia. Un clásico imprescindible de la literatura universal.",
+    "tema": "Revolución",
+    "ranking": 4,
+    "generos": [
+      "Clásico",
+      "Histórico"
+    ],
+    "url_portada": "/portadasLibros/CharlesDickens/HistoriaDeDosCiudadesDickens.jpg",
+    "id_autor": 16
+  },
+  {
+    "titulo": "Moby Dick",
+    "fecha_publicacion": "1851-01-01",
+    "anio": 1851,
+    "tipo": "Novela",
+    "descripcion": "En los mares del norte, Ismael se embarca en el Pequod junto a Queequeg. La tripulación se enfrenta al legendario leviatán blanco, Moby Dick, mientras el capitán Ahab persigue obsesivamente su venganza. Una historia de aventuras, obsesión y confrontación con la naturaleza.",
+    "tema": "Obsesión",
+    "ranking": 3,
+    "generos": [
+      "Clásico",
+      "Aventura"
+    ],
+    "url_portada": "/portadasLibros/HermanMelville/MobyDickMelville.jpg",
+    "id_autor": 17
+  },
+  {
+    "titulo": "El Retrato de Dorian Gray",
+    "fecha_publicacion": "1890-01-01",
+    "anio": 1890,
+    "tipo": "Novela",
+    "descripcion": "Dorian Gray, consciente de su belleza gracias al retrato que le hace Basilio Hallward, se obsesiona con mantenerla intacta. Para evitar los estragos del tiempo, entrega su alma al placer y al egoísmo, ignorando la ética. Mientras él permanece joven, el retrato envejece y refleja sus faltas y decadencia moral, convirtiéndose en testigo de su caída espiritual..",
+    "tema": "Estética",
+    "ranking": 4,
+    "generos": [
+      "Gótico",
+      "Filosófico"
+    ],
+    "url_portada": "/portadasLibros/OscarWilde/ElRetratoDeDorianGrayWilde.png",
+    "id_autor": 18
+  },
+  {
+    "titulo": "Guerra y Paz",
+    "fecha_publicacion": "1869-01-01",
+    "anio": 1869,
+    "tipo": "Novela",
+    "descripcion": "Guerra y Paz, de León Tolstói (1828-1910), publicada en 1869, es un clásico de la literatura rusa. Ambientada entre 1805 y 1820, narra cómo cinco familias aristocráticas enfrentan la invasión napoleónica mientras buscan preservar su honor y estilo de vida. Ejemplo del realismo literario, combina historia y ficción, y ha sido fuente de inspiración en múltiples medios.",
+    "tema": "Guerra",
+    "ranking": 4,
+    "generos": [
+      "Clásico",
+      "Histórico"
+    ],
+    "url_portada": "/portadasLibros/LeoTolstoi/GuerraYPazTolstoi.jpg",
+    "id_autor": 24
+  },
+  {
+    "titulo": "Anna Karénina",
+    "fecha_publicacion": "1877-01-01",
+    "anio": 1877,
+    "tipo": "Novela",
+    "descripcion": "Anna Karenina, junto con Guerra y Paz, es una de las obras más importantes de León Tolstói y un clásico del realismo ruso. La novela combina crítica social y personajes de gran profundidad psicológica. Narra las desventuras de Anna Karenina, quien busca integrarse en una sociedad hipócrita que la margina por su adulterio mientras perdona los excesos de su amante, ofreciendo un retrato de la Rusia del siglo XIX y reflexionando sobre la invisibilización de la mujer.",
+    "tema": "Adulterio",
+    "ranking": 4,
+    "generos": [
+      "Clásico",
+      "Romance"
+    ],
+    "url_portada": "/portadasLibros/LeoTolstoi/AnnaKareninaTolstoi.png",
+    "id_autor": 24
+  },
+  {
+    "titulo": "Crimen y Castigo",
+    "fecha_publicacion": "1866-01-01",
+    "anio": 1866,
+    "tipo": "Novela",
+    "descripcion": "Un estudiante pobre asesina a una usurera por razones morales.",
+    "tema": "Moralidad",
+    "ranking": 4,
+    "generos": [
+      "Clásico",
+      "Psicológico"
+    ],
+    "url_portada": "/portadasLibros/FiodorDostoevski/CrimenYCastigoFiodor.jpg",
+    "id_autor": 25
+  },
+  {
+    "titulo": "Los Hermanos Karamázov",
+    "fecha_publicacion": "1880-01-01",
+    "anio": 1880,
+    "tipo": "Novela",
+    "descripcion": "Crimen y castigo (1866) es considerada la primera obra maestra de Dostoievski y un profundo estudio psicológico de su protagonista, Raskolnikov. Joven estudiante de San Petersburgo, Raskolnikov cree que los fines humanitarios justifican la maldad, lo que lo lleva a asesinar a un usurero. Desde entonces, la culpa lo atormenta sin tregua. Con un estilo intenso y compasivo, Dostoievski sigue los conflictos internos del protagonista, mostrando cómo la felicidad no puede imponerse por la razón, sino que se gana a través del sufrimiento. La obra destaca por su retrato conmovedor de la lucha interna de un hombre contra su propia conciencia.",
+    "tema": "Religión",
+    "ranking": 4,
+    "generos": [
+      "Clásico",
+      "Filosófico"
+    ],
+    "url_portada": "/portadasLibros/FiodorDostoevski/LosHermanosKaramazovFiodor.png",
+    "id_autor": 25
+  },
+  {
+    "titulo": "Pedro Páramo",
+    "fecha_publicacion": "1955-01-01",
+    "anio": 1955,
+    "tipo": "Novela",
+    "descripcion": "Pedro Páramo, primera novela de Juan Rulfo publicada en 1955, es una obra maestra de la literatura universal. Su historia transcurre en un mundo onírico donde vida y muerte se entrelazan, y las voces de los personajes resuenan más allá de la muerte. Escritores como Borges, García Márquez y Vargas Llosa destacan su originalidad y profundidad, que capturan la esencia de México mediante técnicas literarias innovadoras.",
+    "tema": "Muerte",
+    "ranking": 4,
+    "generos": [
+      "Realismo Mágico"
+    ],
+    "url_portada": "/portadasLibros/JuanRulfo/PedroParamoRulfo.png",
+    "id_autor": 30
+  },
+  {
+    "titulo": "El Hobbit",
+    "fecha_publicacion": "1937-01-01",
+    "anio": 1937,
+    "tipo": "Novela",
+    "descripcion": "Bilbo Bolsón es un hobbit que lleva una vida tranquila y sin ambiciones, hasta que un día Gandalf y trece enanos llegan a su hogar para embarcarlo en una inesperada aventura. Su misión: recuperar el tesoro de Smaug, un enorme y peligroso dragón..",
+    "tema": "Fantasía",
+    "ranking": 4,
+    "generos": [
+      "Fantasía",
+      "Infantil"
+    ],
+    "url_portada": "/portadasLibros/JRRTolkien/ElHobbitTolkien.png",
+    "id_autor": 33
+  },
+  {
+    "titulo": "El Señor de los Anillos: La Comunidad del Anillo",
+    "fecha_publicacion": "1954-07-29",
+    "anio": 1954,
+    "tipo": "Novela",
+    "descripcion": "En la tranquila Comarca, Frodo, un joven hobbit, recibe la misión de custodiar el Anillo Único y llevarlo a las Grietas del Destino para destruirlo. Acompañado por Sam, Pippin y Merry, y con la ayuda de Aragorn, enfrentará a los Jinetes Negros y llegará al refugio de Elrond en Rivendel.",
+    "tema": "Aventura",
+    "ranking": 4,
+    "generos": [
+      "Fantasía",
+      "Épico"
+    ],
+    "url_portada": "/portadasLibros/JRRTolkien/ElSeniorDeLosAnillosComunidadTolkien.jpeg",
+    "id_autor": 33
+  },
+  {
+    "titulo": "El Señor de los Anillos: Las Dos Torres",
+    "fecha_publicacion": "1954-11-11",
+    "anio": 1954,
+    "tipo": "Novela",
+    "descripcion": "Los Anillos del Poder fueron forjados por los Elfos, y Sauron creó el Anillo Único para dominarlos a todos. Tras pasar de Bilbo a Frodo, este debe atravesar la Tierra Media y destruir el Anillo en las Grietas del Destino. La segunda parte de La Guerra del Anillo narra una épica de valor, traición y aventuras mágicas.",
+    "tema": "Guerra",
+    "ranking": 4,
+    "generos": [
+      "Fantasía",
+      "Épico"
+    ],
+    "url_portada": "/portadasLibros/JRRTolkien/ElSeniorDeLosAnillosTorresTolkien.png",
+    "id_autor": 33
+  },
+  {
+    "titulo": "El Señor de los Anillos: El Retorno del Rey",
+    "fecha_publicacion": "1955-10-20",
+    "anio": 1955,
+    "tipo": "Novela",
+    "descripcion": "La batalla por la Tierra Media ha empezado. Las fuerzas de Saruman han sido destruidas y por primera vez parece que hay una pequeña esperanza. Sin embargo, el poder de Sauron crece y su interés se centra en Gondor, el último reducto de los hombres, cuyo heredero es Aragorn. Mientras, Frodo y Sam, guiados por Gollum, siguen su peligrosa misión a través de Mordor para destruir el anillo.",
+    "tema": "Destino",
+    "ranking": 4,
+    "generos": [
+      "Fantasía",
+      "Épico"
+    ],
+    "url_portada": "/portadasLibros/JRRTolkien/ElSeniorDeLosAnillosRetornoTolkien.jpeg",
+    "id_autor": 33
+  },
+  {
+    "titulo": "1984",
+    "fecha_publicacion": "1949-06-08",
+    "anio": 1949,
+    "tipo": "Novela",
+    "descripcion": "1984 es una de las novelas más inquietantes del siglo XX. Ambientada en una Londres sombría, la Policía del Pensamiento controla la vida de todos. Winston Smith, empleado del sistema, reescribe la historia según lo que el Partido considera oficial, hasta que comienza a cuestionar la verdad impuesta y el régimen que los domina.",
+    "tema": "Totalitarismo",
+    "ranking": 4,
+    "generos": [
+      "Distopía",
+      "Ciencia Ficción"
+    ],
+    "url_portada": "/portadasLibros/GeorgeOrwell/1984Orwell.png",
+    "id_autor": 35
+  },
+  {
+    "titulo": "Un Mundo Feliz",
+    "fecha_publicacion": "1932-01-01",
+    "anio": 1932,
+    "tipo": "Novela",
+    "descripcion": "Un mundo feliz es un clásico del siglo XX que ofrece una crítica mordaz sobre el futuro. Huxley describe una sociedad organizada en diez zonas seguras, donde triunfan el consumo y la comodidad, pero a costa de sacrificar valores humanos esenciales. Los ciudadanos son creados y controlados artificialmente, reflejando un mundo donde la tecnología y el orden reemplazan la libertad y la individualidad.",
+    "tema": "Sociedad",
+    "ranking": 4,
+    "generos": [
+      "Distopía",
+      "Ciencia Ficción"
+    ],
+    "url_portada": "/portadasLibros/AldousHuxley/UnMundoFelizHuxley.png",
+    "id_autor": 36
+  },
+  {
+    "titulo": "Tokio Blues (Norwegian Wood)",
+    "fecha_publicacion": "1987-01-01",
+    "anio": 1987,
+    "tipo": "Novela",
+    "descripcion": "Tokio Blues narra la educación sentimental de Toru Watanabe, un joven estudiante en el Tokio de los años sesenta. Introvertido y serio, se enamora de Naoko, una joven impenetrable, lo que lo lleva a una crisis de aislamiento y reclusión. Ante las dificultades con Naoko, Toru se sumerge en relaciones esporádicas hasta conocer a Midori, una joven vital y exuberante que transformará su mundo tranquilo. Con tono melancólico y sensual, la novela mezcla con acierto melancolía y humor, explorando las angustias adolescentes, el desengaño del primer amor y el tránsito hacia la adultez.",
+    "tema": "Pérdida",
+    "ranking": 3,
+    "generos": [
+      "Drama",
+      "Psicológico"
+    ],
+    "url_portada": "/portadasLibros/HarukiMurakami/TokioBluesNorwegianWoodMurakami.png",
+    "id_autor": 39
+  },
+  {
+    "titulo": "Kafka en la Orilla",
+    "fecha_publicacion": "2002-01-01",
+    "anio": 2002,
+    "tipo": "Novela",
+    "descripcion": "Kafka en la orilla sigue a Kafka Tamura, quien huye de casa al cumplir quince años y llega a Takamatsu, donde encuentra refugio en una misteriosa biblioteca y conoce a la enigmática señora Saeki. Paralelamente, Satoru Nakata, marcado por un accidente infantil y con la habilidad de hablar con gatos, también se dirige a la misma biblioteca. Sus destinos se entrelazan en un relato lleno de misterio y fuerzas que escapan a la razón.",
+    "tema": "Surrealismo",
+    "ranking": 4,
+    "generos": [
+      "Ficción",
+      "Fantástico"
+    ],
+    "url_portada": "/portadasLibros/HarukiMurakami/KafkaEnLaOrillaMurakami.png",
+    "id_autor": 39
+  },
+  {
+    "titulo": "1Q84",
+    "fecha_publicacion": "2009-01-01",
+    "anio": 2009,
+    "tipo": "Novela",
+    "descripcion": "1Q84, libros 1 y 2 de Haruki Murakami se sitúa en un Japón alternativo de 1984, ligeramente desviado de la realidad, reflejando ecos orwellianos en su ambientación. La historia sigue a Aomame, una mujer independiente con un secreto oscuro, y a Tengo, un profesor de matemáticas y aspirante a novelista, cuyas vidas solitarias se entrelazan de manera inevitable. Entre sectas religiosas, corrupción y misterios literarios, ambos personajes descubrirán que no todo es lo que parece y que su destino está irremediablemente conectado.",
+    "tema": "Realidad Alterna",
+    "ranking": 4,
+    "generos": [
+      "Ciencia Ficción",
+      "Romance"
+    ],
+    "url_portada": "/portadasLibros/HarukiMurakami/1q84Murakami.jpg",
+    "id_autor": 39
+  },
+  {
+    "titulo": "Crónica del Pájaro que da Cuerda al Mundo",
+    "fecha_publicacion": "1994-01-01",
+    "anio": 1994,
+    "tipo": "Novela",
+    "descripcion": "El joven Tooru Okada, que acaba de dejar su trabajo en un bufete de abogados, recibe un día la llamada anónima de una mujer. A partir de ese momento, la existencia de Tooru sufre una extraña transformación. Su mujer desaparece, comienzan a surgir a su alrededor misteriosos personajes, y lo real se degrada hasta cobrar tintes fantasmagóricos. Mientras los sueños invaden cada vez más la realidad, Tooru Okada deberá resolver conflictos que ha arrastrado a lo largo de toda su vida.",
+    "tema": "Búsqueda",
+    "ranking": 3,
+    "generos": [
+      "Misterio",
+      "Fantástico"
+    ],
+    "url_portada": "/portadasLibros/HarukiMurakami/CronicadelPajaroMurakami.png",
+    "id_autor": 39
+  },
+  {
+    "titulo": "Diez Negritos",
+    "fecha_publicacion": "1939-01-01",
+    "anio": 1939,
+    "tipo": "Novela",
+    "descripcion": "Diez negritos de Agatha Christie reúne a diez personas, sin relación entre sí, en un aislado islote inglés por un misterioso anfitrión llamado Mr. Owen. Tras la primera cena, una grabación acusa a cada uno de ellos de un crimen, y uno por uno comienzan a morir sin explicación. Solo una antigua canción infantil parece contener la clave de esta creciente pesadilla. Publicada en 1939, Christie convierte al lector en detective, desafiándolo a descubrir el misterio que se oculta tras cada asesinato.",
+    "tema": "Misterio",
+    "ranking": 4,
+    "generos": [
+      "Policial",
+      "Suspense"
+    ],
+    "url_portada": "/portadasLibros/AgathaChristie/DiezNegritosChristie.png",
+    "id_autor": 42
+  },
+  {
+    "titulo": "Asesinato en el Orient Express",
+    "fecha_publicacion": "1934-01-01",
+    "anio": 1934,
+    "tipo": "Novela",
+    "descripcion": "Un grupo de viajeros se ve atrapado en el Orient Express en medio de una tormenta de nieve. Entre ellos, pronto se descubrirá un cadáver. El asesino está entre los presentes. un crimen indescifrable, sino fuera porque el detective más famosos de la historia es uno de los pasajeros.",
+    "tema": "Intriga",
+    "ranking": 4,
+    "generos": [
+      "Policial",
+      "Misterio"
+    ],
+    "url_portada": "/portadasLibros/AgathaChristie/AsesinatoEnElOrientExpressChristie.png",
+    "id_autor": 42
+  },
+  {
+    "titulo": "El Asesinato de Roger Ackroyd",
+    "fecha_publicacion": "1926-01-01",
+    "anio": 1926,
+    "tipo": "Novela",
+    "descripcion": "Roger Ackroyd descubre secretos peligrosos sobre la mujer que ama y recibe noticias que podrían revelar la identidad de un chantajista. Sin embargo, antes de terminar de leerlas, es asesinado a puñaladas. Este clásico del misterio es célebre por su sorprendente giro final, convirtiéndolo en una lectura intensa y memorable para los amantes del género.",
+    "tema": "Pueblo",
+    "ranking": 4,
+    "generos": [
+      "Policial",
+      "Intriga"
+    ],
+    "url_portada": "/portadasLibros/AgathaChristie/ElAsesinatoDeRogerAckroydChristie.png",
+    "id_autor": 42
+  },
+  {
+    "titulo": "Muerte en el Nilo",
+    "fecha_publicacion": "1937-01-01",
+    "anio": 1937,
+    "tipo": "Novela",
+    "descripcion": "Aislados en un crucero por el Nilo, la tensión entre los pasajeros aumenta cuando un triángulo amoroso se convierte en el centro de atención, y el amor da paso a un peligro mortal. Una intriga magistral con una coartada sorprendente y una descripción que hace que el río Nilo cobre vida.",
+    "tema": "Viajes",
+    "ranking": 4,
+    "generos": [
+      "Policial",
+      "Suspense"
+    ],
+    "url_portada": "/portadasLibros/AgathaChristie/MuerteEnElNiloChristie.png",
+    "id_autor": 42
+  },
+  {
+    "titulo": "It (Eso)",
+    "fecha_publicacion": "1986-01-01",
+    "anio": 1986,
+    "tipo": "Novela",
+    "descripcion": "It de Stephen King narra la historia de un grupo de amigos que, tras veintisiete años de separación, regresan al pueblo de Derry para enfrentar un horror que marcó su infancia: un misterioso payaso que mutila y mata niños cíclicamente. La novela explora el miedo, la amistad y la valentía, mientras los protagonistas buscan derrotar definitivamente a la amenaza que los traumatizó. Es una obra ambiciosa que perfecciona las claves del terror moderno.",
+    "tema": "Miedo",
+    "ranking": 4,
+    "generos": [
+      "Terror",
+      "Fantasía Oscura"
+    ],
+    "url_portada": "/portadasLibros/StephenKing/ItEsoKing.png",
+    "id_autor": 43
+  },
+  {
+    "titulo": "El Resplandor",
+    "fecha_publicacion": "1977-01-01",
+    "anio": 1977,
+    "tipo": "Novela",
+    "descripcion": "El resplandor de Stephen King cuenta la historia de Danny, un niño de cinco años con la capacidad de percibir cosas que otros no ven, y su familia, que se aísla durante seis meses en un hotel de lujo cubierto de nieve. Mientras su madre enfrenta tensiones personales y su padre se obsesiona con el cuidado del hotel, Danny descubre que sus visiones y fantasías aterradoras relacionadas con el lugar podrían hacerse realidad, transformando la soledad en una amenaza sobrenatural.",
+    "tema": "Locura",
+    "ranking": 4,
+    "generos": [
+      "Terror",
+      "Psicológico"
+    ],
+    "url_portada": "/portadasLibros/StephenKing/ElResplandorKing.png",
+    "id_autor": 43
+  },
+  {
+    "titulo": "Carrie",
+    "fecha_publicacion": "1974-01-01",
+    "anio": 1974,
+    "tipo": "Novela",
+    "descripcion": "Carrie de Stephen King narra la vida de Carrie White, una adolescente tímida y víctima de constantes burlas en su colegio, que posee un poder telequinético: puede mover objetos con la mente. Su habilidad, que es a la vez su don y su maldición, la mantiene aislada hasta que un acto de aparente bondad le da la posibilidad de encajar. Pero cuando la crueldad de sus compañeros alcanza un límite, Carrie desata su poder en un estallido de horror y destrucción que marcará a todos los que la rodean.",
+    "tema": "Telequinesis",
+    "ranking": 4,
+    "generos": [
+      "Terror",
+      "Sobrenatural"
+    ],
+    "url_portada": "/portadasLibros/StephenKing/CarrieKing.png",
+    "id_autor": 43
+  },
+  {
+    "titulo": "La Milla Verde",
+    "fecha_publicacion": "1996-01-01",
+    "anio": 1996,
+    "tipo": "Novela",
+    "descripcion": "La Milla Verde de Stephen King se sitúa en la penitenciaría de Cold Mountain en 1932, donde los presos condenados a muerte esperan su turno para la silla eléctrica, recorriendo el pasillo conocido como “la Milla Verde”. Entre ellos está John Coffey, un hombre gigante con la mente de un niño, acusado de un crimen aterrador. El guardia Paul Edgecombe, testigo de los horrores cotidianos de la prisión, descubrirá pronto que Coffey posee un don extraordinario que desafiará toda lógica y sus más profundas creencias. La novela combina horror, humanidad y misterio, consolidándose como una de las obras más impactantes de King.",
+    "tema": "Milagro",
+    "ranking": 4,
+    "generos": [
+      "Drama",
+      "Fantasía"
+    ],
+    "url_portada": "/portadasLibros/StephenKing/LaMillaVerdeKing.jpg",
+    "id_autor": 43
+  },
+  {
+    "titulo": "Cementerio de Animales",
+    "fecha_publicacion": "1983-01-01",
+    "anio": 1983,
+    "tipo": "Novela",
+    "descripcion": "Cementerio de animales de Stephen King narra cómo Louis Creed descubre que el gato de su hija, Church, vuelve a la vida tras ser enterrado en el misterioso cementerio de animales. Pero lo que parecía un milagro se convierte en horror, pues Church regresa cruel y siniestro. Louis deberá enfrentarse al oscuro poder del cementerio y a las terribles consecuencias de desafiar la muerte.",
+    "tema": "Muerte",
+    "ranking": 4,
+    "generos": [
+      "Terror"
+    ],
+    "url_portada": "/portadasLibros/StephenKing/CementerioDeAnimalesKing.png",
+    "id_autor": 43
+  },
+  {
+    "titulo": "Fahrenheit 451",
+    "fecha_publicacion": "1953-01-01",
+    "anio": 1953,
+    "tipo": "Novela",
+    "descripcion": "Fahrenheit 451 narra un futuro oscuro donde leer está prohibido y pensar se considera un delito. Montag, el protagonista, forma parte de un cuerpo de bomberos que, en lugar de apagar incendios, quema libros para mantener a la sociedad en la ignorancia y la felicidad forzada. La novela explora los peligros del control, la censura y la pérdida del pensamiento crítico, combinando ciencia ficción y fantasía con un mensaje atemporal sobre la libertad intelectual. Reconocidos autores como Borges, C. S. Lewis y Christopher Isherwood han elogiado su imaginación y fuerza narrativa.",
+    "tema": "Censura",
+    "ranking": 4,
+    "generos": [
+      "Distopía",
+      "Ciencia Ficción"
+    ],
+    "url_portada": "/portadasLibros/RayBradbury/Fahrenheit451Bradbury.jpeg",
+    "id_autor": 44
+  },
+  {
+    "titulo": "El Vino del Estío",
+    "fecha_publicacion": "1957-01-01",
+    "anio": 1957,
+    "tipo": "Novela",
+    "descripcion": "Días de verano narra tres prodigiosos meses en 1928 en la vida de Douglas Spaulding, quien descubre, observa y saborea las sorpresas de un verano lleno de vida y muerte, tradiciones veraniegas, cosechas y aventuras. Entre la rutina y la magia de máquinas extraordinarias, Douglas experimenta la inocencia y vitalidad de la vida en una pequeña ciudad estadounidense. Una obra que, según Saturday Review, solo podría compararse con la sensibilidad de Mark Twain al retratar la niñez y el mundo cotidiano.",
+    "tema": "Infancia",
+    "ranking": 4,
+    "generos": [
+      "Ficción",
+      "Memorias"
+    ],
+    "url_portada": "/portadasLibros/RayBradbury/ElVinoDelEstioBradbury.jpg",
+    "id_autor": 44
+  },
+  {
+    "titulo": "La Colmena",
+    "fecha_publicacion": "1951-01-01",
+    "anio": 1951,
+    "tipo": "Novela",
+    "descripcion": "La colmena, de Camilo José Cela, es considerada una de las mejores novelas españolas del siglo XX. Ambientada en el Madrid de posguerra de 1943, muestra la vida de la clase media, atrapada en la rutina y la incertidumbre de la época. La obra narra simultáneamente pequeñas escenas que entrelazan las vidas de sus personajes, formando un mosaico similar a las celdas de una colmena. Esta edición incluye por primera vez escenas censuradas por su contenido sexual y añade estudios críticos, glosario, índice y bibliografía, presentando la obra íntegra tal como la concibió el autor.",
+    "tema": "Posguerra",
+    "ranking": 4,
+    "generos": [
+      "Realismo Social"
+    ],
+    "url_portada": "/portadasLibros/CamiloJoseCela/LaColmenaCela.png",
+    "id_autor": 47
+  },
+  {
+    "titulo": "El Gran Gatsby",
+    "fecha_publicacion": "1925-01-01",
+    "anio": 1925,
+    "tipo": "Novela",
+    "descripcion": "El Gran Gatsby retrata la frivolidad y el exceso de la alta sociedad estadounidense de los años veinte, marcada por la ostentación y el hedonismo tras la Gran Guerra. En medio de este mundo, Jay Gatsby persigue su sueño verdadero: recuperar a Daisy, el amor de su juventud, mientras oculta un pasado misterioso bajo su riqueza y fiestas fastuosas. A través de la historia de amor e intriga, Fitzgerald refleja aspectos de su propia vida con Zelda, mostrando cómo realidad y ficción se entrelazan en esta obra icónica de la literatura estadounidense.",
+    "tema": "Riqueza",
+    "ranking": 3,
+    "generos": [
+      "Clásico",
+      "Drama"
+    ],
+    "url_portada": "/portadasLibros/FScottFitzgerald/ElGranGatsabyFitzgerald.png",
+    "id_autor": 54
+  },
+  {
+    "titulo": "Juego de Tronos",
+    "fecha_publicacion": "1996-01-01",
+    "anio": 1996,
+    "tipo": "Novela",
+    "descripcion": "En los Siete Reinos, donde los veranos duran décadas y los inviernos toda una vida, Invernalia protege el norte con un enorme muro de hielo frente a fuerzas oscuras. Allí, la familia Stark se ve envuelta en traiciones, lealtades, amor y ambición, enfrentando intrigas y peligros en la lucha por el Trono de Hierro.",
+    "tema": "Política",
+    "ranking": 4,
+    "generos": [
+      "Fantasía",
+      "Épico"
+    ],
+    "url_portada": "/portadasLibros/GeorgeRRMartin/JuegoDeTronosMartin.png",
+    "id_autor": 64
+  },
+  
+  {
+    "titulo": "La Vida Invisible de Addie Larue",
+    "fecha_publicacion": "2020-10-06",
+    "anio": 2020,
+    "tipo": "Novela",
+    "descripcion": "Addie LaRue hace un pacto con un ser oscuro: obtiene inmortalidad, pero a cambio nadie puede recordarla. Desde el siglo XVIII recorre el mundo viviendo una existencia solitaria, en la que todo lo que toca se pierde y cada relación se desvanece al instante. Durante trescientos años, su único vínculo constante es el demonio con quien pactó, que la visita cada aniversario. Todo cambia cuando, en una librería de Manhattan, encuentra a alguien que sí puede recordarla, poniendo en duda su destino y el alcance real de su maldición.",
+    "ranking": 4,
+    "tema": "Identidad",
+    "generos": [
+      "Fantasia",
+      "Ficción Historica"
+    ],
+    "url_portada": "/portadasLibros/V. E. Schwab/LaVidaInvisible.jpg",
+    "id_autor": 79
+  }
+]

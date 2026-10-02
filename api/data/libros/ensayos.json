@@ -1,0 +1,92 @@
+[
+  {
+    "titulo": "Otras Inquisiciones",
+    "fecha_publicacion": "1952-01-01",
+    "anio": 1952,
+    "tipo": "Ensayo",
+    "descripcion": "Los textos reunidos en este volumen sostienen un mismo diálogo: el de Borges con la tradición literaria y con las preguntas que rodean al acto de leer y escribir. A través de ensayos que abarcan temas y épocas diversas, el autor examina la figura múltiple de Quevedo, cuestiona la idea de una personalidad fija, reflexiona sobre la continuidad de la tradición literaria y propone una mirada novedosa sobre el concepto de influencia, como en su célebre texto “Kafka y sus precursores”. El conjunto forma un itinerario intelectual que revela la profundidad crítica y la curiosidad inagotable que atraviesan toda su obra.",
+    "tema": "Crítica",
+    "ranking": 4,
+    "generos": [
+      "Ensayo",
+      "Crítica"
+    ],
+    "url_portada": "/portadasLibros/Borges/OtrasInquisicionesBorges.jpg",
+    "id_autor": 6
+  },
+  {
+    "titulo": "El Mito de Sísifo",
+    "fecha_publicacion": "1942-01-01",
+    "anio": 1942,
+    "tipo": "Ensayo",
+    "descripcion": "El Mito de Sísifo es un ensayo filosófico en el que Albert Camus analiza el “absurdo”: la sensación de que la vida no tiene un sentido definitivo. A partir de ese conflicto, Camus reflexiona sobre cómo seguir viviendo pese a esa falta de sentido. Usando la figura de Sísifo —condenado a empujar una piedra eternamente— propone que el ser humano puede encontrar dignidad y libertad aceptando el absurdo y aun así continuando la lucha cotidiana.",
+    "tema": "Filosofía",
+    "ranking": 4,
+    "generos": [
+      "Ensayo",
+      "Existencialismo"
+    ],
+    "url_portada": "/portadasLibros/AlbertCamus/ElMitoDeSisifoCamus.jpg",
+    "id_autor": 9
+  },
+  {
+    "titulo": "Un Cuarto Propio",
+    "fecha_publicacion": "1929-01-01",
+    "anio": 1929,
+    "tipo": "Ensayo",
+    "descripcion": "Ensayo fundamental del feminismo moderno, plantea que para escribir, una mujer necesita independencia económica y un espacio propio. Virginia Woolf reflexiona sobre la representación histórica de la mujer y la relación entre lo personal y lo político, combinando ensueño y realidad con un estilo equilibrado y musical.",
+    "tema": "Feminismo",
+    "ranking": 4,
+    "generos": [
+      "Ensayo",
+      "Feminista"
+    ],
+    "url_portada": "/portadasLibros/VirginiaWoolf/UnCuartoPropioWoolf.png",
+    "id_autor": 15
+  },
+  {
+    "titulo": "La Condesa Sangrienta",
+    "fecha_publicacion": "1968-01-01",
+    "anio": 1968,
+    "tipo": "Ensayo",
+    "descripcion": "Acusada del asesinato de seiscientas cincuenta jóvenes, Erzebet Bathory se convirtió en una de las criminales más siniestras de la historia. En su castillo de los Cárpatos, a finales del siglo XVII, la condesa desangraba a sus víctimas para preservar su juventud. La condesa sangrienta, obra clave de Alejandra Pizarnik, construye un perturbador retrato del sadismo y la locura, magistralmente recreado en las ilustraciones de Santiago Caruso.",
+    "tema": "Historia",
+    "ranking": 3,
+    "generos": [
+      "No Ficción",
+      "Histórico"
+    ],
+    "url_portada": "/portadasLibros/AlejandraPizarnik/LaCondesaSangrientaPizarnik.png",
+    "id_autor": 19
+  },
+  {
+    "titulo": "El Segundo Sexo",
+    "fecha_publicacion": "1949-01-01",
+    "anio": 1949,
+    "tipo": "Ensayo",
+    "descripcion": "El texto de Simone de Beauvoir plantea reflexiones sobre cómo el hecho de ser mujeres ha condicionado la vida y las oportunidades de las mujeres a lo largo del tiempo. Se interroga sobre qué derechos y posibilidades han sido concedidos o negados, y cómo orientar a las generaciones futuras. Señala que la literatura femenina contemporánea tiende menos a la reivindicación directa y más a la búsqueda de lucidez y comprensión de la situación femenina.",
+    "tema": "Feminismo",
+    "ranking": 4,
+    "generos": [
+      "Ensayo",
+      "Filosófico"
+    ],
+    "url_portada": "/portadasLibros/SimoneDeBeauvoir/ElSegundoSexoBeauvoir.jpg",
+    "id_autor": 52
+  },
+  {
+    "titulo": "El Ser y la Nada",
+    "fecha_publicacion": "1943-01-01",
+    "anio": 1943,
+    "tipo": "Ensayo",
+    "descripcion": "El ser y la Nada es la obra en la que Jean-Paul Sartre expone de manera completa su existencialismo, facilitando también la comprensión de su producción literaria. Publicada en 1943, en plena Europa devastada por la guerra, Sartre ya había escrito varias obras filosóficas y literarias, incluyendo La náusea y El muro. Este ensayo constituye la base de su pensamiento y continúa influyendo en toda su obra posterior.",
+    "tema": "Ontología",
+    "ranking": 5,
+    "generos": [
+      "Ensayo",
+      "Existencialismo"
+    ],
+    "url_portada": "/portadasLibros/JeanPaul Sartre/ElSerYLaNadaSartre.png",
+    "id_autor": 53
+  }
+]
