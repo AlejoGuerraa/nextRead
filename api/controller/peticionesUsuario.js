@@ -12,6 +12,7 @@ const bcrypt = require('bcrypt');
 const { Op } = require('sequelize');
 const { escape_like } = require('../utils/querySafety');
 const { sign_access_token } = require('../utils/jwtTokens');
+const { attach_average_ratings } = require('../utils/bookRatings');
 
 const bcryptSaltRounds = Number(process.env.BCRYPT_SALT_ROUNDS || 10);
 
@@ -394,12 +395,12 @@ const getUser = async (req, res) => {
         }
 
         // --- Aplanar datos de libros ---
+        librosBD = await attach_average_ratings(librosBD);
         librosBD = librosBD.map(libro => {
-            const json = libro.toJSON();
             return {
-                ...json,
-                nombre_autor: json.Autor ? json.Autor.nombre : "Desconocido",
-                puntuacion_usuario: json.Resenas && json.Resenas.length > 0 ? json.Resenas[0].puntuacion : null
+                ...libro,
+                nombre_autor: libro.Autor ? libro.Autor.nombre : "Desconocido",
+                puntuacion_usuario: libro.Resenas && libro.Resenas.length > 0 ? libro.Resenas[0].puntuacion : null
             };
         });
 

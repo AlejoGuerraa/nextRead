@@ -3,6 +3,7 @@ const Libro = require("../models/Libro");
 const Autor = require("../models/Autor");
 const { Op, Sequelize } = require("sequelize");
 const { escape_like } = require("../utils/querySafety");
+const { attach_average_ratings } = require("../utils/bookRatings");
 
 // =======================================================
 // 🔍 BUSCAR LIBROS + AUTOR RELEVANTE
@@ -81,7 +82,7 @@ const getTendencias = async (req, res) => {
             ],
         });
 
-        res.json(libros);
+        res.json(await attach_average_ratings(libros));
 
     } catch (error) {
         console.error('Error al obtener tendencias:', error);
@@ -176,7 +177,7 @@ const getMasDeAutor = async (req, res) => {
 
         res.json({
             message: `Libros de tu autor más leído: ${autorNombre}`,
-            libros: librosRecomendados
+            libros: await attach_average_ratings(librosRecomendados)
         });
 
     } catch (error) {
@@ -298,7 +299,7 @@ const getLibrosPorDecada = async (req, res) => {
                 start: decadaBase,
                 end: decadaBase + 9,
                 count: libros.length,
-                libros,
+                libros: await attach_average_ratings(libros),
             });
         }
 
@@ -317,9 +318,9 @@ const getLibrosPorDecada = async (req, res) => {
             ],
         });
 
+        const librosConPromedios = await attach_average_ratings(libros);
         const grupos = await porDecada(
-            libros.map(l => {
-                const lib = l.toJSON();
+            librosConPromedios.map(lib => {
                 // 🔹 Normalizar ranking
                 lib.ranking = lib.ranking !== undefined && lib.ranking !== null
                     ? Math.floor(Number(lib.ranking))
@@ -431,7 +432,8 @@ const getDecadasPersonalizadas = async (req, res) => {
                 ],
             });
 
-            const grupos = await porDecada(libros.map(l => l.toJSON()));
+            const librosConPromedios = await attach_average_ratings(libros);
+            const grupos = await porDecada(librosConPromedios);
             return res.json({
                 message: 'Sin preferencias de usuario. Mostrando todas las décadas.',
                 decades: grupos.slice(0, 5) // Limitar a 5 décadas
@@ -508,7 +510,8 @@ const getDecadasPersonalizadas = async (req, res) => {
             };
         });
 
-        librosDecadas.forEach((libro) => {
+        const librosConPromedios = await attach_average_ratings(librosDecadas);
+        librosConPromedios.forEach((libro) => {
             const year = Number(libro.anio);
             if (!Number.isFinite(year)) return;
 
@@ -611,7 +614,7 @@ const getGeneroPreferido = async (req, res) => {
 
         return res.json({
             generoPreferido,
-            libros
+            libros: await attach_average_ratings(libros)
         });
 
     } catch (error) {
@@ -727,7 +730,7 @@ const getRecomendacionesPorLibro = async (req, res) => {
                 generos,
                 id_autor: autorId
             },
-            libros: recomendaciones
+            libros: await attach_average_ratings(recomendaciones)
         });
 
     } catch (error) {
