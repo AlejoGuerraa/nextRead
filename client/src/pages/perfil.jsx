@@ -205,10 +205,11 @@ export default function Perfil() {
     const ratings = user.libros_leidos
       .map((libro) =>
         libro?.puntuacion_usuario ??  // puntuación que el usuario le dio
-        libro?.ranking ??             // ranking global del libro
         libro?.puntuacion ?? null
       )
-      .filter((r) => typeof r === "number" && !isNaN(r));
+      .filter((rating) => rating !== null && rating !== undefined)
+      .map(Number)
+      .filter((rating) => Number.isFinite(rating) && rating >= 1 && rating <= 5);
 
     if (ratings.length === 0) return null;
 

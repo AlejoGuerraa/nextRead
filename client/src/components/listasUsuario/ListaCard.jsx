@@ -6,7 +6,7 @@ import ListaDetalleModal from './ListaDetalleModal';
 
 const getBookCover = (book) => book?.url_portada || book?.cover || book?.imagen || null;
 
-export default function ListaCard({ name, books = [], isPrivate = false, onUpdated }) {
+export default function ListaCard({ name, books = [], isPrivate = false, onUpdated, readOnly = false }) {
   const toast = useToast();
   const [menuOpen, setMenuOpen] = useState(false);
   const [detailOpen, setDetailOpen] = useState(false);
@@ -78,7 +78,7 @@ export default function ListaCard({ name, books = [], isPrivate = false, onUpdat
 
   return (
     <>
-      <article className="profile-list-card" onClick={() => setDetailOpen(true)}>
+      <article className={`profile-list-card${readOnly ? " profile-list-card--read-only" : ""}`} onClick={() => setDetailOpen(true)}>
         <div className="profile-list-card-cover">
           {getBookCover(books[0]) ? <img src={getBookCover(books[0])} alt="" /> : <span className="profile-list-empty-cover" aria-hidden="true" />}
         </div>
@@ -86,7 +86,7 @@ export default function ListaCard({ name, books = [], isPrivate = false, onUpdat
           <h4 title={name}>{name}</h4>
           <span>{books.length} {books.length === 1 ? 'libro' : 'libros'}</span>
         </div>
-        <div className="profile-list-menu-wrap" onClick={(event) => event.stopPropagation()}>
+        {!readOnly && <div className="profile-list-menu-wrap" onClick={(event) => event.stopPropagation()}>
           <button className="profile-list-menu-button" type="button" onClick={() => setMenuOpen((current) => !current)} aria-label={`Opciones de ${name}`} aria-expanded={menuOpen}>
             <MoreVertical size={19} aria-hidden="true" />
           </button>
@@ -113,7 +113,7 @@ export default function ListaCard({ name, books = [], isPrivate = false, onUpdat
               )}
             </div>
           )}
-        </div>
+        </div>}
       </article>
 
       {detailOpen && (
@@ -121,6 +121,7 @@ export default function ListaCard({ name, books = [], isPrivate = false, onUpdat
           list={{ name, books }}
           onClose={() => setDetailOpen(false)}
           onBooksUpdated={updateLists}
+          readOnly={readOnly}
         />
       )}
 

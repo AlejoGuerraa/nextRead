@@ -3,7 +3,9 @@
   "version": "1.0.0",
   "main": "index.js",
   "scripts": {
-    "start": "node --watch index.js"
+    "start": "node --watch index.js",
+    "migrate:multiple-reviews": "node scripts/migrateMultipleBookReviews.js",
+    "migrate:optional-review-rating": "node scripts/migrateOptionalReviewRating.js"
   },
   "keywords": [],
   "author": "",

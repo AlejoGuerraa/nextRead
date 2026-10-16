@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Bell, Heart, UserPlus, X, Trash2 } from "lucide-react";
+import { Bell, Heart, MessageCircle, UserPlus, X, Trash2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Modal } from "../acceso/modal";
 import { deleteAllNotifications, deleteNotification, getPublicUserById } from "../../services/notificationsService";
@@ -125,6 +125,11 @@ export default function NotificacionesModal({ open, close, data, onRefresh, user
       navigate(`/libro/${meta.bookId}`);
       return;
     }
+    if (meta.type === "new_reply" && meta.bookId) {
+      close();
+      navigate(`/libro/${meta.bookId}`);
+      return;
+    }
     if (meta.type === "follow" && user?.usuario) {
       close();
       navigate(`/user/${user.usuario}`);
@@ -156,12 +161,16 @@ export default function NotificacionesModal({ open, close, data, onRefresh, user
               const username = user?.usuario || notification.nombre || "Usuario";
               const isLike = meta.type === "new_like";
               const isFollow = meta.type === "follow";
+              const isReply = meta.type === "new_reply";
+              const isActionable = isLike || isFollow || isReply;
               const isUnread = !notification.leido;
-              const Icon = isLike ? Heart : isFollow ? UserPlus : Bell;
+              const Icon = isLike ? Heart : isFollow ? UserPlus : isReply ? MessageCircle : Bell;
               const message = isLike
                 ? "indicó que le gusta tu comentario"
                 : isFollow
                   ? "comenzó a seguirte"
+                  : isReply
+                    ? "respondió a tu reseña"
                   : notification.mensaje || "realizó una acción";
 
               return (
@@ -169,8 +178,15 @@ export default function NotificacionesModal({ open, close, data, onRefresh, user
                   key={notification.id}
                   className={`notif-item ${isUnread ? "notif-item--unread" : "notif-item--read"}`}
                   onClick={() => handleNotificationClick(notification, user)}
-                  role={meta.type === "follow" || isLike ? "button" : undefined}
-                  tabIndex={meta.type === "follow" || isLike ? 0 : undefined}
+                  onKeyDown={(event) => {
+                    if (!isActionable || event.target !== event.currentTarget) return;
+                    if (event.key === "Enter" || event.key === " ") {
+                      event.preventDefault();
+                      handleNotificationClick(notification, user);
+                    }
+                  }}
+                  role={isActionable ? "button" : undefined}
+                  tabIndex={isActionable ? 0 : undefined}
                 >
                   <div className="notif-avatar">
                     <img
@@ -182,9 +198,10 @@ export default function NotificacionesModal({ open, close, data, onRefresh, user
                   <div className="notif-text">
                     <p><strong>{username}</strong> {message}</p>
                     {isLike && meta.commentPreview && <blockquote>“{meta.commentPreview}”</blockquote>}
+                    {isReply && meta.replyPreview && <blockquote>“{meta.replyPreview}”</blockquote>}
                     <span className="notif-date">{getRelativeTime(notification.fecha)}</span>
                   </div>
-                  <Icon className={`notif-type-icon ${isLike ? "notif-type-icon--like" : "notif-type-icon--follow"}`} size={18} aria-hidden="true" />
+                  <Icon className={`notif-type-icon ${isLike ? "notif-type-icon--like" : isReply ? "notif-type-icon--reply" : "notif-type-icon--follow"}`} size={18} aria-hidden="true" />
                   {isFollow && user && !followedIds.has(Number(user.id)) && (
                     <button className="notif-follow-button" type="button" onClick={(event) => handleFollow(event, user)} disabled={followingId === user.id}>
                       {followingId === user.id ? "Siguiendo..." : "Seguir"}

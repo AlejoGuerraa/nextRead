@@ -6,13 +6,14 @@ import api from '../services/api';
 import { saveBookRating } from '../services/booksService';
 import { Bookmark, Heart, Clock, PlusCircle, Book } from "lucide-react"; // iconos más lindos
 
-export default function InfoLibro({ libro, onRestrictedAction, actionRef, onOpenChooseList, onMarkedAsRead }) {
+export default function InfoLibro({ libro, onRestrictedAction, actionRef, onOpenChooseList, onMarkedAsRead, userRating: selectedRating, onRatingChange }) {
     const { id } = useParams();
     const { titulo, Autor, portada, generos, anio, tipo, descripcion, ranking } = libro;
     const autorNombre = Autor?.nombre || "Autor Desconocido";
 
     const [userRating, setUserRating] = useState(0);
     const [hoverRating, setHoverRating] = useState(0);
+    const displayedRating = selectedRating ?? userRating;
     const toast = useToast();
 
     const API_BASE = "/nextread";
@@ -51,6 +52,7 @@ export default function InfoLibro({ libro, onRestrictedAction, actionRef, onOpen
 
     const handleStarClick = async (rating) => {
         setUserRating(rating);
+        onRatingChange?.(rating);
         const auth = validarToken();
         if (!auth) return;
 
@@ -100,13 +102,13 @@ export default function InfoLibro({ libro, onRestrictedAction, actionRef, onOpen
                             return (
                                 <span
                                     key={ratingValue}
-                                    className={`estrella ${ratingValue <= (hoverRating || userRating) ? "activa" : ""}`}
+                                    className={`estrella ${ratingValue <= (hoverRating || displayedRating) ? "activa" : ""}`}
                                     onClick={() => handleStarClick(ratingValue)}
                                     onMouseEnter={() => setHoverRating(ratingValue)}
                                     onMouseLeave={() => setHoverRating(0)}
                                     style={{
                                         fontSize: "24px",
-                                        color: ratingValue <= (hoverRating || userRating) ? "#ffb400" : "#555",
+                                        color: ratingValue <= (hoverRating || displayedRating) ? "#ffb400" : "#555",
                                         marginRight: "4px",
                                         cursor: "pointer"
                                     }}
@@ -116,7 +118,7 @@ export default function InfoLibro({ libro, onRestrictedAction, actionRef, onOpen
                             );
                         })}
                         <span className="rating-numero" style={{ marginLeft: "8px", color: "#406882" }}>
-                            ({userRating || 0})
+                            ({displayedRating || 0})
                         </span>
                     </div>
                 </div>

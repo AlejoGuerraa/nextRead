@@ -63,6 +63,8 @@ expectPass('profile relative banner', editarPerfilSchema.safeParse({ banner: '/b
 expectFail('review extra field', guardarPuntuacionSchema.safeParse({ puntuacion: 5, likes: 99 }));
 expectFail('review score 9', guardarPuntuacionSchema.safeParse({ puntuacion: 9 }));
 expectPass('review score 4', guardarPuntuacionSchema.safeParse({ puntuacion: 4 }));
+expectPass('review null score with comment', guardarPuntuacionSchema.safeParse({ puntuacion: null, comentario: 'Sin puntuación' }));
+expectPass('review without score', guardarPuntuacionSchema.safeParse({ comentario: 'Sin puntuación' }));
 
 expectFail('search huge', searchQuerySchema.safeParse({ search: 'x'.repeat(101) }));
 expectFail('search unknown filter', searchQuerySchema.safeParse({ search: 'a', orderBy: 'titulo; DROP TABLE' }));

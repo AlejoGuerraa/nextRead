@@ -32,6 +32,7 @@ const safeParseGeneros = (generosData) => {
 export default function Libro() {
   const { id } = useParams();
   const [libro, setLibro] = useState(null);
+  const [bookRating, setBookRating] = useState(0);
   const [error, setError] = useState(null);
   const initialUser = (() => {
     try {
@@ -56,6 +57,10 @@ export default function Libro() {
   };
 
   const isLogged = Boolean(initialUser);
+
+  useEffect(() => {
+    setBookRating(0);
+  }, [id]);
 
   useEffect(() => {
     const storedUser = localStorage.getItem("user");
@@ -127,6 +132,8 @@ export default function Libro() {
           actionRef={actionRef}
           onOpenChooseList={() => setShowChooseListModal(true)}
           onMarkedAsRead={() => setShowRatingAfterRead(true)}
+          userRating={bookRating}
+          onRatingChange={setBookRating}
         />
 
         {/* ==== POPOVER POSICIONADO COMO EN PRINCIPAL PERO ARRIBA Y DERECHA ==== */}
@@ -147,7 +154,7 @@ export default function Libro() {
           </div>
         )}
 
-        <Resenas />
+        <Resenas rating={bookRating} onRatingChange={setBookRating} />
       </div>
       <ElegirListaModal isOpen={showChooseListModal} onClose={() => setShowChooseListModal(false)} listas={fullUser?.listas || {}} bookId={id} onAdded={(name, lista) => {
         // refrescar datos de usuario

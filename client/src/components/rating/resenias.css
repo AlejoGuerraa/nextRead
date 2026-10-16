@@ -1,29 +1,647 @@
-.review-rating-picker { display: flex; align-items: center; gap: 3px; margin: 6px 0 12px; }
-.review-rating-picker button { border: 0; padding: 0; background: transparent; color: #ffb400; cursor: pointer; font-size: 22px; }
-.review-rating-picker span { margin-left: 6px; color: #406882; }
-.resena-form label { display: block; margin-bottom: 4px; }
-.resena-form textarea, .respuesta-form textarea, .admin-modal textarea { width: 100%; box-sizing: border-box; margin-bottom: 8px; }
-.review-comment-field { position: relative; }
-.review-comment-field textarea { padding-bottom: 26px; }
-.review-comment-field small { position: absolute; right: 9px; bottom: 15px; color: #6d7c84; font-size: 0.72rem; pointer-events: none; }
-.comentario { display: flex; gap: 12px; margin-bottom: 16px; }
-.comentario-avatar { width: 48px; height: 48px; flex: 0 0 48px; border-radius: 50%; object-fit: cover; }
-.comentario-contenido { min-width: 0; flex: 1; }
-.comentario-cabecera { display: flex; justify-content: space-between; gap: 12px; align-items: baseline; }
-.comentario-cabecera small { color: #6d7c84; white-space: nowrap; }
-.resena-acciones { display: flex; gap: 12px; align-items: center; margin-top: 8px; }
-.resena-acciones button { display: inline-flex; align-items: center; gap: 5px; border: 0; padding: 0; background: transparent; color: #607984; cursor: pointer; }
-.resena-acciones button.is-liked { color: #d94c4c; }
-.respuesta-form { display: flex; gap: 8px; align-items: flex-start; margin: 12px 0 12px 24px; }
-.respuesta-form button { display: inline-flex; align-items: center; gap: 5px; padding: 8px 12px; border: 0; border-radius: 6px; background: #406882; color: #fff; cursor: pointer; }
-.respuesta-form button:disabled { background: #b9c5cb; cursor: not-allowed; }
-.respuestas-lista { margin: 14px 0 0 24px; padding-left: 14px; border-left: 2px solid #d5e0e5; }
-.respuesta { display: flex; gap: 9px; margin: 12px 0; font-size: .94rem; }
-.respuesta img { width: 32px; height: 32px; border-radius: 50%; object-fit: cover; }
-.respuesta p { margin: 4px 0 0; }
-.admin-modal-overlay { position: fixed; inset: 0; z-index: 10000; display: flex; align-items: center; justify-content: center; padding: 20px; background: rgba(0, 0, 0, .45); }
-.admin-modal { position: relative; width: min(480px, 100%); padding: 22px; border-radius: 10px; background: #fff; }
-.admin-modal-close { position: absolute; top: 10px; right: 10px; border: 0; background: transparent; cursor: pointer; }
-.review-delete-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 16px; }
-.review-delete-actions button { width: auto; }
-@media (max-width: 600px) { .respuesta-form { margin-left: 0; flex-direction: column; } .respuesta-form button { align-self: flex-end; } }
+.comentarios-section {
+	--review-ink: #203b48;
+	--review-muted: #62757b;
+	--review-line: #dce6e4;
+	--review-accent: #406882;
+	--review-star: #d99b20;
+	margin-top: 48px;
+	padding-top: 28px;
+	border-top: 1px solid #cbd8d8;
+	color: var(--review-ink);
+}
+
+.comentarios-section .reviews-heading,
+.comentarios-section .reviews-list-heading {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 16px;
+}
+
+.comentarios-section .reviews-heading {
+	margin-bottom: 20px;
+	padding: 17px 20px;
+	border-radius: 8px;
+	background: #203b48;
+	color: #fff;
+}
+
+.comentarios-section .reviews-heading h2,
+.comentarios-section .review-form-heading h3,
+.comentarios-section .reviews-list-heading h3 {
+	margin: 0;
+	color: var(--review-ink);
+}
+
+.comentarios-section .reviews-heading h2,
+.comentarios-section .reviews-heading p {
+	color: #fff;
+}
+
+.comentarios-section .reviews-heading h2 {
+	font-size: 1.35rem;
+}
+
+.comentarios-section .review-form-heading p {
+	margin: 4px 0 0;
+	color: var(--review-muted);
+	font-size: 0.9rem;
+}
+
+.comentarios-section .reviews-count {
+	flex: 0 0 auto;
+	padding: 6px 10px;
+	border: 1px solid rgba(255, 255, 255, 0.28);
+	border-radius: 999px;
+	background: rgba(255, 255, 255, 0.1);
+	color: #fff;
+	font-size: 0.82rem;
+	font-variant-numeric: tabular-nums;
+}
+
+.comentarios-section .resena-form {
+	display: grid;
+	gap: 14px;
+	margin: 0 0 30px;
+	padding: 20px;
+	border: 1px solid var(--review-line);
+	border-radius: 8px;
+	background: #f8fbfa;
+}
+
+.comentarios-section .review-form-heading h3 {
+	font-size: 1.05rem;
+}
+
+.comentarios-section .review-comment-label {
+	color: var(--review-ink);
+	font-size: 0.88rem;
+	font-weight: 700;
+}
+
+.comentarios-section .review-submit:focus-visible,
+.comentarios-section .review-action:focus-visible,
+.comentarios-section .respuesta-form button:focus-visible,
+.comentarios-section .review-modal-cancel:focus-visible,
+.comentarios-section .review-modal-danger:focus-visible,
+.comentarios-section .admin-modal-close:focus-visible,
+.comentarios-section .reviews-error button:focus-visible {
+	outline: 3px solid #d7a437;
+	outline-offset: 2px;
+}
+
+.comentarios-section .review-comment-label {
+	margin-bottom: -9px;
+}
+
+.comentarios-section .review-comment-field {
+	position: relative;
+}
+
+.comentarios-section .review-comment-field textarea,
+.comentarios-section .respuesta-form textarea,
+.comentarios-section .admin-modal textarea {
+	display: block;
+	width: 100%;
+	box-sizing: border-box;
+	margin: 0;
+	padding: 12px 14px;
+	border: 1px solid #cbd9d7;
+	border-radius: 7px;
+	background: #fff;
+	color: var(--review-ink);
+	font: inherit;
+	line-height: 1.55;
+	resize: vertical;
+	transition: border-color 150ms ease, box-shadow 150ms ease;
+}
+
+.comentarios-section .review-comment-field textarea {
+	min-height: 112px;
+	padding-bottom: 32px;
+}
+
+.comentarios-section .review-comment-field textarea:focus,
+.comentarios-section .respuesta-form textarea:focus,
+.comentarios-section .admin-modal textarea:focus {
+	border-color: #527f8b;
+	outline: none;
+	box-shadow: 0 0 0 3px rgba(82, 127, 139, 0.16);
+}
+
+.comentarios-section .review-comment-field small {
+	position: absolute;
+	right: 11px;
+	bottom: 9px;
+	color: var(--review-muted);
+	font-size: 0.75rem;
+	font-variant-numeric: tabular-nums;
+	pointer-events: none;
+}
+
+.comentarios-section .review-submit,
+.comentarios-section .respuesta-form button,
+.comentarios-section .reviews-error button {
+	display: inline-flex;
+	min-height: 40px;
+	align-items: center;
+	justify-content: center;
+	gap: 8px;
+	justify-self: start;
+	padding: 9px 14px;
+	border: 1px solid #315968;
+	border-radius: 6px;
+	background: #315968;
+	color: #fff;
+	cursor: pointer;
+	font: inherit;
+	font-size: 0.88rem;
+	font-weight: 650;
+	transition: background-color 140ms ease, border-color 140ms ease;
+}
+
+.comentarios-section .review-submit:hover:not(:disabled),
+.comentarios-section .respuesta-form button:hover:not(:disabled),
+.comentarios-section .reviews-error button:hover {
+	border-color: #234653;
+	background: #234653;
+}
+
+.comentarios-section .review-submit:disabled,
+.comentarios-section .respuesta-form button:disabled {
+	border-color: #b8c5c4;
+	background: #b8c5c4;
+	color: #f8fbfa;
+	cursor: not-allowed;
+}
+
+.comentarios-section .reviews-list-heading {
+	margin: 0 0 12px;
+}
+
+.comentarios-section .reviews-list-heading h3 {
+	font-size: 1.08rem;
+}
+
+.comentarios-section .reviews-state {
+	display: flex;
+	align-items: center;
+	gap: 10px;
+	margin: 0 0 14px;
+	padding: 14px 16px;
+	border-radius: 7px;
+	background: #f5f8f7;
+	color: var(--review-muted);
+	font-size: 0.92rem;
+}
+
+.comentarios-section .reviews-empty p {
+	margin: 0;
+}
+
+.comentarios-section .reviews-empty > svg {
+	flex: 0 0 auto;
+	color: var(--review-accent);
+}
+
+.comentarios-section .reviews-error {
+	justify-content: space-between;
+	border: 1px solid #e6c7c3;
+	background: #fff8f6;
+	color: #8c3e35;
+}
+
+.comentarios-section .reviews-error button {
+	min-height: 34px;
+	flex: 0 0 auto;
+	padding: 6px 10px;
+}
+
+.comentarios-section .lista-resenas {
+	display: grid;
+	gap: 12px;
+}
+
+.comentarios-section .comentario {
+	display: flex;
+	min-width: 0;
+	gap: 13px;
+	margin: 0;
+	padding: 16px;
+	border: 1px solid #e0e8e6;
+	border-radius: 8px;
+	background: #fff;
+	box-shadow: 0 2px 8px rgba(32, 59, 72, 0.045);
+	transition: border-color 150ms ease, box-shadow 150ms ease;
+}
+
+.comentarios-section .comentario:hover {
+	transform: none;
+	border-color: #cbd9d7;
+	box-shadow: 0 3px 12px rgba(32, 59, 72, 0.07);
+}
+
+.comentarios-section .comentario-avatar {
+	width: 42px;
+	height: 42px;
+	flex: 0 0 42px;
+	border-radius: 50%;
+	background: #e5eeeb;
+	object-fit: cover;
+}
+
+.comentarios-section .comentario-contenido,
+.comentarios-section .reply-content {
+	min-width: 0;
+	flex: 1 1 auto;
+}
+
+.comentarios-section .comentario-cabecera {
+	display: flex;
+	min-width: 0;
+	align-items: baseline;
+	justify-content: space-between;
+	gap: 10px;
+}
+
+.comentarios-section .comentario-usuario {
+	overflow-wrap: anywhere;
+	color: var(--review-ink);
+	font-size: 0.94rem;
+	font-weight: 700;
+}
+
+.comentarios-section .review-user-link {
+	color: inherit;
+	text-decoration: none;
+}
+
+.comentarios-section .review-user-link:hover {
+	color: #245968;
+	text-decoration: underline;
+}
+
+.comentarios-section .review-user-link:focus-visible {
+	border-radius: 2px;
+	outline: 2px solid #d7a437;
+	outline-offset: 2px;
+}
+
+.comentarios-section .comentario-cabecera time {
+	flex: 0 0 auto;
+	color: var(--review-muted);
+	font-size: 0.78rem;
+	white-space: nowrap;
+}
+
+.comentarios-section .comentario-estrellas {
+	display: flex;
+	align-items: center;
+	gap: 7px;
+	margin-top: 4px;
+	color: var(--review-star);
+	font-size: 0.9rem;
+	letter-spacing: 0.03em;
+}
+
+.comentarios-section .review-score-value {
+	color: var(--review-muted);
+	font-size: 0.76rem;
+	font-variant-numeric: tabular-nums;
+	letter-spacing: 0;
+}
+
+.comentarios-section .review-no-rating {
+	color: var(--review-muted);
+	font-size: 0.8rem;
+	letter-spacing: 0;
+}
+
+.comentarios-section .comentario-texto {
+	margin: 10px 0 12px;
+	color: #344c52;
+	font-size: 0.94rem;
+	line-height: 1.65;
+	overflow-wrap: anywhere;
+	white-space: pre-wrap;
+}
+
+.comentarios-section .resena-acciones {
+	display: flex;
+	min-height: 36px;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 6px;
+	margin: 0;
+}
+
+.comentarios-section .review-action {
+	display: inline-flex;
+	min-width: 36px;
+	min-height: 34px;
+	align-items: center;
+	justify-content: center;
+	gap: 6px;
+	padding: 6px 9px;
+	border: 1px solid transparent;
+	border-radius: 6px;
+	background: transparent;
+	color: #4d6870;
+	cursor: pointer;
+	font: inherit;
+	font-size: 0.82rem;
+	transition: background-color 140ms ease, color 140ms ease;
+}
+
+.comentarios-section .review-action:hover:not(:disabled) {
+	background: #f0f5f3;
+	color: #274e5a;
+}
+
+.comentarios-section .review-action:disabled {
+	color: #859396;
+	cursor: wait;
+}
+
+.comentarios-section .review-like {
+	min-width: 58px;
+	border-color: #e2e9e7;
+	background: #fbfcfc;
+	font-variant-numeric: tabular-nums;
+}
+
+.comentarios-section .review-like span {
+	min-width: 2ch;
+	text-align: left;
+}
+
+.comentarios-section .review-like.is-liked {
+	border-color: #e9c6c4;
+	background: #fff6f5;
+	color: #b4443d;
+}
+
+.comentarios-section .review-destructive {
+	margin-left: auto;
+	color: #8a514b;
+}
+
+.comentarios-section .review-destructive:hover:not(:disabled) {
+	background: #fff3f1;
+	color: #9b352e;
+}
+
+.comentarios-section .respuesta-form {
+	display: grid;
+	gap: 8px;
+	margin: 12px 0 12px 8px;
+	padding: 12px;
+	border-left: 2px solid #a9c1bd;
+	background: #f7faf9;
+}
+
+.comentarios-section .respuesta-form textarea {
+	min-height: 76px;
+}
+
+.comentarios-section .reply-form-footer {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 10px;
+}
+
+.comentarios-section .reply-form-footer small {
+	color: var(--review-muted);
+	font-size: 0.76rem;
+	font-variant-numeric: tabular-nums;
+}
+
+.comentarios-section .respuesta-form button {
+	justify-self: end;
+}
+
+.comentarios-section .respuestas-lista {
+	display: grid;
+	gap: 12px;
+	margin: 14px 0 0 7px;
+	padding-left: 14px;
+	border-left: 2px solid #d9e4e1;
+}
+
+.comentarios-section .respuesta {
+	display: flex;
+	min-width: 0;
+	gap: 9px;
+	margin: 0;
+	color: var(--review-ink);
+	font-size: 0.9rem;
+}
+
+.comentarios-section .respuesta img {
+	width: 30px;
+	height: 30px;
+	flex: 0 0 30px;
+	border-radius: 50%;
+	background: #e5eeeb;
+	object-fit: cover;
+}
+
+.comentarios-section .respuesta .comentario-cabecera strong {
+	color: #38555d;
+	font-size: 0.82rem;
+}
+
+.comentarios-section .respuesta .comentario-cabecera time {
+	font-size: 0.74rem;
+}
+
+.comentarios-section .respuesta p {
+	margin: 4px 0 0;
+	color: #40565c;
+	line-height: 1.55;
+	overflow-wrap: anywhere;
+	white-space: pre-wrap;
+}
+
+.comentarios-section .admin-modal-overlay {
+	position: fixed;
+	inset: 0;
+	z-index: 10000;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	padding: 16px;
+	background: rgba(14, 29, 34, 0.58);
+	backdrop-filter: blur(3px);
+}
+
+.comentarios-section .admin-modal {
+	position: relative;
+	width: min(460px, 100%);
+	max-height: min(680px, calc(100dvh - 32px));
+	overflow-y: auto;
+	box-sizing: border-box;
+	padding: 26px 22px 20px;
+	border: 1px solid #dce6e4;
+	border-radius: 8px;
+	background: #fff;
+	box-shadow: 0 20px 55px rgba(9, 27, 34, 0.24);
+}
+
+.comentarios-section .admin-modal h4 {
+	margin: 0 36px 8px 0;
+	color: var(--review-ink);
+	font-size: 1.1rem;
+}
+
+.comentarios-section .admin-modal p {
+	margin: 0 0 16px;
+	color: var(--review-muted);
+	line-height: 1.55;
+}
+
+.comentarios-section .admin-modal textarea {
+	min-height: 110px;
+	margin-bottom: 14px;
+}
+
+.comentarios-section .admin-modal-close {
+	position: absolute;
+	top: 12px;
+	right: 12px;
+	display: grid;
+	width: 34px;
+	height: 34px;
+	place-items: center;
+	padding: 0;
+	border: 1px solid transparent;
+	border-radius: 6px;
+	background: transparent;
+	color: #52666c;
+	cursor: pointer;
+}
+
+.comentarios-section .admin-modal-close:hover {
+	background: #f0f5f3;
+}
+
+.comentarios-section .review-delete-actions {
+	display: flex;
+	flex-wrap: wrap;
+	justify-content: flex-end;
+	gap: 8px;
+	margin-top: 6px;
+}
+
+.comentarios-section .review-modal-cancel,
+.comentarios-section .review-modal-danger {
+	display: inline-flex;
+	min-height: 40px;
+	align-items: center;
+	justify-content: center;
+	gap: 7px;
+	padding: 8px 12px;
+	border: 1px solid #c9d6d4;
+	border-radius: 6px;
+	background: #fff;
+	color: #41595f;
+	cursor: pointer;
+	font: inherit;
+	font-size: 0.85rem;
+	font-weight: 600;
+}
+
+.comentarios-section .review-modal-cancel:hover:not(:disabled) {
+	background: #f3f7f6;
+}
+
+.comentarios-section .review-modal-danger {
+	border-color: #9d3d37;
+	background: #9d3d37;
+	color: #fff;
+}
+
+.comentarios-section .review-modal-danger:hover:not(:disabled) {
+	border-color: #812f2a;
+	background: #812f2a;
+}
+
+.comentarios-section .review-modal-cancel:disabled,
+.comentarios-section .review-modal-danger:disabled {
+	opacity: 0.65;
+	cursor: wait;
+}
+
+.comentarios-section .visually-hidden {
+	position: absolute;
+	width: 1px;
+	height: 1px;
+	overflow: hidden;
+	clip: rect(0, 0, 0, 0);
+	white-space: nowrap;
+	clip-path: inset(50%);
+}
+
+@media (max-width: 620px) {
+	.comentarios-section {
+		margin-top: 34px;
+		padding-top: 22px;
+	}
+
+	.comentarios-section .resena-form {
+		padding: 16px;
+	}
+
+	.comentarios-section .comentario {
+		gap: 10px;
+		padding: 13px;
+	}
+
+	.comentarios-section .comentario-avatar {
+		width: 36px;
+		height: 36px;
+		flex-basis: 36px;
+	}
+
+	.comentarios-section .comentario-cabecera {
+		flex-wrap: wrap;
+		gap: 2px 8px;
+	}
+
+	.comentarios-section .comentario-cabecera time {
+		font-size: 0.73rem;
+	}
+
+	.comentarios-section .resena-acciones {
+		gap: 3px;
+	}
+
+	.comentarios-section .review-action {
+		padding: 6px;
+		font-size: 0.78rem;
+	}
+
+	.comentarios-section .review-destructive {
+		margin-left: 0;
+	}
+
+	.comentarios-section .respuesta-form {
+		margin-left: 0;
+		padding: 10px;
+	}
+
+	.comentarios-section .respuestas-lista {
+		margin-left: 0;
+		padding-left: 10px;
+	}
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.comentarios-section *,
+	.comentarios-section *::before,
+	.comentarios-section *::after {
+		scroll-behavior: auto !important;
+		transition-duration: 0.01ms !important;
+	}
+}

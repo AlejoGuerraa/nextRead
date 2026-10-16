@@ -15,7 +15,7 @@ const Resena = sequelize.define('Resena', {
 
     puntuacion: {
         type: DataTypes.INTEGER,
-        allowNull: false
+        allowNull: true
     },
 
     fecha: {

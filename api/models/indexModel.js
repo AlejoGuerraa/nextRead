@@ -17,14 +17,14 @@ const Banner = require('./Banner');
 
 // 📘 Usuario ↔ Libro (por medio de Reseñas)
 Usuario.belongsToMany(Libro, {
-    through: Resena,
+    through: { model: Resena, unique: false },
     foreignKey: 'usuario_id',
     otherKey: 'libro_id',
     as: 'LibrosResenados'
 });
 
 Libro.belongsToMany(Usuario, {
-    through: Resena,
+    through: { model: Resena, unique: false },
     foreignKey: 'libro_id',
     otherKey: 'usuario_id',
     as: 'UsuariosResenadores'

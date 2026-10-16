@@ -149,21 +149,33 @@ const guardarPuntuacion = async (req, res) => {
     if (!idLibro || Number.isNaN(idLibroNum)) return res.status(400).json({ error: 'ID de libro inválido' });
     const { puntuacion, comentario } = req.body;
 
-    if (!puntuacion || puntuacion < 1 || puntuacion > 5) {
+    const hasRating = puntuacion !== undefined && puntuacion !== null;
+    const normalizedRating = hasRating ? Number(puntuacion) : null;
+    if (hasRating && (!Number.isInteger(normalizedRating) || normalizedRating < 1 || normalizedRating > 5)) {
       return res.status(400).json({ error: "La puntuación debe ser entre 1 y 5 estrellas." });
     }
 
     const libro = await Libro.findByPk(idLibroNum);
     if (!libro) return res.status(404).json({ error: "Libro no encontrado." });
 
-    let resena = await Resena.findOne({
-      where: { usuario_id: userId, libro_id: idLibroNum },
+    const hasComment = typeof comentario === 'string' && comentario.trim().length > 0;
+    if (!hasRating && !hasComment) {
+      return res.status(400).json({ error: 'Escribe una reseña o selecciona una puntuación.' });
+    }
+    let resena = null;
+
+    resena = await Resena.findOne({
+      where: {
+        usuario_id: userId,
+        libro_id: idLibroNum,
+        ...(hasComment ? { comentario: '' } : {}),
+      },
       order: [['id', 'DESC']]
     });
 
     if (resena) {
-      resena.puntuacion = puntuacion;
-      resena.comentario = comentario || "";
+      resena.puntuacion = normalizedRating;
+      if (hasComment) resena.comentario = comentario.trim();
       resena.activo = 1;
       resena.fecha = new Date();
       await resena.save();
@@ -171,8 +183,8 @@ const guardarPuntuacion = async (req, res) => {
       resena = await Resena.create({
         usuario_id: userId,
         libro_id: idLibroNum,
-        puntuacion,
-        comentario: comentario || ""
+        puntuacion: normalizedRating,
+        comentario: hasComment ? comentario.trim() : ""
       });
     }
 
@@ -441,11 +453,30 @@ const crearRespuestaResena = async (req, res) => {
 
     if (!resena) return res.status(404).json({ error: 'Reseña no encontrada' });
 
+    const replyAuthor = Number(resena.usuario_id) !== usuarioId
+      ? await Usuario.findByPk(usuarioId, { attributes: ['usuario'] })
+      : null;
+
     const respuesta = await RespuestaResena.create({
       comentario: req.body.comentario,
       usuario_id: usuarioId,
       resena_id: resenaId
     });
+
+    if (replyAuthor) {
+      await agregarNotificacion(
+        resena.usuario_id,
+        `${replyAuthor.usuario} respondió a tu reseña.`,
+        replyAuthor.usuario,
+        {
+          type: 'new_reply',
+          fromUser: usuarioId,
+          resenaId,
+          bookId: resena.libro_id,
+          replyPreview: String(req.body.comentario || '').slice(0, 100)
+        }
+      );
+    }
 
     return res.status(201).json({ message: 'Respuesta publicada correctamente', respuesta });
   } catch (error) {

@@ -389,7 +389,7 @@ const getUser = async (req, res) => {
                 ],
                 include: [
                     { model: Autor, as: "Autor", attributes: ["id", "nombre", "url_cara"] },
-                    { model: Resena, as: "Resenas", required: false, where: { usuario_id: usuario.id }, attributes: ["puntuacion"] }
+                    { model: Resena, as: "Resenas", required: false, where: { usuario_id: usuario.id }, attributes: ["id", "puntuacion", "fecha"] }
                 ]
             });
         }
@@ -397,10 +397,13 @@ const getUser = async (req, res) => {
         // --- Aplanar datos de libros ---
         librosBD = await attach_average_ratings(librosBD);
         librosBD = librosBD.map(libro => {
+            const latestUserReview = [...(libro.Resenas || [])].sort((left, right) => (
+                new Date(right.fecha).getTime() - new Date(left.fecha).getTime() || right.id - left.id
+            ))[0];
             return {
                 ...libro,
                 nombre_autor: libro.Autor ? libro.Autor.nombre : "Desconocido",
-                puntuacion_usuario: libro.Resenas && libro.Resenas.length > 0 ? libro.Resenas[0].puntuacion : null
+                puntuacion_usuario: latestUserReview?.puntuacion ?? null
             };
         });
 
@@ -810,23 +813,30 @@ const buscarUsuario = async (req, res) => {
                     ? await Libro.findAll({
                         where: { id: readBookIds },
                         attributes: ['id', 'titulo', 'url_portada', 'ranking', 'id_autor'],
-                        include: [{
-                            model: Resena,
-                            as: 'Resenas',
-                            required: false,
-                            where: { usuario_id: u.id, activo: 1 },
-                            attributes: ['puntuacion']
-                        }]
+                        include: [
+                            { model: Autor, as: 'Autor', attributes: ['id', 'nombre'], required: false },
+                            {
+                                model: Resena,
+                                as: 'Resenas',
+                                required: false,
+                                where: { usuario_id: u.id, activo: 1 },
+                                attributes: ['puntuacion', 'fecha']
+                            }
+                        ]
                     })
                     : [];
                 usuarioJSON.libros_leidos = readBooks.map((book) => {
                     const data = book.toJSON();
+                    const latestRatedReview = (data.Resenas || [])
+                        .filter((review) => review.puntuacion != null)
+                        .sort((left, right) => new Date(right.fecha).getTime() - new Date(left.fecha).getTime())[0];
                     return {
                         ...data,
-                        puntuacion_usuario: data.Resenas?.[0]?.puntuacion ?? null,
+                        puntuacion_usuario: latestRatedReview?.puntuacion ?? null,
                     };
                 });
                 const userRatings = usuarioJSON.libros_leidos
+                    .filter((book) => book.puntuacion_usuario != null)
                     .map((book) => Number(book.puntuacion_usuario))
                     .filter((value) => Number.isFinite(value));
                 usuarioJSON.ratingPromedio = userRatings.length > 0

@@ -8,7 +8,7 @@ const getBookId = (book) => book?.id || book?.id_libro || book?.book_id || book?
 const getBookTitle = (book) => book?.titulo || book?.title || 'Libro sin título';
 const getBookCover = (book) => book?.url_portada || book?.cover || book?.imagen || null;
 
-export default function ListaDetalleModal({ list, onClose, onBooksUpdated }) {
+export default function ListaDetalleModal({ list, onClose, onBooksUpdated, readOnly = false }) {
   const navigate = useNavigate();
   const toast = useToast();
   const [books, setBooks] = useState(list?.books || []);
@@ -67,9 +67,9 @@ export default function ListaDetalleModal({ list, onClose, onBooksUpdated }) {
                 <article className="list-detail-book" key={bookId || index} onClick={() => bookId && navigate(`/libro/${bookId}`)}>
                   <div className="list-detail-cover">
                     {cover ? <img src={cover} alt={getBookTitle(book)} /> : <span className="list-cover-placeholder" aria-hidden="true" />}
-                    <button className="list-remove-book" type="button" onClick={(event) => handleRemove(event, book)} disabled={removingId === bookId} aria-label={`Quitar ${getBookTitle(book)} de la lista`} title="Quitar de la lista">
+                    {!readOnly && <button className="list-remove-book" type="button" onClick={(event) => handleRemove(event, book)} disabled={removingId === bookId} aria-label={`Quitar ${getBookTitle(book)} de la lista`} title="Quitar de la lista">
                       <XCircle size={18} aria-hidden="true" />
-                    </button>
+                    </button>}
                   </div>
                   <h3>{getBookTitle(book)}</h3>
                 </article>
