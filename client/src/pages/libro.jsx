@@ -134,6 +134,7 @@ export default function Libro() {
           onMarkedAsRead={() => setShowRatingAfterRead(true)}
           userRating={bookRating}
           onRatingChange={setBookRating}
+          userBookLists={fullUser}
         />
 
         {/* ==== POPOVER POSICIONADO COMO EN PRINCIPAL PERO ARRIBA Y DERECHA ==== */}

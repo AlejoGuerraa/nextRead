@@ -126,9 +126,86 @@ body {
 /* ===== Acciones ===== */
 .libro-acciones {
   display: flex;
-  gap: 16px;
+  align-items: center;
+  gap: 12px;
   flex-wrap: wrap;
   margin-bottom: 28px;
+}
+
+.libro-action {
+  display: inline-grid;
+  width: 46px;
+  height: 46px;
+  flex: 0 0 46px;
+  place-items: center;
+  padding: 0;
+  border: 1px solid #d7e1e3;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.76);
+  color: #406882;
+  cursor: pointer;
+  box-shadow: 0 3px 9px rgba(26, 55, 77, 0.08);
+  transition: transform 180ms ease, color 180ms ease, background-color 180ms ease, border-color 180ms ease, box-shadow 180ms ease;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.libro-action svg {
+  transition: transform 180ms ease;
+}
+
+.libro-action--favorite:hover {
+  border-color: #e7c9cc;
+  background: #fff1f2;
+  color: #b64f5a;
+}
+
+.libro-action:hover {
+  transform: translateY(-3px) scale(1.06);
+  border-color: #aec7cc;
+  background: #eaf2f3;
+  color: #1a374d;
+  box-shadow: 0 8px 16px rgba(26, 55, 77, 0.16);
+}
+
+.libro-action--favorite:hover {
+  background: #fff1f2;
+  color: #b64f5a;
+}
+
+.libro-action:active {
+  transform: translateY(0) scale(0.92);
+  box-shadow: 0 2px 5px rgba(26, 55, 77, 0.12);
+}
+
+.libro-action:active svg {
+  transform: scale(0.88);
+  fill: currentColor;
+  stroke: #fff;
+}
+
+.libro-action.is-selected {
+  border-color: #406882;
+  background: #406882;
+  color: #fff;
+}
+
+.libro-action.is-selected svg {
+  stroke: #fff;
+}
+
+.libro-action--favorite.is-selected {
+  border-color: #e7c9cc;
+  background: #fff1f2;
+  color: #b64f5a;
+}
+
+.libro-action--favorite.is-selected svg {
+  stroke: currentColor;
+}
+
+.libro-action:focus-visible {
+  outline: 3px solid #d7a437;
+  outline-offset: 3px;
 }
 
 .btn {
@@ -150,6 +227,24 @@ body {
   box-shadow: 8px 8px 20px rgba(0,0,0,0.1), -8px -8px 20px rgba(255,255,255,0.95);
 }
 
+@media (max-width: 600px) {
+  .libro-acciones {
+    gap: 10px;
+  }
+
+  .libro-action {
+    width: 44px;
+    height: 44px;
+    flex-basis: 44px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .libro-action,
+  .libro-action svg {
+    transition-duration: 0.01ms;
+  }
+}
 /* ===== Rating ===== */
 .libro-footer {
   display: flex;

@@ -58,6 +58,7 @@ export default function Resenas({ rating = 0, onRatingChange }) {
     const [replyingId, setReplyingId] = useState(null);
     const [replyDrafts, setReplyDrafts] = useState({});
     const [replySubmittingId, setReplySubmittingId] = useState(null);
+    const [expandedReplyIds, setExpandedReplyIds] = useState([]);
     const [modalResenaId, setModalResenaId] = useState(null);
     const [modalDescargo, setModalDescargo] = useState("");
     const [modalLoading, setModalLoading] = useState(false);
@@ -150,6 +151,7 @@ export default function Resenas({ rating = 0, onRatingChange }) {
             await createReviewReply(reviewId, comentario);
             setReplyDrafts((current) => ({ ...current, [reviewId]: "" }));
             setReplyingId(null);
+            setExpandedReplyIds((current) => current.includes(reviewId) ? current : [...current, reviewId]);
             await fetchReviews();
             toast?.push("Respuesta publicada correctamente", "success");
         } catch (replyError) {
@@ -230,6 +232,8 @@ export default function Resenas({ rating = 0, onRatingChange }) {
                     const displayName = author.usuario || "Usuario";
                     const authorProfilePath = author.usuario ? getProfilePath(author, currentUser) : null;
                     const isReplying = replyingId === review.id;
+                    const replies = review.Respuestas || [];
+                    const areRepliesExpanded = expandedReplyIds.includes(review.id);
                     return (
                         <article className="comentario" key={review.id}>
                             <img className="comentario-avatar" src={getAvatarSrc(author)} alt="" />
@@ -281,8 +285,23 @@ export default function Resenas({ rating = 0, onRatingChange }) {
                                         </button>
                                     </div>
                                 </form>}
-                                <div className="respuestas-lista">
-                                    {(review.Respuestas || []).map((reply) => {
+                                {replies.length > 0 && (
+                                    <>
+                                        <button
+                                            className="review-replies-toggle"
+                                            type="button"
+                                            aria-expanded={areRepliesExpanded}
+                                            aria-controls={`review-replies-${review.id}`}
+                                            onClick={() => setExpandedReplyIds((current) => (
+                                                areRepliesExpanded
+                                                    ? current.filter((replyId) => replyId !== review.id)
+                                                    : [...current, review.id]
+                                            ))}
+                                        >
+                                            {areRepliesExpanded ? "Ocultar respuestas" : "Mostrar respuestas"} ({replies.length})
+                                        </button>
+                                        {areRepliesExpanded && <div className="respuestas-lista" id={`review-replies-${review.id}`}>
+                                    {replies.map((reply) => {
                                         const replyAuthor = reply.Usuario || {};
                                         const replyName = replyAuthor.usuario || "Usuario";
                                         const replyProfilePath = replyAuthor.usuario ? getProfilePath(replyAuthor, currentUser) : null;
@@ -291,7 +310,9 @@ export default function Resenas({ rating = 0, onRatingChange }) {
                                             <div className="reply-content"><div className="comentario-cabecera"><strong>{replyAuthor.usuario ? <Link className="review-user-link" to={replyProfilePath}>{replyName}</Link> : replyName}</strong><time dateTime={reply.fecha}>{formatRelativeDate(reply.fecha)}</time></div><p>{reply.comentario}</p></div>
                                         </div>;
                                     })}
-                                </div>
+                                        </div>}
+                                    </>
+                                )}
                             </div>
                         </article>
                     );
