@@ -35,6 +35,8 @@
   display: flex;
   align-items: center;
   gap: 12px;
+  flex: 1 1 auto;
+  min-width: 0;
 }
 
 /* Sobrescribir estilos globales */
@@ -82,13 +84,67 @@
 
 .search-wrapper {
   margin-left: 24px;
-  width: 320px;
+  width: min(320px, 100%);
+  min-width: 0;
+  flex: 0 1 320px;
+}
+
+.search-wrapper > div {
+  width: 100%;
+}
+
+.search-wrapper .search-bar {
+  width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+  padding: 10px 12px;
+  border: 1px solid rgba(255, 255, 255, 0.34);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.96);
+  color: #203b48;
+  font: inherit;
 }
 
 .header-right {
   display: flex;
   align-items: center;
   gap: 20px;
+  flex: 0 0 auto;
+  position: relative;
+}
+
+.header-actions-menu {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+.header-menu-toggle {
+  display: none;
+  width: 44px;
+  height: 44px;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border: 1px solid rgba(255, 255, 255, 0.26);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.12);
+  color: #fff;
+  cursor: pointer;
+}
+
+.header-menu-toggle:hover {
+  background: rgba(255, 255, 255, 0.24);
+}
+
+.header-menu-toggle:focus-visible,
+.header-actions-menu .header-action:focus-visible {
+  outline: 3px solid #f0c75e;
+  outline-offset: 3px;
+}
+
+.header-action-label {
+  display: none;
 }
 
 .icon-btn {
@@ -102,6 +158,8 @@
   transition: all 0.3s ease;
   color: white;
   box-shadow: 0 3px 8px rgba(0, 0, 0, 0.18);
+  border: 1px solid transparent;
+  font: inherit;
 }
 
 /* Badge for unread notifications */
@@ -159,14 +217,155 @@
   background: rgba(255, 255, 255, 0.16);
 }
 
-@media (max-width: 600px) {
-  .search-wrapper {
+@media (max-width: 820px) {
+  .header-container {
+    gap: 10px;
+    padding: 10px 16px;
+  }
+
+  .header-left {
+    gap: 8px;
+  }
+
+  .logo,
+  .logo-circle {
+    width: 44px !important;
+    height: 44px !important;
+    margin-right: 0 !important;
+    flex: 0 0 44px;
+  }
+
+  .home-img {
+    width: 42px;
+    height: 42px;
+  }
+
+  .app-title {
     display: none;
   }
+
+  .search-wrapper {
+    display: block;
+    width: auto;
+    min-width: 0;
+    margin-left: 0;
+    flex: 1 1 120px;
+  }
+
+  .search-wrapper > div > div {
+    max-width: min(300px, calc(100vw - 24px));
+    box-sizing: border-box;
+  }
+
+  .header-right {
+    gap: 0;
+  }
+
+  .header-menu-toggle {
+    display: inline-flex;
+  }
+
+  .header-actions-menu {
+    position: absolute;
+    top: calc(100% + 10px);
+    right: 0;
+    z-index: 120;
+    display: none;
+    width: min(280px, calc(100vw - 24px));
+    max-height: min(60vh, 400px);
+    flex-direction: column;
+    align-items: stretch;
+    gap: 4px;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    padding: 8px;
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    border-radius: 8px;
+    background: linear-gradient(155deg, #173a46, #244f59);
+    box-shadow: 0 12px 30px rgba(7, 24, 32, 0.3);
+  }
+
+  .header-actions-menu.is-open {
+    display: flex;
+  }
+
+  .header-actions-menu .header-action {
+    display: flex;
+    width: 100%;
+    min-height: 48px;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 12px;
+    padding: 10px 12px;
+    border: 0;
+    border-radius: 6px;
+    background: transparent;
+    color: #fff;
+    text-align: left;
+    box-shadow: none;
+    transform: none;
+  }
+
+  .header-actions-menu .header-action:hover {
+    background: rgba(255, 255, 255, 0.14);
+    box-shadow: none;
+    transform: none;
+  }
+
+  .header-action-label {
+    display: inline;
+  }
+
+  .header-actions-menu .profile-box {
+    padding: 10px 12px;
+    border-radius: 6px;
+  }
+
   .username {
     display: none;
   }
+
+  .header-actions-menu .profile-avatar {
+    width: 26px;
+    height: 26px;
+  }
+}
+
+@media (min-width: 821px) {
+  .profile-action {
+    order: 3;
+  }
+
+  .notifications-action {
+    order: 2;
+  }
+
+  .settings-action {
+    order: 1;
+  }
+}
+
+@media (max-width: 380px) {
   .header-container {
-    padding: 12px 18px;
+    gap: 6px;
+    padding-right: 10px;
+    padding-left: 10px;
+  }
+
+  .logo,
+  .logo-circle {
+    width: 40px !important;
+    height: 40px !important;
+    flex-basis: 40px;
+  }
+
+  .home-img {
+    width: 38px;
+    height: 38px;
+  }
+
+  .header-menu-toggle {
+    width: 40px;
+    height: 40px;
   }
 }

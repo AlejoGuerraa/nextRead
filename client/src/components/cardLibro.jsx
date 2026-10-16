@@ -6,6 +6,12 @@ const ratingFormatter = new Intl.NumberFormat("es-ES", {
     maximumFractionDigits: 1,
 });
 
+const normalizeRating = (value) => {
+    if (typeof value !== "number" && (typeof value !== "string" || !value.trim())) return null;
+    const parsed = Number(value);
+    return Number.isFinite(parsed) && parsed >= 1 && parsed <= 5 ? parsed : null;
+};
+
 export default function BookCard({ book, onClick }) {
     const [failedCover, setFailedCover] = useState(null);
     const id = book.id ?? book.id_libro ?? book.book_id ?? null;
@@ -30,13 +36,7 @@ export default function BookCard({ book, onClick }) {
         book.cover ||
         null;
 
-    const rawRating = book.average_rating ?? book.ranking;
-    const parsedRating = typeof rawRating === "number" || (typeof rawRating === "string" && rawRating.trim())
-        ? Number(rawRating)
-        : NaN;
-    const rating = Number.isFinite(parsedRating) && parsedRating >= 1 && parsedRating <= 5
-        ? parsedRating
-        : null;
+    const rating = normalizeRating(book.average_rating) ?? normalizeRating(book.ranking);
     const ratingLabel = rating === null ? null : ratingFormatter.format(rating);
     const ratingHue = rating === null ? null : Math.round(((rating - 1) / 4) * 42);
     const hasCover = Boolean(cover && failedCover !== cover);
