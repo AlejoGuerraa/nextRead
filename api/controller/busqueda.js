@@ -60,7 +60,7 @@ const buscar = async (req, res) => {
 
 
 // =======================================================
-// 🔥 TENDENCIAS (ranking + fecha)
+// 🔥 TENDENCIAS (ranking + año)
 // =======================================================
 const getTendencias = async (req, res) => {
     try {
@@ -68,7 +68,7 @@ const getTendencias = async (req, res) => {
             where: {},
             order: [
                 ['ranking', 'DESC'],
-                ['fecha_publicacion', 'DESC']
+                ['anio', 'DESC']
             ],
             limit: 20,
             include: [
@@ -161,7 +161,7 @@ const getMasDeAutor = async (req, res) => {
             where: {
                 id_autor: autorMasLeidoId,
             },
-            order: [['fecha_publicacion', 'DESC']],
+            order: [['anio', 'DESC']],
             include: [
                 {
                     model: Autor,
@@ -260,7 +260,6 @@ const getLibrosPorDecada = async (req, res) => {
             "anio",
             "url_portada",
             "generos",
-            "fecha_publicacion",
             "ranking"   // 👈 RANKING SIEMPRE INCLUIDO
         ];
 
@@ -282,7 +281,7 @@ const getLibrosPorDecada = async (req, res) => {
                     },
                 },
                 attributes: baseAttributes,
-                order: [['fecha_publicacion', 'DESC']],
+                order: [['anio', 'DESC']],
                 include: [
                     {
                         model: Autor,
@@ -420,7 +419,7 @@ const getDecadasPersonalizadas = async (req, res) => {
         if (todosLosIds.length === 0) {
             // Si no tiene libros guardados, devolver todas las décadas disponibles (comportamiento por defecto)
             const libros = await Libro.findAll({
-                attributes: ["id", "titulo", "anio", "url_portada", "generos", "fecha_publicacion", "ranking"],
+                attributes: ["id", "titulo", "anio", "url_portada", "generos", "ranking"],
                 include: [
                     {
                         model: Autor,
@@ -483,8 +482,8 @@ const getDecadasPersonalizadas = async (req, res) => {
 
         const librosDecadas = await Libro.findAll({
             where: { [Op.or]: conditions },
-            attributes: ["id", "titulo", "anio", "url_portada", "generos", "fecha_publicacion", "ranking"],
-            order: [['fecha_publicacion', 'DESC']],
+            attributes: ["id", "titulo", "anio", "url_portada", "generos", "ranking"],
+            order: [['anio', 'DESC']],
             include: [
                 {
                     model: Autor,
@@ -604,7 +603,7 @@ const getGeneroPreferido = async (req, res) => {
             ],
             order: [
                 ["ranking", "DESC"],
-                ["fecha_publicacion", "DESC"]
+                ["anio", "DESC"]
             ],
             limit: 20
         });
@@ -705,7 +704,7 @@ const getRecomendacionesPorLibro = async (req, res) => {
                     [Op.or]: orConditions
                 },
                 include: [{ model: Autor, as: "Autor", attributes: ["id", "nombre", "url_cara"] }],
-                order: [["ranking", "DESC"], ["fecha_publicacion", "DESC"]],
+                order: [["ranking", "DESC"], ["anio", "DESC"]],
                 limit: 20
             });
         }
@@ -715,7 +714,7 @@ const getRecomendacionesPorLibro = async (req, res) => {
             recomendaciones = await Libro.findAll({
                 where: baseExcludes,
                 include: [{ model: Autor, as: "Autor", attributes: ["id", "nombre", "url_cara"] }],
-                order: [["ranking", "DESC"], ["fecha_publicacion", "DESC"]],
+                order: [["ranking", "DESC"], ["anio", "DESC"]],
                 limit: 20
             });
         }

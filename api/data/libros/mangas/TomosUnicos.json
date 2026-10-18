@@ -1,0 +1,66 @@
+[
+  {
+    "titulo": "Tomie Deluxe Edition",
+    "anio": 2016,
+    "tipo": "Manga",
+    "descripcion": "Tomie Kawakami posee una belleza capaz de despertar obsesiones extremas, celos y violencia en quienes la rodean. Aunque sus admiradores intentan deshacerse de ella una y otra vez, su muerte nunca parece ser definitiva. A través de relatos inquietantes que exploran la obsesión, la crueldad y la naturaleza humana, Junji Ito construye una historia de terror en la que cada regreso de Tomie trae nuevas consecuencias.",
+    "ranking": 4.2,
+    "tema": "obsesion y horror sobrenatural",
+    "generos": [
+      "Terror",
+      "Sobrenatural",
+      "Horror psicologico"
+    ],
+    "tags": ["1980", "junji ito", "terror", "manga", "japon", "ingles", "medio", "adultos", "obsesion", "inmortalidad", "violencia", "muerte"],
+    "url_portada": "/portadasLibros/mangas/JunjiIto/Tomie.jpg",
+    "id_autor": 79
+  },
+  {
+    "titulo": "Gyo Deluxe Edition",
+    "anio": 2015,
+    "tipo": "Manga",
+    "descripcion": "Durante unas vacaciones en Okinawa, Kaori y Tadashi descubren que el mar esconde una amenaza imposible de comprender: peces capaces de desplazarse sobre patas mecánicas comienzan a aparecer junto a un hedor insoportable. A medida que la extraña plaga se extiende, ambos quedan atrapados en una pesadilla que mezcla horror corporal, ciencia ficción y los ecos de experimentos militares del pasado. Una historia de supervivencia que transforma el océano en una fuente de terror.",
+    "ranking": 3.9,
+    "tema": "horror biologico y experimentos cientificos",
+    "generos": [
+      "Terror",
+      "Ciencia ficcion",
+      "Sobrenatural"
+    ],
+    "tags": ["2000", "junji ito", "terror", "manga", "japon", "ingles", "medio", "adultos", "experimentos cientificos", "contaminacion", "horror corporal", "violencia", "muerte", "guerra"],
+    "url_portada": "/portadasLibros/mangas/JunjiIto/GyoDeluxe.jpg",
+    "id_autor": 79
+  },
+  {
+    "titulo": "Soichi",
+    "anio": 1997,
+    "tipo": "Manga",
+    "descripcion": "Soichi Tsujii es un chico excéntrico y perturbador que disfruta de las maldiciones, los rituales extraños y las bromas crueles. Sus familiares y conocidos terminan envueltos en situaciones cada vez más absurdas e inquietantes, donde lo cotidiano se mezcla con lo sobrenatural. Esta colección reúne historias de terror con un humor negro muy particular, protagonizadas por un personaje tan desagradable como impredecible.",
+    "ranking": 3.9,
+    "tema": "ocultismo y humor negro",
+    "generos": [
+      "Terror",
+      "Comedia negra",
+      "Sobrenatural"
+    ],
+    "tags": ["1990", "junji ito", "terror", "manga", "japon", "ingles", "facil", "adolescentes", "adultos", "ocultismo", "maldiciones", "humor negro", "violencia"],
+    "url_portada": "/portadasLibros/mangas/JunjiIto/SoichiCollection.jpg",
+    "id_autor": 79
+  },
+  {
+    "titulo": "Uzumaki Deluxe Edition",
+    "anio": 2013,
+    "tipo": "Manga",
+    "descripcion": "En Kurouzu, un pueblo costero aparentemente tranquilo, una extraña obsesión por las espirales comienza a extenderse entre sus habitantes. Lo que al principio parece una rareza inofensiva pronto se convierte en una sucesión de fenómenos inexplicables que alteran los cuerpos, las relaciones y la cordura de quienes viven allí. A través de Kirie Goshima, Junji Ito construye una historia de horror cósmico y psicológico en la que una forma geométrica común se transforma en una amenaza imposible de escapar.",
+    "ranking": 4.5,
+    "tema": "obsesion, locura y horror cosmico",
+    "generos": [
+      "Terror",
+      "Horror psicologico",
+      "Sobrenatural"
+    ],
+    "tags": ["1990", "junji ito", "terror", "manga", "japon", "ingles", "complejo", "adultos", "obsesion", "locura", "horror cosmico", "transformacion corporal", "violencia", "muerte", "autolesiones"],
+    "url_portada": "/portadasLibros/mangas/JunjiIto/Uzumaki.jpg",
+    "id_autor": 79
+  }
+]

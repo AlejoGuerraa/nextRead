@@ -12,7 +12,7 @@ const getAllBooks = async (_req, res) => {
     const libros = await Libro.findAll({
       attributes: [
         'id', 'titulo', 'anio', 'tipo', 'descripcion', 'tema',
-        'ranking', 'generos', 'url_portada', 'id_autor', 'fecha_publicacion'
+        'ranking', 'generos', 'tags', 'url_portada', 'id_autor'
       ],
     });
     console.log("Libros encontrados:", libros.length);
