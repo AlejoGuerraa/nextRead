@@ -78,6 +78,12 @@ const Libro = sequelize.define('Libro', {
     },
     // Comentario: etiquetas de búsqueda y clasificación del libro
     
+    read_count: {
+        type: DataTypes.INTEGER,
+        allowNull: false,
+        defaultValue: 0
+    },
+
     url_portada: {
         type: DataTypes.TEXT,
         allowNull: true
