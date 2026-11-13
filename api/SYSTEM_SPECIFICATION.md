@@ -221,7 +221,11 @@ La generación debe combinar:
 
 No se debe traer todo el catálogo a memoria para filtrar en JavaScript. La base de datos debe acotar los candidatos mediante consultas selectivas, índices y límites. La lógica de puntuación y diversidad debe trabajar sobre un conjunto acotado.
 
-La búsqueda inicial puede generar varios grupos de candidatos a partir de tags de interés distintos y luego combinarlos, eliminar duplicados y puntuarlos. La cantidad consultada por grupo debe estar limitada y ser configurable.
+La implementación consulta hasta ocho tags positivos con mayor peso efectivo. Los empates se resuelven mediante un hash estable de usuario, generación y tag, no por el orden de las propiedades del JSON. El resto de los tags del perfil también participa del score aunque no origine una consulta. Cada grupo está limitado; los grupos se combinan y deduplican antes de puntuar.
+
+Las búsquedas usan `JSON_CONTAINS` parametrizado por tag y un cursor sobre el ID primario, con una segunda consulta de wrap-around si el primer rango no alcanza el límite. Esto evita ordenar todo el conjunto coincidente con `CRC32` o `RAND`. La consulta de exploración excluye los IDs obtenidos por afinidad. La indexación multivalor de `Libro.tags` requiere ejecutar `npm run migrate:recommendations` con Oracle MySQL 8.0.17 o superior; la migración falla explícitamente en versiones no compatibles. No se debe afirmar soporte de escala hasta revisar `EXPLAIN` con la base y volumen representativos.
+
+Para recomendar son indispensables un título no vacío y un array de tags válido y no vacío. Año, tipo, autor y géneros son útiles para diversidad pero opcionales para la admisión del candidato. Popularidad/ranking y portada no se usan para puntuar compatibilidad ni para filtrar esta etapa; el filtro `ranking > 3` pertenece a la presentación del carrusel.
 
 ### 5.2. Puntuación
 
@@ -229,14 +233,23 @@ Cada libro candidato debe recibir un `score` de compatibilidad con el usuario.
 
 La puntuación debe combinar los pesos efectivos de los tags compartidos, teniendo en cuenta señales negativas y evitando que un libro gane únicamente por contener muchas etiquetas.
 
-No se establece una fórmula definitiva en este documento porque depende de la escala matemática final de los pesos y de la calidad de los tags reales. El agente debe:
+La implementación usa pesos efectivos (peso con decaimiento temporal) y normaliza solo sobre los tags conocidos que comparte el libro con el usuario:
 
-- Inspeccionar ejemplos reales de libros y preferencias.
-- Proponer una fórmula normalizada y documentarla.
-- Evitar que una cantidad grande de tags infle artificialmente la puntuación.
-- Definir cómo se tratan los tags ausentes o desconocidos.
-- Definir cómo intervienen pesos negativos.
-- Crear tests con casos de ejemplo para validar el ranking.
+```text
+compatibilidad = sum(peso_efectivo[tag]) / max(1, sum(abs(peso_efectivo[tag])))
+score = clamp(compatibilidad, -1, 1)
+```
+
+La suma incluye pesos negativos, que reducen la compatibilidad; si no hay tags compartidos con peso conocido, el score es `0`. Los tags duplicados se cuentan una sola vez; los ausentes, inválidos o desconocidos no agregan peso ni denominador. El score no se modula por completitud bibliográfica: hacerlo apenas cambiaba el resultado porque los campos requeridos en la consulta imponían una calidad mínima alta. En su lugar, solo título y tags son filtros de admisión, mientras que los metadatos disponibles alimentan la diversidad.
+
+Ejemplos:
+
+- Un libro que comparte `fantasía` con peso efectivo `0.8` obtiene `0.8 / max(1, 0.8) = 0.8`.
+- Si además comparte `terror` con peso `-0.4`, obtiene `(0.8 - 0.4) / 1.2 = 0.33`.
+- Si comparte dos intereses positivos de `0.8` y `0.4`, obtiene `1.2 / 1.2 = 1.0`; agregar más tags conocidos no puede superar el límite `1`.
+- Añadir tags no conocidos al segundo libro no cambia su score: no representan evidencia de afinidad.
+
+El score mide compatibilidad, no popularidad: no utiliza `Libro.ranking` ni `read_count`. La posición final se decide después, con diversidad y exploración.
 
 La puntuación de compatibilidad no debe confundirse con la posición final. Después de puntuar, debe ejecutarse una etapa de diversidad y selección.
 
@@ -246,9 +259,9 @@ El conjunto no debe ser una lista de 200 libros casi idénticos.
 
 Debe distribuir los candidatos entre intereses relevantes del usuario y mantener variedad de autores, géneros, períodos y tipos de obra.
 
-Se propone reservar aproximadamente un **20% de los resultados para exploración**. Este porcentaje es una referencia inicial configurable, no una obligación de incluir libros irrelevantes.
+Se propone reservar aproximadamente un **20% de los resultados para exploración**. Este porcentaje es una referencia inicial configurable, no una obligación de incluir libros irrelevantes. La muestra se obtiene por rangos del ID primario y una semilla reproducible de usuario y generación. Una generación nueva obtiene otra posición de inicio, mientras que repetir la misma semilla reproduce el conjunto. Se excluyen los libros ya obtenidos por afinidad, por lo que la proporción solo cuenta libros realmente seleccionados desde exploración independiente.
 
-La exploración debe seguir teniendo un criterio de calidad: los libros deben superar los filtros mínimos del catálogo y no ser elegidos completamente al azar.
+La exploración debe seguir teniendo un criterio de calidad: los libros deben superar los filtros mínimos del catálogo y no ser elegidos completamente al azar. Si no existen suficientes libros independientes, el resultado contiene menos del 20% de exploración en vez de etiquetar candidatos de afinidad como exploración. Cuando no hay ningún candidato de compatibilidad, el conjunto puede completarse con libros exploratorios válidos.
 
 ### 5.4. Almacenamiento independiente
 
@@ -260,19 +273,24 @@ Campos mínimos propuestos:
 |---|---|
 | `id` | Identificador del registro. |
 | `user_id` | Usuario propietario. |
+| `generation_id` | Secuencia de generación que produjo la fila. |
 | `book_id` | Libro candidato. |
 | `score` | Compatibilidad calculada. |
 | `position` | Orden final dentro de la generación. |
+| `is_exploration` | Indica que el candidato se obtuvo por la consulta independiente de exploración. |
 | `created_at` | Fecha de creación. |
 
 Se deben utilizar claves foráneas y restricciones adecuadas. Como mínimo, revisar:
 
 - Unicidad de libro dentro de la generación activa de un usuario.
+- Unicidad de posición dentro de la generación.
 - Índice para recuperar candidatos por usuario y posición.
 - Índices necesarios para filtrar y ordenar.
 - Eliminación o tratamiento consistente de candidatos cuyo libro deje de estar disponible.
 
-Si se necesita conservar el conjunto anterior mientras se calcula uno nuevo, se puede agregar un identificador de generación (`generation_id` o equivalente). El agente debe elegir el mecanismo más simple que garantice que la página de inicio nunca lea un conjunto parcialmente reemplazado.
+La tabla no duplica datos bibliográficos. La columna `is_exploration` conserva el origen de exploración para reutilizar la selección sin inferirlo a partir del score. La migración `npm run migrate:recommendations` crea las columnas de generación y exploración, los índices necesarios y el índice multivalor de tags; requiere Oracle MySQL 8.0.17 o superior y falla antes de modificar el esquema si el motor no es compatible. La creación del índice y su uso real deben verificarse con `SHOW INDEX` y `EXPLAIN` en la base de destino.
+
+`Usuario.preferences.recommendation.generation_sequence` se incrementa bajo bloqueo breve del usuario antes del cálculo. El motor calcula fuera de la transacción, luego vuelve a bloquear al usuario y publica solo si la secuencia y la huella de tags siguen vigentes. Así una generación vieja no reemplaza una posterior ni una que quedó obsoleta por una interacción. El borrado e inserción de las filas y su `generation_id` ocurren en una transacción corta; hasta el commit, la generación anterior sigue visible. Un fallo antes de publicar no borra el conjunto anterior.
 
 No guardar la lista de candidatos como un JSON dentro de `User`. La tabla independiente permite filtrar, ordenar, relacionar y actualizar mediante SQL.
 

@@ -6,7 +6,8 @@
     "start": "node --watch index.js",
     "test": "node --test",
     "migrate:book-states": "node scripts/backfillUserBookStates.js",
-    "migrate:tag-preferences": "node scripts/backfillUserTagPreferences.js"
+    "migrate:tag-preferences": "node scripts/backfillUserTagPreferences.js",
+    "migrate:recommendations": "node scripts/migrateRecommendationSchema.js"
   },
   "keywords": [],
   "author": "",

@@ -6,6 +6,7 @@ const Libro = require('./Libro');
 const UserBookState = require('./UserBookState');
 const BookReadEvent = require('./BookReadEvent');
 const UserBookPreferenceSignal = require('./UserBookPreferenceSignal');
+const UserRecommendation = require('./UserRecommendation');
 const Autor = require('./Autor');
 const Resena = require('./Resena');
 const ResenaLike = require('./ResenaLike');
@@ -86,6 +87,34 @@ Libro.hasMany(UserBookPreferenceSignal, {
 UserBookPreferenceSignal.belongsTo(Libro, {
     foreignKey: 'book_id',
     as: 'Book'
+});
+
+Usuario.hasMany(UserRecommendation, {
+    foreignKey: 'user_id',
+    as: 'Recommendations',
+    onDelete: 'CASCADE',
+    onUpdate: 'CASCADE'
+});
+
+UserRecommendation.belongsTo(Usuario, {
+    foreignKey: 'user_id',
+    as: 'User',
+    onDelete: 'CASCADE',
+    onUpdate: 'CASCADE'
+});
+
+Libro.hasMany(UserRecommendation, {
+    foreignKey: 'book_id',
+    as: 'Recommendations',
+    onDelete: 'CASCADE',
+    onUpdate: 'CASCADE'
+});
+
+UserRecommendation.belongsTo(Libro, {
+    foreignKey: 'book_id',
+    as: 'Book',
+    onDelete: 'CASCADE',
+    onUpdate: 'CASCADE'
 });
 
 // 📘 Usuario ↔ Libro (por medio de Reseñas)
@@ -257,6 +286,7 @@ module.exports = {
     UserBookState,
     BookReadEvent,
     UserBookPreferenceSignal,
+    UserRecommendation,
     Resena,
     ResenaLike,
     RespuestaResena,
