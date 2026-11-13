@@ -5,6 +5,7 @@ const Usuario = require('./Usuario');
 const Libro = require('./Libro');
 const UserBookState = require('./UserBookState');
 const BookReadEvent = require('./BookReadEvent');
+const UserBookPreferenceSignal = require('./UserBookPreferenceSignal');
 const Autor = require('./Autor');
 const Resena = require('./Resena');
 const ResenaLike = require('./ResenaLike');
@@ -59,6 +60,30 @@ Libro.hasMany(BookReadEvent, {
 });
 
 BookReadEvent.belongsTo(Libro, {
+    foreignKey: 'book_id',
+    as: 'Book'
+});
+
+Usuario.hasMany(UserBookPreferenceSignal, {
+    foreignKey: 'user_id',
+    as: 'BookPreferenceSignals',
+    onDelete: 'CASCADE',
+    onUpdate: 'CASCADE'
+});
+
+UserBookPreferenceSignal.belongsTo(Usuario, {
+    foreignKey: 'user_id',
+    as: 'User'
+});
+
+Libro.hasMany(UserBookPreferenceSignal, {
+    foreignKey: 'book_id',
+    as: 'PreferenceSignals',
+    onDelete: 'CASCADE',
+    onUpdate: 'CASCADE'
+});
+
+UserBookPreferenceSignal.belongsTo(Libro, {
     foreignKey: 'book_id',
     as: 'Book'
 });
@@ -226,4 +251,19 @@ Usuario.belongsToMany(Usuario, {
     otherKey: 'id_remitente'
 });
 
-module.exports = { Usuario, Libro, UserBookState, BookReadEvent, Resena, ResenaLike, RespuestaResena, Seguidos_Seguidores, Logro, Usuario_Logro, Autor, Icono, Banner };
+module.exports = {
+    Usuario,
+    Libro,
+    UserBookState,
+    BookReadEvent,
+    UserBookPreferenceSignal,
+    Resena,
+    ResenaLike,
+    RespuestaResena,
+    Seguidos_Seguidores,
+    Logro,
+    Usuario_Logro,
+    Autor,
+    Icono,
+    Banner
+};

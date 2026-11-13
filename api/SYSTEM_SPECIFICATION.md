@@ -146,102 +146,56 @@ Las acciones deben procesarse según su transición real. Repetir una petición 
 
 ---
 
-## 4. Preferencias individuales por tags
+## 4. Individual tag preferences
 
-Cada usuario debe tener preferencias propias para las etiquetas. Un mismo tag puede tener un peso positivo para una persona, negativo para otra y no existir todavía para una tercera.
+Each user has an independent affinity for each normalized tag. The aggregate profile remains in `Usuario.preferences` under `recommendation.tags`; each entry contains `weight`, `updated_at`, `evidence_sum`, `evidence_scale`, `evidence_offset`, and `contribution_count`. `recommendation.signals_initialized` records whether existing interactions have been backfilled.
 
-Se propone guardar las preferencias en un campo JSON del usuario, siempre que el modelo actual y el motor de base de datos permitan hacerlo de forma segura y eficiente.
+Tag normalization trims surrounding whitespace, applies Unicode NFC normalization, and lowercases without removing accents. Duplicate normalized tags on one book contribute only once. Missing or invalid tags produce no contribution.
 
-Ejemplo:
+### 4.1. Signal scale and combination
 
-```json
-{
-  "fantasia": {
-    "weight": 8.52,
-    "updated_at": "2026-06-01"
-  },
-  "1980": {
-    "weight": 6.94,
-    "updated_at": "2026-05-23"
-  }
-}
-```
-
-- `weight`: representa la afinidad individual del usuario por ese tag.
-- `updated_at`: representa la última vez que se actualizó ese peso, incluyendo la aplicación del decaimiento.
-
-Los nombres de los tags deben normalizarse de forma consistente. La normalización debe respetar el formato real del catálogo y no fusionar etiquetas distintas por intuición.
-
-### 4.1. Efecto de las acciones
-
-La propuesta inicial de ajustes es:
-
-| Acción | Ajuste propuesto |
-|---|---:|
-| Libro marcado como favorito | +30% |
-| Libro en estado `leyendo` | +5% |
-| Libro terminado, si todavía no tiene valoración | +10% |
-| Libro marcado `para leer` | +15% |
-| Valoración de 5/5 | +40% |
-| Valoración de 4/5 | +25% |
-| Valoración de 3/5 | +15% |
-| Valoración de 2/5 | -20% |
-| Valoración de 1/5 | -30% |
-
-**Importante: estos porcentajes son parámetros de diseño pendientes de una definición matemática precisa.** No deben sumarse directamente a un `weight` arbitrario como si fueran puntos absolutos, ni interpretarse como un porcentaje del peso actual sin una decisión explícita.
-
-Antes de implementar, el agente debe revisar el formato y rango real del peso y definir una regla consistente para convertir estos ajustes en cambios numéricos. Debe documentar:
-
-- Qué significa exactamente un ajuste de `+30%` o `-20%`.
-- Si se aplica sobre una escala normalizada, sobre un incremento fijo o sobre otro valor.
-- Cómo se limitan pesos máximos y mínimos para evitar crecimiento ilimitado.
-- Cómo se combinan acciones distintas sobre el mismo libro.
-- Cómo se revierte el efecto de una acción cuando se deshace o cambia.
-- Cómo se evita que una valoración se aplique dos veces.
-
-No se debe inventar una interpretación silenciosa de estos porcentajes. Si el código existente ya tiene una escala de pesos, debe analizarse y proponer una adaptación compatible.
-
-### 4.2. Evitar duplicación de señales
-
-Un libro puede estar marcado como favorito, en lectura, leído y además tener una valoración. El sistema debe definir cómo combinar esas señales sin contar repetidamente la misma acción.
-
-Reglas mínimas:
-
-- Un cambio de estado debe aplicar únicamente la diferencia entre el estado anterior y el nuevo.
-- Una modificación de valoración debe aplicar la diferencia entre la valoración anterior y la nueva, no sumar el efecto completo otra vez.
-- Marcar dos veces un libro como favorito no debe duplicar el efecto.
-- Quitar un favorito debe revertir o ajustar la señal que ese favorito había aportado.
-- Si el usuario termina un libro y lo valora, no se debe sumar automáticamente el efecto de `+10%` por terminarlo si la regla indica que ese incremento solo corresponde cuando todavía no hay valoración.
-- La misma operación HTTP repetida no debe duplicar preferencias ni estadísticas.
-
-Para que esto sea confiable, las actualizaciones de la relación usuario-libro, preferencias y contadores deben ejecutarse de forma transaccional cuando corresponda.
-
-Si revertir exactamente una señal resulta necesario, se debe investigar si el sistema actual conserva suficiente información para hacerlo. No se debe intentar reconstruir una valoración anterior que ya no está almacenada.
-
-### 4.3. Decaimiento temporal de preferencias
-
-Las preferencias deben perder peso gradualmente para reflejar cambios de gustos.
-
-Regla inicial:
+Weights use the bounded normalized interval `(-1, 1)`. To give the proposed percentage for one signal its direct interpretation as the resulting affinity of an otherwise neutral tag, each signal impact `p` is converted to evidence with `atanh(p)`. For a tag:
 
 ```text
-peso_actual = peso_anterior * 0.8 ^ (dias_transcurridos / 150)
+evidence_sum = sum(active per-book signal evidence)
+weight = tanh(evidence_scale * evidence_sum + evidence_offset)
 ```
 
-Esto significa conservar el 80% del peso cada 150 días.
+The initial `evidence_scale` is `1` and `evidence_offset` is `0`. The stored weight is clamped to `[-(1 - 10^-12), +(1 - 10^-12)]` for finite floating-point values. Multiple signals combine additively in evidence space and saturate asymptotically in weight space; negative signals can offset positive ones.
 
-Ejemplos:
-- 150 días: se conserva el 80%.
-- 300 días: se conserva el 64%.
-- 75 días: se aplica la mitad del período exponencial.
+| Signal | Normalized impact `p` |
+|---|---:|
+| Favorite | +0.30 |
+| `reading` state | +0.05 |
+| `to_read` state | +0.15 |
+| `read` with no active rating | +0.10 |
+| Rating 5/5 | +0.40 |
+| Rating 4/5 | +0.25 |
+| Rating 3/5 | +0.15 |
+| Rating 2/5 | -0.20 |
+| Rating 1/5 | -0.30 |
 
-Cada tag tiene su propio `updated_at`.
+Favorite is independent of reading state and rating. A reading state is mutually exclusive with other reading states. An active rating replaces the `read`-without-rating signal; it does not add to it. An unrated `read` state contributes only while no active rating exists.
 
-No hace falta recorrer todos los usuarios periódicamente. El decaimiento debe calcularse de manera diferida cuando se leen las preferencias para recomendar o cuando se aplica una nueva interacción. Si se actualiza un peso, se aplica primero su decaimiento pendiente y después el nuevo efecto.
+### 4.2. Reversible per-book signals
 
-El cálculo debe evitar mutaciones innecesarias en cada lectura. Si se calcula un peso efectivo para una recomendación, no es obligatorio persistirlo en cada petición. La persistencia se realiza cuando corresponda actualizar la preferencia.
+`user_book_preference_signals` stores one row per `(user_id, book_id)`, with the normalized tags and raw evidence contributions currently attributed to that book. It has a composite primary key and foreign keys to `Usuario` and `Libro`. This ledger is required because the current catalog tags may change after a signal was applied; reverting against current tags alone could not remove the original contribution reliably.
 
-Los pesos positivos y negativos deben decaer hacia cero. No deben cambiar de signo por el decaimiento.
+Interaction changes update this ledger and `Usuario.preferences` in the same transaction as the state, rating, or favorite. The service subtracts the old ledger contribution and adds the new contribution, and writes nothing for an unchanged signal. Repeated requests therefore do not duplicate evidence. A tag aggregate is removed when its contribution count reaches zero.
+
+Existing interaction dates cannot be reconstructed from the legacy arrays. The one-time backfill initializes their contributions at migration time, after the user-book-state backfill. Future updates use the ledger snapshot rather than reconstructing prior signals from catalog tags.
+
+### 4.3. Deferred temporal decay
+
+Each tag decays independently:
+
+```text
+effective_weight = previous_weight * 0.8^(days_elapsed / 150)
+```
+
+This retains 80% after 150 days, 64% after 300 days, and the corresponding exponential factor after 75 days. Decay is calculated when an interaction updates that tag or when a future consumer reads effective preferences. Reads do not persist decay.
+
+When applying a new signal, the service first computes the effective decayed weight and derives the scale of the existing evidence. It subtracts the old per-book contribution at that decayed scale, then adds the new contribution at its full impact. `evidence_offset` preserves aggregate evidence in the edge case where active per-book contributions sum to zero. The result is stored with a fresh `updated_at`, so a new interaction is not aged immediately. Multiplication by a positive decay factor moves positive and negative weights toward zero without changing their sign.
 
 ---
 

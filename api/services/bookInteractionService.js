@@ -12,6 +12,7 @@ const READING_STATUS_BY_LIST = Object.freeze({
 });
 
 const READING_LISTS = ['enLectura', 'paraLeer', 'leido'];
+const { createTagPreferenceService } = require('./tagPreferenceService');
 
 function normalize_book_ids(value) {
     let list = value;
@@ -123,8 +124,50 @@ function createBookInteractionService({
     BookReadEvent,
     Resena,
     ResenaLike,
-    RespuestaResena
+    RespuestaResena,
+    UserBookPreferenceSignal
 }) {
+    const tagPreferenceService = UserBookPreferenceSignal
+        ? createTagPreferenceService({ UserBookPreferenceSignal })
+        : null;
+
+    async function find_user_book_state(userId, bookId, user, transaction) {
+        const state = await UserBookState.findOne({
+            where: { user_id: userId, book_id: bookId },
+            transaction,
+            lock: transaction.LOCK.UPDATE
+        });
+        if (state) {
+            return {
+                readingStatus: state.reading_status,
+                isFavorite: Boolean(state.is_favorite)
+            };
+        }
+        return get_legacy_state(read_user_lists(user), bookId);
+    }
+
+    async function find_active_rating(userId, bookId, transaction, lock = true) {
+        const review = await Resena.findOne({
+            where: { usuario_id: userId, libro_id: bookId, activo: 1 },
+            order: [['id', 'DESC']],
+            transaction,
+            ...(lock ? { lock: transaction.LOCK.UPDATE } : {})
+        });
+        return review ? Number(review.puntuacion) : null;
+    }
+
+    async function update_preferences(user, book, bookId, oldSources, newSources, transaction) {
+        if (!tagPreferenceService) return;
+        await tagPreferenceService.update_book_signals({
+            user,
+            bookId,
+            tags: book.tags,
+            oldSources,
+            newSources,
+            transaction
+        });
+    }
+
     async function change_list({ userId, bookId, type, action }) {
         return sequelize.transaction(async (transaction) => {
             const user = await Usuario.findByPk(userId, {
@@ -187,6 +230,7 @@ function createBookInteractionService({
                 };
             }
 
+            const rating = await find_active_rating(userId, bookId, transaction);
             const readCountDelta = Number(mutation.newState.readingStatus === 'read') -
                 Number(mutation.oldState.readingStatus === 'read');
             const nextReadCount = Number(book.read_count) + readCountDelta;
@@ -234,6 +278,15 @@ function createBookInteractionService({
                 }, { transaction });
             }
 
+            await update_preferences(
+                user,
+                book,
+                bookId,
+                { ...mutation.oldState, rating },
+                { ...mutation.newState, rating },
+                transaction
+            );
+
             return {
                 status: 'ok',
                 changed: true,
@@ -255,17 +308,26 @@ function createBookInteractionService({
             const book = await Libro.findByPk(bookId, { transaction });
             if (!book) return { status: 'book_not_found' };
 
-            const review = await Resena.findOne({
-                where: { usuario_id: userId, libro_id: bookId },
+            const bookState = await find_user_book_state(userId, bookId, user, transaction);
+            const previousRating = await find_active_rating(userId, bookId, transaction);
+            let review = await Resena.findOne({
+                where: { usuario_id: userId, libro_id: bookId, activo: 1 },
                 order: [['id', 'DESC']],
                 transaction,
                 lock: transaction.LOCK.UPDATE
             });
+            if (!review) {
+                review = await Resena.findOne({
+                    where: { usuario_id: userId, libro_id: bookId },
+                    order: [['id', 'DESC']],
+                    transaction,
+                    lock: transaction.LOCK.UPDATE
+                });
+            }
 
             const nextComment = comentario || '';
             if (review) {
-                const oldScore = Number(review.puntuacion);
-                const ratingDelta = puntuacion - oldScore;
+                const ratingDelta = previousRating === null ? null : puntuacion - previousRating;
                 const changed = ratingDelta !== 0 ||
                     review.comentario !== nextComment ||
                     Number(review.activo) !== 1;
@@ -278,6 +340,17 @@ function createBookInteractionService({
                     await review.save({ transaction });
                 }
 
+                if (changed) {
+                    await update_preferences(
+                        user,
+                        book,
+                        bookId,
+                        { ...bookState, rating: previousRating },
+                        { ...bookState, rating: puntuacion },
+                        transaction
+                    );
+                }
+
                 return { status: 'ok', review, changed, ratingDelta };
             }
 
@@ -287,6 +360,15 @@ function createBookInteractionService({
                 puntuacion,
                 comentario: nextComment
             }, { transaction });
+
+            await update_preferences(
+                user,
+                book,
+                bookId,
+                { ...bookState, rating: previousRating },
+                { ...bookState, rating: Number(puntuacion) },
+                transaction
+            );
 
             return { status: 'ok', review: newReview, changed: true, ratingDelta: null };
         });
@@ -300,6 +382,17 @@ function createBookInteractionService({
             });
             if (!user) return { status: 'user_not_found' };
 
+            const reviewReference = await Resena.findByPk(reviewId, { transaction });
+            if (!reviewReference) return { status: 'review_not_found' };
+            if (Number(reviewReference.usuario_id) !== Number(userId)) return { status: 'forbidden' };
+
+            const book = await Libro.findByPk(reviewReference.libro_id, {
+                transaction,
+                lock: transaction.LOCK.UPDATE
+            });
+            if (!book) return { status: 'book_not_found' };
+            const bookState = await find_user_book_state(userId, book.id, user, transaction);
+            const previousRating = await find_active_rating(userId, book.id, transaction);
             const review = await Resena.findByPk(reviewId, {
                 transaction,
                 lock: transaction.LOCK.UPDATE
@@ -315,9 +408,21 @@ function createBookInteractionService({
             }
             await review.destroy({ transaction });
 
+            const nextRating = await find_active_rating(userId, book.id, transaction);
+            await update_preferences(
+                user,
+                book,
+                book.id,
+                { ...bookState, rating: previousRating },
+                { ...bookState, rating: nextRating },
+                transaction
+            );
+
             return {
                 status: 'ok',
-                ratingDelta: -Number(review.puntuacion)
+                ratingDelta: previousRating === null || nextRating === null
+                    ? null
+                    : nextRating - previousRating
             };
         });
     }
@@ -329,6 +434,7 @@ module.exports = {
     LIST_FIELDS,
     apply_list_mutation,
     createBookInteractionService,
+    get_legacy_state,
     legacy_rows_from_user,
     normalize_book_ids,
     read_user_lists

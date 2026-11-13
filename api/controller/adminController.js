@@ -1,9 +1,15 @@
 const User = require('../models/Usuario');
+const Libro = require('../models/Libro');
+const UserBookState = require('../models/UserBookState');
+const UserBookPreferenceSignal = require('../models/UserBookPreferenceSignal');
 const Resena = require('../models/Resena');
 const ResenaLike = require('../models/ResenaLike');
 const RespuestaResena = require('../models/RespuestaResena');
 const sequelize = require('../config/db');
 const emailService = require('../services/emailService');
+const { createTagPreferenceService } = require('../services/tagPreferenceService');
+const { get_legacy_state, read_user_lists } = require('../services/bookInteractionService');
+const tagPreferenceService = createTagPreferenceService({ UserBookPreferenceSignal });
 
 // Importar helper para notificaciones
 const { agregarNotificacion } = require('./usuariosController');
@@ -93,6 +99,26 @@ const eliminarComentario = async (req, res) => {
         transaction,
         lock: transaction.LOCK.UPDATE
       });
+      const libro = await Libro.findByPk(existingReview.libro_id, {
+        transaction,
+        lock: transaction.LOCK.UPDATE
+      });
+      const state = usuario && await UserBookState.findOne({
+        where: { user_id: existingReview.usuario_id, book_id: existingReview.libro_id },
+        transaction,
+        lock: transaction.LOCK.UPDATE
+      });
+      const bookState = usuario
+        ? state
+          ? { readingStatus: state.reading_status, isFavorite: Boolean(state.is_favorite) }
+          : get_legacy_state(read_user_lists(usuario), existingReview.libro_id)
+        : null;
+      const previousRating = await Resena.findOne({
+        where: { usuario_id: existingReview.usuario_id, libro_id: existingReview.libro_id, activo: 1 },
+        order: [['id', 'DESC']],
+        transaction,
+        lock: transaction.LOCK.UPDATE
+      });
       const resena = await Resena.findByPk(id, {
         transaction,
         lock: transaction.LOCK.UPDATE
@@ -109,6 +135,28 @@ const eliminarComentario = async (req, res) => {
       await resena.destroy({ transaction });
 
       if (usuario) {
+        const nextRating = await Resena.findOne({
+          where: { usuario_id: usuario.id, libro_id: existingReview.libro_id, activo: 1 },
+          order: [['id', 'DESC']],
+          transaction,
+          lock: transaction.LOCK.UPDATE
+        });
+        if (libro) {
+          await tagPreferenceService.update_book_signals({
+            user: usuario,
+            bookId: libro.id,
+            tags: libro.tags,
+            oldSources: {
+              ...bookState,
+              rating: previousRating ? Number(previousRating.puntuacion) : null
+            },
+            newSources: {
+              ...bookState,
+              rating: nextRating ? Number(nextRating.puntuacion) : null
+            },
+            transaction
+          });
+        }
         usuario.activo = 0;
         await usuario.save({ transaction });
       }

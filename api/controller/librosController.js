@@ -5,6 +5,7 @@ const Libro = require('../models/Libro');
 const Usuario = require('../models/Usuario');
 const UserBookState = require('../models/UserBookState');
 const BookReadEvent = require('../models/BookReadEvent');
+const UserBookPreferenceSignal = require('../models/UserBookPreferenceSignal');
 const Icono = require('../models/Icono');
 const sequelize = require('../config/db');
 const { Op } = require('sequelize');
@@ -19,7 +20,8 @@ const bookInteractionService = createBookInteractionService({
   BookReadEvent,
   Resena,
   ResenaLike,
-  RespuestaResena
+  RespuestaResena,
+  UserBookPreferenceSignal
 });
 
 const getAllBooks = async (_req, res) => {
