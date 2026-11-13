@@ -3,6 +3,8 @@ const sequelize = require('../config/db');
 
 const Usuario = require('./Usuario');
 const Libro = require('./Libro');
+const UserBookState = require('./UserBookState');
+const BookReadEvent = require('./BookReadEvent');
 const Autor = require('./Autor');
 const Resena = require('./Resena');
 const ResenaLike = require('./ResenaLike');
@@ -13,7 +15,53 @@ const Usuario_Logro = require('./Usuario_Logro');
 const Icono = require('./Icono');
 const Banner = require('./Banner');
 
+Usuario.hasMany(UserBookState, {
+    foreignKey: 'user_id',
+    as: 'BookStates',
+    onDelete: 'CASCADE',
+    onUpdate: 'CASCADE'
+});
 
+UserBookState.belongsTo(Usuario, {
+    foreignKey: 'user_id',
+    as: 'User'
+});
+
+Libro.hasMany(UserBookState, {
+    foreignKey: 'book_id',
+    as: 'UserStates',
+    onDelete: 'CASCADE',
+    onUpdate: 'CASCADE'
+});
+
+UserBookState.belongsTo(Libro, {
+    foreignKey: 'book_id',
+    as: 'Book'
+});
+
+Usuario.hasMany(BookReadEvent, {
+    foreignKey: 'user_id',
+    as: 'BookReadEvents',
+    onDelete: 'CASCADE',
+    onUpdate: 'CASCADE'
+});
+
+BookReadEvent.belongsTo(Usuario, {
+    foreignKey: 'user_id',
+    as: 'User'
+});
+
+Libro.hasMany(BookReadEvent, {
+    foreignKey: 'book_id',
+    as: 'ReadEvents',
+    onDelete: 'RESTRICT',
+    onUpdate: 'CASCADE'
+});
+
+BookReadEvent.belongsTo(Libro, {
+    foreignKey: 'book_id',
+    as: 'Book'
+});
 
 // 📘 Usuario ↔ Libro (por medio de Reseñas)
 Usuario.belongsToMany(Libro, {
@@ -178,4 +226,4 @@ Usuario.belongsToMany(Usuario, {
     otherKey: 'id_remitente'
 });
 
-module.exports = { Usuario, Libro, Resena, ResenaLike, RespuestaResena, Seguidos_Seguidores, Logro, Usuario_Logro, Autor, Icono, Banner };
+module.exports = { Usuario, Libro, UserBookState, BookReadEvent, Resena, ResenaLike, RespuestaResena, Seguidos_Seguidores, Logro, Usuario_Logro, Autor, Icono, Banner };

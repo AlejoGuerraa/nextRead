@@ -1,9 +1,12 @@
 const User = require('../models/Usuario');
 const Resena = require('../models/Resena');
+const ResenaLike = require('../models/ResenaLike');
+const RespuestaResena = require('../models/RespuestaResena');
+const sequelize = require('../config/db');
 const emailService = require('../services/emailService');
 
 // Importar helper para notificaciones
-const { agregarNotificacion } = require('./peticionesUsuario');
+const { agregarNotificacion } = require('./usuariosController');
 
 // Banear usuario: marca activo = 0
 const banearUsuario = async (req, res) => {
@@ -80,56 +83,69 @@ const eliminarComentario = async (req, res) => {
       return res.status(400).json({ error: 'ID de reseña/comentario inválido' });
     }
 
-    const resena = await Resena.findByPk(id);
-    if (!resena) {
+    const existingReview = await Resena.findByPk(id);
+    if (!existingReview) {
       return res.status(404).json({ error: 'Reseña/comentario no encontrado' });
     }
 
-    const autorId = resena.usuario_id;
-    // Capturamos el comentario para usarlo en la notificación
-    const contenidoComentario = resena.comentario ? resena.comentario.substring(0, 50) + '...' : 'Comentario sin contenido.';
+    const result = await sequelize.transaction(async (transaction) => {
+      const usuario = await User.findByPk(existingReview.usuario_id, {
+        transaction,
+        lock: transaction.LOCK.UPDATE
+      });
+      const resena = await Resena.findByPk(id, {
+        transaction,
+        lock: transaction.LOCK.UPDATE
+      });
+      if (!resena) return { status: 'not_found' };
 
-    // 1. ELIMINAR LA RESEÑA/COMENTARIO
-    await resena.destroy();
+      const autorId = resena.usuario_id;
+      const contenidoComentario = resena.comentario
+        ? `${resena.comentario.substring(0, 50)}...`
+        : 'Comentario sin contenido.';
 
-    // 2. SUSPENDER LA CUENTA DEL AUTOR CONFIGURANDO activo = 0
-    try {
-      const usuario = await User.findByPk(autorId);
+      await RespuestaResena.destroy({ where: { resena_id: id }, transaction });
+      await ResenaLike.destroy({ where: { resena_id: id }, transaction });
+      await resena.destroy({ transaction });
+
       if (usuario) {
         usuario.activo = 0;
-        await usuario.save();
-
-        // Enviar correo al usuario afectado informando la suspensión y el descargo
-        try {
-          const subject = 'Cuenta suspendida - NextRead';
-          const html = `
-            <p>Hola ${usuario.nombre || ''},</p>
-            <p>Tu cuenta ha sido suspendida por un administrador debido a una reseña/comentario que infringe nuestras políticas.</p>
-            <p><strong>Extracto del comentario:</strong> ${contenidoComentario}</p>
-            <p><strong>Descargo del administrador:</strong></p>
-            <div style="padding:10px;border-left:4px solid #d33;background:#fff">${descargo ? descargo : 'No se proporcionó descargo.'}</div>
-            <p>Si crees que esto es un error, por favor responde a este correo solicitando revisión.</p>
-            <p>Atentamente,<br/>Equipo NextRead</p>
-          `;
-
-          // emailService expects { to, subject, html }
-          await emailService({ to: usuario.correo, subject, html });
-        } catch (emailErr) {
-          console.error('Error al enviar email de suspensión:', emailErr);
-        }
-
-        // 3. ENVIAR NOTIFICACIÓN EN LA APP (si existe helper)
-        try {
-          if (typeof agregarNotificacion === 'function') {
-            const mensaje = `Tu reseña/comentario: "${contenidoComentario}" fue eliminado por un administrador. Tu cuenta ha sido suspendida.`;
-            await agregarNotificacion(autorId, mensaje, 'Moderación', { adminId, descargo });
-          }
-        } catch (notifError) {
-          console.error('Error al agregar notificación de moderación:', notifError);
-        }
+        await usuario.save({ transaction });
       }
-    } catch (suspendErr) {
-      console.error('Error al suspender usuario después de eliminar reseña:', suspendErr);
+
+      return { status: 'ok', usuario, autorId, contenidoComentario };
+    });
+
+    if (result.status === 'not_found') {
+      return res.status(404).json({ error: 'Reseña/comentario no encontrado' });
+    }
+
+    if (result.usuario) {
+      const { usuario, autorId, contenidoComentario } = result;
+      try {
+        const subject = 'Cuenta suspendida - NextRead';
+        const html = `
+          <p>Hola ${usuario.nombre || ''},</p>
+          <p>Tu cuenta ha sido suspendida por un administrador debido a una reseña/comentario que infringe nuestras políticas.</p>
+          <p><strong>Extracto del comentario:</strong> ${contenidoComentario}</p>
+          <p><strong>Descargo del administrador:</strong></p>
+          <div style="padding:10px;border-left:4px solid #d33;background:#fff">${descargo ? descargo : 'No se proporcionó descargo.'}</div>
+          <p>Si crees que esto es un error, por favor responde a este correo solicitando revisión.</p>
+          <p>Atentamente,<br/>Equipo NextRead</p>
+        `;
+        await emailService({ to: usuario.correo, subject, html });
+      } catch (emailErr) {
+        console.error('Error al enviar email de suspensión:', emailErr);
+      }
+
+      try {
+        if (typeof agregarNotificacion === 'function') {
+          const mensaje = `Tu reseña/comentario: "${contenidoComentario}" fue eliminado por un administrador. Tu cuenta ha sido suspendida.`;
+          await agregarNotificacion(autorId, mensaje, 'Moderación', { adminId, descargo });
+        }
+      } catch (notifError) {
+        console.error('Error al agregar notificación de moderación:', notifError);
+      }
     }
 
     return res.json({ message: '✅ Reseña/comentario eliminado y usuario suspendido correctamente' });

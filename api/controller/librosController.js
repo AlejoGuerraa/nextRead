@@ -1,11 +1,26 @@
 const Resena = require('../models/Resena')
+const ResenaLike = require('../models/ResenaLike');
 const RespuestaResena = require('../models/RespuestaResena');
 const Libro = require('../models/Libro');
 const Usuario = require('../models/Usuario');
+const UserBookState = require('../models/UserBookState');
+const BookReadEvent = require('../models/BookReadEvent');
 const Icono = require('../models/Icono');
 const sequelize = require('../config/db');
 const { Op } = require('sequelize');
-const { agregarNotificacion } = require('./peticionesUsuario');
+const { agregarNotificacion } = require('./usuariosController');
+const { createBookInteractionService } = require('../services/bookInteractionService');
+
+const bookInteractionService = createBookInteractionService({
+  sequelize,
+  Usuario,
+  Libro,
+  UserBookState,
+  BookReadEvent,
+  Resena,
+  ResenaLike,
+  RespuestaResena
+});
 
 const getAllBooks = async (_req, res) => {
   try {
@@ -34,112 +49,49 @@ const agregarLibroALista = async (req, res) => {
     if (!tipo) return res.status(400).json({ error: "Falta el parámetro 'tipo' en la URL" });
     if (Number.isNaN(idNum) || idNum <= 0) return res.status(400).json({ error: "ID de libro inválido" });
 
-    const usuario = await Usuario.findByPk(userId);
-    if (!usuario) return res.status(404).json({ error: "Usuario no encontrado" });
-
-    // Verificar que el libro exista antes de modificar listas
-    const libroExistente = await Libro.findByPk(idNum);
-    if (!libroExistente) return res.status(404).json({ error: 'Libro no encontrado' });
-
-    // Helper: normalizar cualquier campo (string JSON, array, objetos, strings)
-    const normalizarLista = (lista) => {
-      // Intenta parsear si es un string (esto maneja el caso de DataTypes.JSON)
-      if (typeof lista === "string") {
-        try { lista = JSON.parse(lista); } catch { lista = []; }
-      }
-      // Asegura que sea un array
-      if (!Array.isArray(lista)) lista = [];
-
-      // Mapea y filtra para asegurar que solo haya números (IDs de libros)
-      return lista
-        .map(item => {
-          if (typeof item === "number") return item;
-          if (typeof item === "object" && item !== null) {
-            if ("idLibro" in item) return Number(item.idLibro);
-            if ("id" in item) return Number(item.id);
-          }
-          const n = Number(item);
-          // Solo retorna números válidos (no NaN y mayores a 0)
-          return Number.isNaN(n) || n <= 0 ? null : n;
-        })
-        .filter(x => typeof x === "number");
-    };
-
-    // Normalizamos todos los campos del usuario
-    let leidos = normalizarLista(usuario.libros_leidos);
-    let favoritos = normalizarLista(usuario.libros_favoritos);
-    let enLectura = normalizarLista(usuario.libros_en_lectura);
-    let paraLeer = normalizarLista(usuario.libros_para_leer);
-
-    // Map para elegir el campo objetivo según tipo
-    const mapaTipos = {
-      favoritos: { campo: "libros_favoritos", arr: favoritos },
-      enLectura: { campo: "libros_en_lectura", arr: enLectura },
-      paraLeer: { campo: "libros_para_leer", arr: paraLeer },
-      leido: { campo: "libros_leidos", arr: leidos }
-    };
-
-    const entry = mapaTipos[tipo];
-    if (!entry) return res.status(400).json({ error: "Tipo de lista inválido." });
-
-    // --- Lógica de actualización para "leido", "enLectura" y "paraLeer" ---
-    let listaActualizada = entry.arr;
-
-    if (["leido", "enLectura", "paraLeer"].includes(tipo)) {
-      
-      // 1. Quitar el libro de todas las listas de estado para asegurar exclusividad
-      // Esto cumple con: "Se borra el id del libro en los atributos libros_en_lectura y libros_para_leer."
-      leidos = leidos.filter(x => x !== idNum);
-      enLectura = enLectura.filter(x => x !== idNum);
-      paraLeer = paraLeer.filter(x => x !== idNum);
-
-      // 2. Si el libro ya estaba en la lista objetivo, lo consideramos como un error 400
-      // o simplemente no hacemos nada más, pero el requisito es agregarlo si no está.
-      if (entry.arr.includes(idNum)) {
-         return res.status(400).json({ message: `El libro ya está en ${tipo}` });
-      }
-
-      // 3. Agregar el libro a la lista objetivo
-      if (tipo === "leido") {
-        leidos.push(idNum);
-        listaActualizada = leidos;
-      } else if (tipo === "enLectura") {
-        enLectura.push(idNum);
-        listaActualizada = enLectura;
-      } else if (tipo === "paraLeer") {
-        paraLeer.push(idNum);
-        listaActualizada = paraLeer;
-      }
-
-      // 4. Utilizar el método `set` de Sequelize para forzar la actualización de las propiedades JSON
-      usuario.set('libros_leidos', [...new Set(leidos)]);
-      usuario.set('libros_en_lectura', [...new Set(enLectura)]);
-      usuario.set('libros_para_leer', [...new Set(paraLeer)]);
-      
-    } else if (tipo === "favoritos") {
-      // Lógica para 'favoritos' (no excluyente)
-      if (entry.arr.includes(idNum)) {
-         return res.status(400).json({ message: `El libro ya está en ${tipo}` });
-      }
-      entry.arr.push(idNum);
-      listaActualizada = entry.arr;
-      usuario.set('libros_favoritos', [...new Set(favoritos)]);
+    const result = await bookInteractionService.change_list({
+      userId,
+      bookId: idNum,
+      type: tipo,
+      action: 'add'
+    });
+    if (result.status === 'user_not_found') return res.status(404).json({ error: "Usuario no encontrado" });
+    if (result.status === 'book_not_found') return res.status(404).json({ error: 'Libro no encontrado' });
+    if (result.status === 'already_exists') {
+      return res.status(400).json({ message: `El libro ya está en ${tipo}` });
     }
-
-    // Guardar los cambios en la base de datos
-    await usuario.save();
-
     return res.json({
       message: `Libro agregado a ${tipo}`,
-      [entry.campo]: listaActualizada // Usamos la lista actualizada local para la respuesta
+      [result.field]: result.lists[result.field]
     });
-
   } catch (error) {
     console.error("Error en agregarLibroALista:", error);
     return res.status(500).json({ error: "Error al agregar el libro a la lista" });
   }
 };
 
+const quitarLibroDeListaDeEstado = async (req, res) => {
+  try {
+    const { tipo, idLibro } = req.params;
+    const result = await bookInteractionService.change_list({
+      userId: req.user.id,
+      bookId: Number(idLibro),
+      type: tipo,
+      action: 'remove'
+    });
+
+    if (result.status === 'user_not_found') return res.status(404).json({ error: "Usuario no encontrado" });
+    if (result.status === 'book_not_found') return res.status(404).json({ error: 'Libro no encontrado' });
+
+    return res.json({
+      message: `Libro quitado de ${tipo}`,
+      [result.field]: result.lists[result.field]
+    });
+  } catch (error) {
+    console.error("Error en quitarLibroDeListaDeEstado:", error);
+    return res.status(500).json({ error: "Error al quitar el libro de la lista" });
+  }
+};
 
 const guardarPuntuacion = async (req, res) => {
   try {
@@ -153,53 +105,18 @@ const guardarPuntuacion = async (req, res) => {
       return res.status(400).json({ error: "La puntuación debe ser entre 1 y 5 estrellas." });
     }
 
-    const libro = await Libro.findByPk(idLibroNum);
-    if (!libro) return res.status(404).json({ error: "Libro no encontrado." });
-
-    let resena = await Resena.findOne({
-      where: { usuario_id: userId, libro_id: idLibroNum },
-      order: [['id', 'DESC']]
+    const result = await bookInteractionService.save_rating({
+      userId,
+      bookId: idLibroNum,
+      puntuacion: Number(puntuacion),
+      comentario
     });
-
-    if (resena) {
-      resena.puntuacion = puntuacion;
-      resena.comentario = comentario || "";
-      resena.activo = 1;
-      resena.fecha = new Date();
-      await resena.save();
-    } else {
-      resena = await Resena.create({
-        usuario_id: userId,
-        libro_id: idLibroNum,
-        puntuacion,
-        comentario: comentario || ""
-      });
-    }
-
-    // Añadir el libro a la lista de 'leidos' del usuario si no está ya
-    try {
-      const usuario = await Usuario.findByPk(userId);
-      if (usuario) {
-        let leidos = usuario.libros_leidos;
-        if (typeof leidos === 'string') {
-          try { leidos = JSON.parse(leidos); } catch { leidos = []; }
-        }
-        if (!Array.isArray(leidos)) leidos = [];
-        const idNum = Number(idLibroNum);
-        if (!leidos.includes(idNum)) {
-          leidos.push(idNum);
-          // dedupe and save
-          usuario.libros_leidos = Array.from(new Set(leidos));
-          await usuario.save();
-        }
-      }
-    } catch (err) {
-      console.error('Error actualizando libros_leidos del usuario:', err);
-    }
+    if (result.status === 'user_not_found') return res.status(404).json({ error: "Usuario no encontrado." });
+    if (result.status === 'book_not_found') return res.status(404).json({ error: "Libro no encontrado." });
 
     res.json({
       message: "Puntuación guardada correctamente",
-      resena
+      resena: result.review
     });
   } catch (error) {
     console.error(error);
@@ -296,23 +213,11 @@ const eliminarResenaPropia = async (req, res) => {
   try {
     const resenaId = Number(req.params.id);
     const userId = Number(req.user.id);
-
-    const resena = await Resena.findByPk(resenaId);
-
-    if (!resena) return res.status(404).json({ error: 'Reseña no encontrada' });
-    if (Number(resena.usuario_id) !== userId) {
+    const result = await bookInteractionService.delete_review({ userId, reviewId: resenaId });
+    if (result.status === 'user_not_found') return res.status(404).json({ error: 'Usuario no encontrado' });
+    if (result.status === 'review_not_found') return res.status(404).json({ error: 'Reseña no encontrada' });
+    if (result.status === 'forbidden') {
       return res.status(403).json({ error: 'No tienes permiso para eliminar esta reseña' });
-    }
-
-    const transaction = await sequelize.transaction();
-    try {
-      await RespuestaResena.destroy({ where: { resena_id: resenaId }, transaction });
-      await ResenaLike.destroy({ where: { resena_id: resenaId }, transaction });
-      await resena.destroy({ transaction });
-      await transaction.commit();
-    } catch (error) {
-      await transaction.rollback();
-      throw error;
     }
 
     return res.json({ message: 'Reseña eliminada correctamente' });
@@ -323,8 +228,6 @@ const eliminarResenaPropia = async (req, res) => {
 };
 
 // Toggle de likes en una reseña
-const ResenaLike = require('../models/ResenaLike');
-
 const syncLikeCount = async (resena) => {
   const likes = await ResenaLike.count({ where: { resena_id: resena.id } });
   if (resena.likes !== likes) {
@@ -457,6 +360,7 @@ const crearRespuestaResena = async (req, res) => {
 module.exports = {
   getAllBooks,
   agregarLibroALista,
+  quitarLibroDeListaDeEstado,
   guardarPuntuacion,
   obtenerResenas,
   likeResena,

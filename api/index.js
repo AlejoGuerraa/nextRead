@@ -9,26 +9,30 @@ const {
     agregarNotificacion, getAllUsers, register, login,getUser,editarPerfil,checkEmail,checkUsername,buscarUsuario,
     crearLista,agregarLibroAListaEnLista,editarLista,eliminarLista,quitarLibroDeLista,listarSeguidores,listarSeguidos,cancelarSeguido,
     seguirUsuario,dejarDeSeguir,marcarNotificacionesLeidas,eliminarNotificacion,eliminarNotificaciones, getPublicUserById
-} = require('./controller/peticionesUsuario');
+} = require('./controller/usuariosController');
 
-const { banearUsuario, eliminarComentario } = require('./controller/peticionesAdmin');
-
-const {
-    buscar,getTendencias,getLibrosPorDecada,getMasDeAutor,getLibroById,getDecadasPersonalizadas,getGeneroPreferido,getRecomendacionesPorLibro
-} = require('./controller/busqueda');
+const { banearUsuario, eliminarComentario } = require('./controller/adminController');
 
 const {
-    getAllBooks,agregarLibroALista,guardarPuntuacion,obtenerResenas,likeResena,unlikeResena,crearRespuestaResena,eliminarResenaPropia
-} = require('./controller/peticionesLibros');
+    buscar,getLibroById
+} = require('./controller/busquedaController');
 
-const { getAllBanners, getAllIconos } = require('./controller/banners');
+const {
+    getTendencias,getLibrosPorDecada,getMasDeAutor,getDecadasPersonalizadas,getGeneroPreferido,getRecomendacionesPorLibro
+} = require('./controller/recomendacionesController');
+
+const {
+    getAllBooks,agregarLibroALista,quitarLibroDeListaDeEstado,guardarPuntuacion,obtenerResenas,likeResena,unlikeResena,crearRespuestaResena,eliminarResenaPropia
+} = require('./controller/librosController');
+
+const { getAllBanners, getAllIconos } = require('./controller/bannersController');
 const { getAllAutores } = require('./controller/autorController');
 
 const { enviarEnlaceRecuperacion, resetearPassword } = require('./controller/recoveryController');
 
 const {
     changePassword,changeEmailRequest,confirmEmailChange,deleteAccountRequest,deleteAccountConfirm
-} = require('./controller/configuracion');
+} = require('./controller/configuracionController');
 const { getAuthMe } = require('./controller/authController');
 
 // ---------------------- MIDDLEWARES ----------------------
@@ -261,6 +265,7 @@ server.get('/nextread/libros/recomendaciones/:idUsuario/:idLibro', isAuth, expen
 
 // ---------------------- LIBROS ----------------------
 server.post('/nextread/usuario/:tipo/:idLibro', isAuth, interactionLimiter, validateParams(listActionParamsSchema), agregarLibroALista);
+server.delete('/nextread/usuario/:tipo/:idLibro', isAuth, interactionLimiter, validateParams(listActionParamsSchema), quitarLibroDeListaDeEstado);
 server.post('/nextread/resena/:idLibro', isAuth, interactionLimiter, validateParams(idLibroParamSchema), validateBody(guardarPuntuacionSchema), guardarPuntuacion);
 server.get('/nextread/resenas/:idLibro', optionalAuth, validateParams(idLibroParamSchema), obtenerResenas);
 server.post('/nextread/resena/:idResena/respuestas', isAuth, interactionLimiter, validateParams(idResenaParamSchema), validateBody(respuestaResenaSchema), crearRespuestaResena);

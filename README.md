@@ -149,6 +149,14 @@ npm install
 
 Crear archivo `.env` o configurar conexión a MySQL en `config/db.js`
 
+Para actualizar una base existente, ejecutar el backfill antes de iniciar la API:
+
+```bash
+npm run migrate:book-states
+```
+
+El proceso crea la relación usuario-libro, migra los estados y favoritos existentes y recalcula `read_count`. Los eventos históricos de lectura se registran desde el despliegue en adelante; las fechas de lecturas antiguas no se pueden reconstruir desde los arreglos existentes. Si encuentra un libro en más de un estado de lectura para el mismo usuario, se detiene para evitar elegir uno arbitrariamente; resolver esos conflictos antes de volver a ejecutarlo. Ejecutarlo antes de habilitar tráfico.
+
 ```bash
 npm start
 ```
