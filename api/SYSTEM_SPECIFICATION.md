@@ -515,46 +515,51 @@ Campos mínimos:
 | `id` | Identificador del evento. |
 | `user_id` | Usuario que realizó la transición. |
 | `book_id` | Libro que pasó a leído. |
-| `created_at` | Fecha y hora del evento. |
+| `occurred_at` | Instante UTC de la transición. |
 
-Debe tener índices para consultas por libro y fecha, y por usuario y fecha cuando corresponda. Revisar una restricción única o mecanismo de idempotencia que evite registrar dos veces la misma transición lógica.
+La tabla existente tiene índices `book_read_events_occurred_at_book_id_user_id` y `book_read_events_user_id_book_id_occurred_at`, además de su clave primaria. El primero permite acotar los eventos por fecha y agrupar por libro/usuario; no se agrega otro índice para la consulta inicial.
 
 **¿Cómo sabe el sistema cuándo una persona leyó un libro?**
 
 No se deduce de una visita ni de una valoración aislada. Se sabe porque el backend recibe una operación válida que cambia el estado de lectura del usuario a `leído`.
 
-El flujo correcto es:
+El servicio registra un evento cuando `readCountDelta > 0`, dentro de la misma transacción que cambia `user_book_states`, ajusta `read_count` y actualiza las preferencias. Las filas de estado se bloquean durante la operación, y el usuario también se bloquea al resolver el estado heredado, por lo que una petición repetida que no produzca una transición no genera otro evento.
 
-1. Leer el estado anterior de la relación usuario-libro.
-2. Validar la operación y los permisos.
-3. Si el estado anterior no era `leído` y el nuevo sí lo es, registrar un evento.
-4. Incrementar `read_count` una sola vez.
-5. Actualizar la relación usuario-libro.
-6. Aplicar la actualización de preferencias que corresponda.
-7. Ejecutar los cambios relacionados dentro de una transacción cuando deban mantenerse consistentes.
-
-Si el estado ya era `leído`, no se registra otro evento ni se incrementa el contador.
+Cada transición válida de un estado distinto de `read` a `read` crea un evento. Esto incluye la primera lectura y una relectura posterior a salir de `read`. Repetir la petición mientras el estado ya es `read` no crea otro evento.
 
 Si el usuario pasa de `leído` a `leyendo` o `para leer`, se decrementa `read_count`, pero no se borra el evento histórico. El evento representa que esa transición a leído ocurrió; el contador representa el estado actual. Esta distinción permite que las tendencias históricas no desaparezcan cuando alguien modifica posteriormente su estado.
 
-Para las tendencias se deben contar **usuarios únicos por libro dentro de cada período**, según la regla definida. Si un mismo usuario puede registrar más de una transición a leído para un mismo libro, se debe decidir si el análisis de tendencias cuenta la primera transición de su vida o una nueva lectura explícita. No asumir que ambas significan lo mismo. La primera versión debe evitar inflar tendencias por cambios repetidos de estado.
+`read_count` representa usuarios que actualmente tienen el libro marcado como leído; cada transición lo incrementa o decrementa en la misma transacción. El backfill existente lo reconcilia contando `user_book_states` actuales. No representa actividad histórica.
+
+El backfill de estados no reconstruye eventos pasados. Por eso `book_read_events` puede tener un historial incompleto desde que comenzó el registro; no se inventan fechas históricas a partir del estado actual o de `read_count`.
 
 ### 8.2. Cálculo de tendencias
 
-Una métrica inicial propuesta compara:
+La consulta implementada para `GET /nextread/tendencias` calcula por libro:
 
 - `R`: usuarios únicos que registraron una nueva lectura durante los últimos 30 días.
 - `P`: usuarios únicos que registraron una nueva lectura durante los 30 días anteriores.
 
-Fórmula borrador:
+Las ventanas son intervalos UTC semiabiertos y contiguos, evaluados al inicio de la consulta con `asOf`:
+
+- Reciente: `[asOf - 30 días, asOf)`.
+- Anterior: `[asOf - 60 días, asOf - 30 días)`.
+
+Los límites se enlazan como fechas UTC con precisión de segundos, que coincide con la columna `DATETIME` existente. El instante de cálculo y los eventos nuevos se normalizan a segundos enteros. Un evento exactamente en `asOf - 30 días` pertenece a R; uno exactamente en `asOf - 60 días` pertenece a P; uno exactamente en `asOf` queda para la siguiente consulta.
+
+Se cuenta `COUNT(DISTINCT user_id)` por libro y ventana. Si un usuario realiza varias transiciones a leído del mismo libro dentro de la misma ventana, cuenta una sola vez en esa ventana. Si aparece en ambas ventanas, cuenta una vez en cada una.
+
+La fórmula está centralizada en `readingTrendService.js`:
 
 ```text
 T = R + 0.5 * max(0, R - P)
 ```
 
-Aplicar un umbral mínimo inicial de **30 lectores únicos** para que un libro pueda aparecer como tendencia. El umbral debe ser configurable y revisable con datos reales.
+Se exige `R >= READING_TRENDS_MIN_UNIQUE_USERS`, configurable por variable de entorno y con valor inicial 30. Si el valor no está definido, se usa 30; un valor inválido detiene la inicialización del servicio. No hay fallback a orden por ranking cuando no hay tendencias suficientes: el endpoint devuelve una lista vacía.
 
-La fórmula y el umbral son parámetros iniciales, no verdades universales. Deben quedar centralizados y documentados para poder ajustarlos sin reescribir todos los endpoints.
+Los resultados se ordenan por `T` y aplican un máximo de tres libros por autor antes del límite de 20. Los libros sin autor se tratan como autores independientes.
+
+El umbral sigue siendo un valor inicial conservador. La base inspeccionada no contiene eventos ni estados de lectura, así que no permite calibrarlo contra actividad real de usuarios.
 
 ### 8.3. Agregación diaria
 
@@ -567,7 +572,9 @@ Campos de referencia:
 - `read_count` o cantidad de eventos del día
 - Si se necesita contar usuarios únicos de manera exacta, la estructura debe conservar información suficiente para deduplicar por usuario y período. Un simple contador diario no permite deduplicar un usuario que aparezca en varios días del mismo período.
 
-La tabla diaria puede ser una optimización derivada de los eventos, no la única fuente de verdad. Debe poder reconstruirse desde los eventos si se detectan inconsistencias.
+La consulta directa actual restringe lógicamente los eventos a los últimos 60 días y fuerza el índice existente `book_read_events_occurred_at_book_id_user_id`, que cubre fecha, libro y usuario. En MySQL 8.4.13, `EXPLAIN` selecciona ese índice; como la tabla tiene cero filas, el plan informa un recorrido de índice (`type=index`) y no permite medir selectividad ni extrapolar el costo con historial real. El plan de la consulta completa también muestra ordenamiento para la diversidad por autor y el ranking final, además de un escaneo estimado de una fila de `Libro`; el catálogo inspeccionado no permite estimar su comportamiento a escala. No se crea una tabla diaria: no hay evidencia de que una agregación se justifique todavía. Se volverá a evaluar con volumen y mediciones reales.
+
+Un contador diario de usuarios únicos no bastaría para reconstruir R o P exactos porque el mismo usuario puede aparecer en varios días. Si el volumen futuro justifica una agregación, esta deberá conservar la identidad usuario-libro-fecha necesaria para deduplicar ventanas exactas y podrá reconstruirse desde `book_read_events`.
 
 El agente debe elegir una estructura que permita contar usuarios únicos correctamente. Una opción es consultar eventos con `COUNT(DISTINCT user_id)` sobre ventanas acotadas y luego optimizar con agregaciones adecuadas cuando el volumen lo justifique. No sacrificar exactitud sin documentarlo.
 

@@ -164,9 +164,14 @@ export function usePrincipal(user) {
   }, [user?.id]);
 
   const bookCarousels = useMemo(() => {
-    const carousels = [
-      { id: 'tendencias', title: 'Novedades y Tendencias', books: librosTendencias },
-    ];
+    const carousels = [];
+    if (librosTendencias.length > 0) {
+      carousels.push({
+        id: 'tendencias',
+        title: 'Tendencias de lectura',
+        books: librosTendencias,
+      });
+    }
 
     if (user?.id && recommendationStatus === 'ready') {
       carousels.push(...personalizedCarousels);

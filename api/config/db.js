@@ -32,6 +32,7 @@ const database = new Sequelize(
         host: process.env.SQL_DATABASE_HOST,
         port,
         dialect: 'mysql',
+        timezone: '+00:00',
         logging: false
     }
 );

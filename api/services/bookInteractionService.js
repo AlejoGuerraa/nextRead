@@ -277,9 +277,12 @@ function createBookInteractionService({
                 await book.save({ transaction, fields: ['read_count'] });
             }
             if (readCountDelta > 0) {
+                const occurredAt = new Date();
+                occurredAt.setUTCMilliseconds(0);
                 await BookReadEvent.create({
                     user_id: userId,
-                    book_id: bookId
+                    book_id: bookId,
+                    occurred_at: occurredAt
                 }, { transaction });
             }
 

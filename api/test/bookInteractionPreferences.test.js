@@ -149,6 +149,8 @@ test('applies reading-state and favorite transitions once through the interactio
     await service.change_list({ userId: 1, bookId: 5, type: 'leido', action: 'add' });
     assert.equal(book.read_count, 1);
     assert.equal(events.length, 1);
+    assert.ok(events[0].occurred_at instanceof Date);
+    assert.equal(events[0].occurred_at.getUTCMilliseconds(), 0);
     assert.ok(Math.abs(tag_weight(user) - 0.10) < 1e-10);
 
     const repeatedRead = await service.change_list({
@@ -195,6 +197,23 @@ test('replaces and removes rating signals without changing reading counts', asyn
     assert.ok(Math.abs(tag_weight(user) - 0.10) < 1e-10);
     assert.equal(book.read_count, 1);
     assert.equal(events.length, 1);
+});
+
+test('records each valid reread transition while read_count reflects only the current state', async () => {
+    const { book, events, service } = create_harness();
+
+    await service.change_list({ userId: 1, bookId: 5, type: 'leido', action: 'add' });
+    const firstReadAt = events[0].occurred_at.getTime();
+    await service.change_list({ userId: 1, bookId: 5, type: 'leido', action: 'remove' });
+
+    assert.equal(book.read_count, 0);
+    assert.equal(events.length, 1);
+
+    await service.change_list({ userId: 1, bookId: 5, type: 'leido', action: 'add' });
+
+    assert.equal(book.read_count, 1);
+    assert.equal(events.length, 2);
+    assert.ok(events[1].occurred_at.getTime() >= firstReadAt);
 });
 
 test('enqueues one recommendation update in the interaction transaction when preferences change', async () => {

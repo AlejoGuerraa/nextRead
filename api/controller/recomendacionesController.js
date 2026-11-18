@@ -6,12 +6,14 @@ const sequelize = require("../config/db");
 const { create_recommendation_reader } = require("../services/recommendationService");
 const { build_personalized_carousels } = require("../services/recommendationCarouselService");
 const { create_user_carousel_service } = require("../services/userCarouselService");
+const { create_reading_trend_service } = require("../services/readingTrendService");
 const UserRecommendationJob = require("../models/UserRecommendationJob");
 const { create_recommendation_job_service } = require("../services/recommendationJobService");
 const { get_recommendation_worker_config } = require("../config/recommendationWorker");
 
 const recommendationReader = create_recommendation_reader({ sequelize });
 const userCarouselService = create_user_carousel_service({ sequelize });
+const readingTrendService = create_reading_trend_service({ sequelize });
 const recommendationJobService = create_recommendation_job_service({
     sequelize,
     UserRecommendationJob,
@@ -81,33 +83,13 @@ const getPersonalizedCarousels = async (req, res) => {
     }
 };
 
-// =======================================================
-// 🔥 TENDENCIAS (ranking + año)
-// =======================================================
-const getTendencias = async (req, res) => {
+const getTendencias = async (_req, res) => {
     try {
-        const libros = await Libro.findAll({
-            where: {},
-            order: [
-                ['ranking', 'DESC'],
-                ['anio', 'DESC']
-            ],
-            limit: 20,
-            include: [
-                {
-                    model: Autor,
-                    as: 'Autor',
-                    attributes: ['id', 'nombre', 'url_cara'],
-                    required: false,
-                },
-            ],
-        });
-
-        res.json(libros);
-
+        const books = await readingTrendService.get_trending_books();
+        return res.json(books);
     } catch (error) {
-        console.error('Error al obtener tendencias:', error);
-        res.status(500).json({ message: 'Error al obtener las tendencias' });
+        console.error('Error calculating reading trends:', error);
+        return res.status(500).json({ message: 'Error al obtener las tendencias' });
     }
 };
 
