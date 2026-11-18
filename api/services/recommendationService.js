@@ -21,6 +21,7 @@ const CANDIDATE_SELECT = `
     SELECT
         book.id,
         book.titulo,
+        book.url_portada,
         book.anio,
         book.tipo,
         book.tema,
@@ -548,11 +549,93 @@ function create_candidate_repository({ sequelize }) {
 }
 
 function create_recommendation_reader({ sequelize }) {
-    async function get_published_for_user(userId) {
+    function normalize_user_id(userId) {
         const numericUserId = Number(userId);
         if (!Number.isSafeInteger(numericUserId) || numericUserId <= 0) {
             throw new Error('A valid user id is required to read recommendations');
         }
+        return numericUserId;
+    }
+
+    async function get_published_candidate_set_for_user(userId) {
+        const numericUserId = normalize_user_id(userId);
+        const candidates = await sequelize.query(`
+            SELECT
+                recommendation.generation_id,
+                recommendation.score,
+                recommendation.position,
+                recommendation.is_exploration,
+                book.id,
+                book.titulo,
+                book.anio,
+                book.tipo,
+                book.tema,
+                book.generos,
+                book.tags,
+                book.ranking,
+                book.read_count,
+                book.id_autor,
+                author.nombre AS nombre_autor,
+                CASE WHEN state.user_id IS NULL THEN FALSE ELSE TRUE END AS is_read
+            FROM \`user_recommendations\` AS recommendation
+            INNER JOIN (
+                SELECT user_id, MAX(generation_id) AS generation_id
+                FROM \`user_recommendations\`
+                WHERE user_id = :userId
+                    AND generation_id > 0
+                GROUP BY user_id
+            ) AS published
+                ON published.user_id = recommendation.user_id
+                AND published.generation_id = recommendation.generation_id
+            INNER JOIN \`Libro\` AS book
+                ON book.id = recommendation.book_id
+            LEFT JOIN \`Autor\` AS author
+                ON author.id = book.id_autor
+            LEFT JOIN \`user_book_states\` AS state
+                ON state.user_id = recommendation.user_id
+                AND state.book_id = book.id
+                AND state.reading_status = 'read'
+            WHERE recommendation.user_id = :userId
+            ORDER BY recommendation.position ASC
+            LIMIT :limit
+        `, {
+            replacements: {
+                userId: numericUserId,
+                limit: MAX_CANDIDATE_COUNT
+            },
+            type: QueryTypes.SELECT
+        });
+
+        if (candidates.length === 0) {
+            return {
+                status: 'pending',
+                generation_id: null,
+                candidates: []
+            };
+        }
+
+        const generationId = Number(candidates[0].generation_id);
+        if (
+            !Number.isSafeInteger(generationId) ||
+            generationId <= 0 ||
+            candidates.some((candidate) =>
+                Number(candidate.generation_id) !== generationId
+            )
+        ) {
+            const error = new Error('Published recommendation generation is invalid');
+            error.code = 'RECOMMENDATION_PUBLICATION_INVALID';
+            throw error;
+        }
+
+        return {
+            status: 'ready',
+            generation_id: generationId,
+            candidates
+        };
+    }
+
+    async function get_published_for_user(userId) {
+        const numericUserId = normalize_user_id(userId);
 
         // Reservations may advance without publishing; persisted IDs still increase monotonically.
         const recommendations = await sequelize.query(`
@@ -616,7 +699,10 @@ function create_recommendation_reader({ sequelize }) {
         };
     }
 
-    return { get_published_for_user };
+    return {
+        get_published_candidate_set_for_user,
+        get_published_for_user
+    };
 }
 
 function create_recommendation_service({

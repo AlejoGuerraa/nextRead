@@ -2,28 +2,9 @@ import { useEffect, useMemo, useState } from 'react';
 import {
   getTrendingBooks,
   getBooksByDecade,
-  getDecadesPersonalizadas,
   getAuthorMostRead,
-  getBooksByUserGenre,
-  getPersonalizedRecommendations,
+  getPersonalizedCarousels,
 } from '../services/booksService';
-
-const generosRotativos = [
-  { genero: 'Aventura', titulo: 'Libros para aventurarse' },
-  { genero: 'Romance', titulo: 'Libros para volver a enamorarse' },
-  { genero: 'Fantasía', titulo: 'Historias mágicas para escapar' },
-  { genero: 'Terror', titulo: 'Para no dormir nunca más' },
-  { genero: 'Ciencia Ficción', titulo: 'Explora nuevos mundos' },
-  { genero: 'Misterio', titulo: 'Intriga y suspenso' },
-  { genero: 'Histórico', titulo: 'Viajes al pasado' },
-  { genero: 'Poesía', titulo: 'Versos que inspiran' },
-  { genero: 'Clásicos', titulo: 'Obras que perduran' },
-  { genero: 'No Ficción', titulo: 'Conocimiento y realidad' },
-  { genero: 'Infantil', titulo: 'Cuentos para los más pequeños' },
-  { genero: 'Épico', titulo: 'Grandes sagas para grandes lectores' },
-  { genero: 'Filosófico', titulo: 'Reflexiones profundas' },
-  { genero: 'Gótico', titulo: 'Oscuridad y romance' },
-];
 
 const normalizeBookList = (value) => {
   if (Array.isArray(value)) return value;
@@ -45,9 +26,7 @@ export function usePrincipal(user) {
   const [librosTendencias, setLibrosTendencias] = useState([]);
   const [librosAutor, setLibrosAutor] = useState([]);
   const [autorMasLeidoNombre, setAutorMasLeidoNombre] = useState(null);
-  const [generoUsuario, setGeneroUsuario] = useState(null);
-  const [librosGeneroUsuario, setLibrosGeneroUsuario] = useState([]);
-  const [librosRecomendados, setLibrosRecomendados] = useState([]);
+  const [personalizedCarousels, setPersonalizedCarousels] = useState([]);
   const [recommendationStatus, setRecommendationStatus] = useState('idle');
   const [librosPorDecada, setLibrosPorDecada] = useState([]);
   const [generoSeleccionado, setGeneroSeleccionado] = useState('Género...');
@@ -73,28 +52,22 @@ export function usePrincipal(user) {
 
   useEffect(() => {
     const fetchDecadasPersonalizadas = async () => {
-      if (!user?.correo) {
-        try {
-          const data = await getBooksByDecade();
-          setLibrosPorDecada(Array.isArray(data?.decades) ? data.decades.slice(0, 5) : []);
-        } catch (error) {
-          console.error('Error cargando libros por década:', error);
-          setLibrosPorDecada([]);
-        }
+      if (user?.id) {
+        setLibrosPorDecada([]);
         return;
       }
 
       try {
-        const data = await getDecadesPersonalizadas(user.correo);
-        setLibrosPorDecada(Array.isArray(data?.decades) ? data.decades : []);
+        const data = await getBooksByDecade();
+        setLibrosPorDecada(Array.isArray(data?.decades) ? data.decades.slice(0, 5) : []);
       } catch (error) {
-        console.error('Error cargando décadas personalizadas:', error);
+        console.error('Error cargando libros por década:', error);
         setLibrosPorDecada([]);
       }
     };
 
     fetchDecadasPersonalizadas();
-  }, [user?.correo]);
+  }, [user?.id]);
 
   useEffect(() => {
     const fetchLibrosAutor = async () => {
@@ -111,7 +84,6 @@ export function usePrincipal(user) {
 
         if (data?.libros) {
           setLibrosAutor(normalizeBookList(data.libros));
-
           const nombre = data.message?.match?.(/Libros de tu autor más leído: (.+)/);
           setAutorMasLeidoNombre(nombre ? nombre[1] : 'Más Libros del Autor');
         } else {
@@ -129,63 +101,46 @@ export function usePrincipal(user) {
   }, [user?.correo]);
 
   useEffect(() => {
-    const fetchGeneroUsuario = async () => {
-      if (!user?.id) {
-        setGeneroUsuario(null);
-        setLibrosGeneroUsuario([]);
-        return;
-      }
-
-      try {
-        const data = await getBooksByUserGenre(user.id);
-        const genero = data?.generoPreferido || null;
-        setGeneroUsuario(genero);
-        setLibrosGeneroUsuario(Array.isArray(data?.libros) ? data.libros : []);
-      } catch (error) {
-        console.error('Error obteniendo género preferido:', error);
-        setGeneroUsuario(null);
-        setLibrosGeneroUsuario([]);
-      }
-    };
-
-    fetchGeneroUsuario();
-  }, [user?.id]);
-
-  useEffect(() => {
     let isActive = true;
 
     const fetchRecomendaciones = async () => {
       if (!user?.id) {
-        setLibrosRecomendados([]);
+        setPersonalizedCarousels([]);
         setRecommendationStatus('idle');
         return;
       }
 
-      setLibrosRecomendados([]);
+      setPersonalizedCarousels([]);
       setRecommendationStatus('loading');
 
       try {
-        const data = await getPersonalizedRecommendations();
+        const data = await getPersonalizedCarousels();
         if (data?.status === 'pending') {
           if (isActive) {
-            setLibrosRecomendados([]);
+            setPersonalizedCarousels([]);
             setRecommendationStatus('pending');
           }
           return;
         }
 
-        if (data?.status !== 'ready' || !Array.isArray(data.libros)) {
+        if (data?.status !== 'ready' || !Array.isArray(data.carousels)) {
           throw new Error('Respuesta inválida del servicio de recomendaciones.');
         }
 
         if (isActive) {
-          setLibrosRecomendados(data.libros);
+          setPersonalizedCarousels(data.carousels
+            .filter((carousel) => Array.isArray(carousel.libros))
+            .map((carousel) => ({
+              id: carousel.id,
+              title: carousel.title,
+              books: carousel.libros,
+            })));
           setRecommendationStatus('ready');
         }
       } catch (error) {
         console.error('Error cargando recomendaciones:', error);
         if (isActive) {
-          setLibrosRecomendados([]);
+          setPersonalizedCarousels([]);
           setRecommendationStatus('error');
         }
       }
@@ -198,12 +153,6 @@ export function usePrincipal(user) {
     };
   }, [user?.id]);
 
-  const tituloGenero = useMemo(() => {
-    if (!generoUsuario) return null;
-    const match = generosRotativos.find((g) => g.genero.toLowerCase() === String(generoUsuario).toLowerCase());
-    return match?.titulo || `Recomendados de ${generoUsuario}`;
-  }, [generoUsuario]);
-
   const bookCarousels = useMemo(() => {
     const carousels = [
       { id: 'tendencias', title: 'Novedades y Tendencias', books: librosTendencias },
@@ -214,49 +163,28 @@ export function usePrincipal(user) {
       },
     ];
 
-    if (recommendationStatus === 'ready' && librosRecomendados.length > 0) {
-      carousels.push({
-        id: 'recomendados',
-        title: 'Recomendados para vos',
-        books: librosRecomendados,
-      });
-    }
-
-    if (Array.isArray(librosPorDecada) && librosPorDecada.length > 0) {
-      const decades = librosPorDecada.map((group, index) => ({
+    if (user?.id && recommendationStatus === 'ready') {
+      carousels.push(...personalizedCarousels);
+    } else if (!user?.id && Array.isArray(librosPorDecada) && librosPorDecada.length > 0) {
+      carousels.push(...librosPorDecada.map((group, index) => ({
         id: `decada-${group.decade ?? index}`,
         title: getDecadeTitle(group.decade),
         books: normalizeBookList(group.libros),
-      }));
-
-      carousels.push(...decades);
-    }
-
-    if (generoUsuario) {
-      carousels.push({
-        id: 'genero-preferido',
-        title: tituloGenero || `Recomendados de ${generoUsuario}`,
-        books: librosGeneroUsuario,
-      });
+      })));
     }
 
     return carousels;
-  }, [autorMasLeidoNombre, generoUsuario, librosAutor, librosGeneroUsuario, librosPorDecada, librosRecomendados, librosTendencias, recommendationStatus, tituloGenero]);
+  }, [autorMasLeidoNombre, librosAutor, librosPorDecada, librosTendencias, personalizedCarousels, recommendationStatus, user?.id]);
 
   return {
     librosTendencias,
     librosAutor,
     autorMasLeidoNombre,
-    generoUsuario,
-    librosGeneroUsuario,
-    librosRecomendados,
     recommendationStatus,
     librosPorDecada,
     generoSeleccionado,
     setGeneroSeleccionado,
-    tituloGenero,
     bookCarousels,
-    generosRotativos,
   };
 }
 

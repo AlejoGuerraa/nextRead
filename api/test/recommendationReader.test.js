@@ -25,7 +25,7 @@ function create_reader(records) {
                 return userRecommendations
                     .filter((record) => Number(record.generation_id) === latestGeneration)
                     .sort((left, right) => left.position - right.position)
-                    .slice(0, 20)
+                    .slice(0, options.replacements.limit || 20)
                     .map(({ user_id, ...record }) => ({ ...record }));
             }
         }
@@ -39,7 +39,10 @@ function recommendation({
     generation_id = 3,
     position = 1,
     id = position,
-    titulo = `Book ${id}`
+    titulo = `Book ${id}`,
+    is_read = false,
+    anio = 1965,
+    tags = ['1960']
 } = {}) {
     return {
         user_id,
@@ -51,7 +54,10 @@ function recommendation({
         ranking: 4.2,
         nombre_autor: 'Author',
         score: 0.6,
-        is_exploration: false
+        is_exploration: false,
+        is_read,
+        anio,
+        tags
     };
 }
 
@@ -135,4 +141,50 @@ test('selects only the latest published generation even when older rows exist', 
         [7, 1, 71],
         [7, 2, 72]
     ]);
+});
+
+test('reads the bounded latest candidate set without treating read books as missing generations', async () => {
+    const { queries, reader } = create_reader([
+        recommendation({ user_id: 5, generation_id: 4, position: 1, id: 41 }),
+        recommendation({
+            user_id: 5,
+            generation_id: 7,
+            position: 1,
+            id: 71,
+            is_read: true,
+            tags: ['1960'],
+            anio: 1965
+        }),
+        recommendation({
+            user_id: 5,
+            generation_id: 7,
+            position: 2,
+            id: 72,
+            is_read: false,
+            tags: ['1980'],
+            anio: 1982
+        })
+    ]);
+
+    const result = await reader.get_published_candidate_set_for_user(5);
+
+    assert.equal(result.status, 'ready');
+    assert.equal(result.generation_id, 7);
+    assert.deepEqual(result.candidates.map(({ id, is_read }) => [id, is_read]), [
+        [71, true],
+        [72, false]
+    ]);
+    assert.equal(queries[0].options.replacements.limit, 200);
+    assert.match(queries[0].sql, /LEFT JOIN `user_book_states` AS state/);
+    assert.match(queries[0].sql, /LIMIT :limit/);
+});
+
+test('returns pending when no candidate generation is published', async () => {
+    const { reader } = create_reader([]);
+
+    assert.deepEqual(await reader.get_published_candidate_set_for_user(8), {
+        status: 'pending',
+        generation_id: null,
+        candidates: []
+    });
 });

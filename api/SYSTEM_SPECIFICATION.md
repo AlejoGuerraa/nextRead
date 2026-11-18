@@ -678,6 +678,26 @@ Los ejemplos son orientativos. El agente debe verificar qué campos consume real
 
 La composición debe omitir carruseles que no cumplan las condiciones mínimas. No debe devolver carruseles vacíos solo para mantener una estructura fija.
 
+### 9.4. Carruseles personalizados de Home
+
+El endpoint autenticado `GET /nextread/recomendaciones/carruseles` lee la última generación publicada de `UserRecommendation`. Recupera hasta 200 candidatos con sus atributos bibliográficos necesarios, autor, ranking, popularidad (`read_count`) y estado de lectura actual. La consulta comienza por las filas persistidas de esa generación; no recorre el catálogo ni vuelve a calcular afinidad. Si aún no existe una generación, devuelve `pending` y encola la primera generación mediante el worker existente. Home no espera ese cálculo. Mientras una nueva generación está en proceso, se sigue usando la última publicada.
+
+Todos los carruseles omitidos por falta de resultados no se devuelven como listas vacías. Los carruseles existentes tienen un máximo de 20 libros, sin duplicados y con un máximo de 3 por autor identificable. Se excluyen libros leídos en todos los carruseles personalizados de descubrimiento. El mínimo para mostrar un carrusel es de 3 libros, para evitar filas con muy poco contenido. No se limita el número de períodos, tipos o temas que cumplan ese mínimo; géneros se limita a los 3 grupos más afines para evitar una Home saturada.
+
+| Carrusel | Regla de selección |
+|---|---|
+| Para vos | Conserva el orden de posiciones persistidas, exige `ranking > 3`, descarta rankings nulos y usa `is_exploration` guardado por el motor para reservar hasta 4 de 20 lugares a exploración. Si hay menos candidatos personalizados, reduce proporcionalmente los lugares de exploración y muestra una lista más corta; si la generación es solo exploratoria (por ejemplo, un usuario sin preferencias), omite el carrusel en vez de presentar libros arbitrarios como personalizados. |
+| Épocas | Usa `anio` y solo agrupa si `tags` contiene exactamente la década numérica correspondiente al año. No asigna década a libros sin año o sin el tag concordante. |
+| Tipo de obra | Agrupa los valores existentes de `Libro.tipo`; solo normaliza mayúsculas y diacríticos, sin crear equivalencias semánticas. |
+| Géneros | Agrupa los valores existentes de `Libro.generos`; normaliza mayúsculas y diacríticos, sin inventar ni fusionar categorías semánticamente distintas. Publica como máximo los 3 grupos con mejor afinidad media entre sus libros seleccionados. |
+| Libros por tema | Agrupa exclusivamente por `Libro.tema`, no por tags ni por géneros. |
+| Joyas por descubrir | Considera candidatos no leídos con score de afinidad positivo, `ranking > 3` (el mismo piso de calidad usado por “Para vos”) y `read_count` disponible. Solo aparece si hay al menos dos niveles de popularidad y tres resultados bajo o igual a la mediana de `read_count` de ese conjunto elegible. Ordena esa selección por el promedio con peso igual de percentiles de afinidad, ranking y menor popularidad para que ninguna escala domine a las otras, con posición persistida como desempate. |
+| Mejores libros de país | No se publica: el catálogo actual no tiene un país de origen confiable por obra y los tags geográficos no distinguen país de autor, idioma u otros usos. La respuesta identifica el carrusel omitido con `country_of_origin_metadata_unavailable`; no se infiere país de los tags ni de la nacionalidad del autor. |
+
+Épocas, tipos, géneros y temas con menos de 3 libros elegibles se omiten. Las consultas y la selección se limitan a candidatos de la generación publicada, por lo que la popularidad usada por “Joyas” es relativa a ese conjunto y no al catálogo completo. Si se requiere popularidad global o carruseles por país, primero debe incorporarse metadata confiable a las etapas de catálogo/importación; no se debe inferir durante la lectura de Home.
+
+El frontend consume `carousels` de este endpoint para usuarios autenticados y mantiene las décadas generales existentes para visitantes sin sesión. La lectura heredada de `GET /nextread/recomendaciones` se conserva para compatibilidad con otros consumidores.
+
 ---
 
 ## 10. Organización de workers y procesamiento en segundo plano

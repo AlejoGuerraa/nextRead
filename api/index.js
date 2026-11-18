@@ -19,7 +19,7 @@ const {
 
 const {
     getTendencias,getLibrosPorDecada,getMasDeAutor,getDecadasPersonalizadas,getGeneroPreferido,
-    getRecomendacionesPersonalizadas,getRecomendacionesPorLibro
+    getRecomendacionesPersonalizadas,getPersonalizedCarousels,getRecomendacionesPorLibro
 } = require('./controller/recomendacionesController');
 
 const {
@@ -261,6 +261,7 @@ server.post('/nextread/decadas-personalizadas', isAuth, sensitiveLimiter, valida
 
 server.get("/nextread/libros/genero-usuario/:idUsuario", isAuth, expensiveLimiter, validateParams(idUsuarioParamSchema), getGeneroPreferido);
 server.get('/nextread/recomendaciones', isAuth, expensiveLimiter, getRecomendacionesPersonalizadas);
+server.get('/nextread/recomendaciones/carruseles', isAuth, expensiveLimiter, getPersonalizedCarousels);
 server.get('/nextread/libro/:id', validateParams(idParamSchema), getLibroById);
 server.get('/nextread/libros', getAllBooks);
 server.get('/nextread/libros/recomendaciones/:idUsuario/:idLibro', isAuth, expensiveLimiter, validateParams(recommendationParamsSchema), getRecomendacionesPorLibro);

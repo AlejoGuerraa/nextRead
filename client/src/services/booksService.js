@@ -46,3 +46,8 @@ export const getPersonalizedRecommendations = async () => {
   const response = await api.get('/nextread/recomendaciones');
   return response.data;
 };
+
+export const getPersonalizedCarousels = async () => {
+  const response = await api.get('/nextread/recomendaciones/carruseles');
+  return response.data;
+};
