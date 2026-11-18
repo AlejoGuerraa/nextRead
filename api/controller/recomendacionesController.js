@@ -4,12 +4,32 @@ const Autor = require("../models/Autor");
 const { Op, Sequelize } = require("sequelize");
 const sequelize = require("../config/db");
 const { create_recommendation_reader } = require("../services/recommendationService");
+const UserRecommendationJob = require("../models/UserRecommendationJob");
+const { create_recommendation_job_service } = require("../services/recommendationJobService");
+const { get_recommendation_worker_config } = require("../config/recommendationWorker");
 
 const recommendationReader = create_recommendation_reader({ sequelize });
+const recommendationJobService = create_recommendation_job_service({
+    sequelize,
+    UserRecommendationJob,
+    ...get_recommendation_worker_config()
+});
 
 const getRecomendacionesPersonalizadas = async (req, res) => {
     try {
         const recommendations = await recommendationReader.get_published_for_user(req.user.id);
+        if (recommendations.status === 'pending') {
+            await recommendationJobService.enqueue_initial(req.user.id);
+            const job = await recommendationJobService.get_status(req.user.id);
+            if (job?.status === 'failed') {
+                return res.json({
+                    status: 'failed',
+                    generation_id: null,
+                    libros: [],
+                    message: 'No se pudieron generar las recomendaciones. Volvé a intentarlo después de actualizar tus preferencias.'
+                });
+            }
+        }
         return res.json(recommendations);
     } catch (error) {
         console.error("Error cargando recomendaciones persistidas:", error);

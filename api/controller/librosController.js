@@ -6,11 +6,20 @@ const Usuario = require('../models/Usuario');
 const UserBookState = require('../models/UserBookState');
 const BookReadEvent = require('../models/BookReadEvent');
 const UserBookPreferenceSignal = require('../models/UserBookPreferenceSignal');
+const UserRecommendationJob = require('../models/UserRecommendationJob');
 const Icono = require('../models/Icono');
 const sequelize = require('../config/db');
 const { Op } = require('sequelize');
 const { agregarNotificacion } = require('./usuariosController');
 const { createBookInteractionService } = require('../services/bookInteractionService');
+const { create_recommendation_job_service } = require('../services/recommendationJobService');
+const { get_recommendation_worker_config } = require('../config/recommendationWorker');
+
+const recommendationJobService = create_recommendation_job_service({
+  sequelize,
+  UserRecommendationJob,
+  ...get_recommendation_worker_config()
+});
 
 const bookInteractionService = createBookInteractionService({
   sequelize,
@@ -21,7 +30,9 @@ const bookInteractionService = createBookInteractionService({
   Resena,
   ResenaLike,
   RespuestaResena,
-  UserBookPreferenceSignal
+  UserBookPreferenceSignal,
+  enqueueRecommendationJob: ({ userId, transaction }) =>
+    recommendationJobService.enqueue_for_user(userId, transaction)
 });
 
 const getAllBooks = async (_req, res) => {

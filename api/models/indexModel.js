@@ -7,6 +7,7 @@ const UserBookState = require('./UserBookState');
 const BookReadEvent = require('./BookReadEvent');
 const UserBookPreferenceSignal = require('./UserBookPreferenceSignal');
 const UserRecommendation = require('./UserRecommendation');
+const UserRecommendationJob = require('./UserRecommendationJob');
 const Autor = require('./Autor');
 const Resena = require('./Resena');
 const ResenaLike = require('./ResenaLike');
@@ -97,6 +98,20 @@ Usuario.hasMany(UserRecommendation, {
 });
 
 UserRecommendation.belongsTo(Usuario, {
+    foreignKey: 'user_id',
+    as: 'User',
+    onDelete: 'CASCADE',
+    onUpdate: 'CASCADE'
+});
+
+Usuario.hasOne(UserRecommendationJob, {
+    foreignKey: 'user_id',
+    as: 'RecommendationJob',
+    onDelete: 'CASCADE',
+    onUpdate: 'CASCADE'
+});
+
+UserRecommendationJob.belongsTo(Usuario, {
     foreignKey: 'user_id',
     as: 'User',
     onDelete: 'CASCADE',
@@ -287,6 +302,7 @@ module.exports = {
     BookReadEvent,
     UserBookPreferenceSignal,
     UserRecommendation,
+    UserRecommendationJob,
     Resena,
     ResenaLike,
     RespuestaResena,

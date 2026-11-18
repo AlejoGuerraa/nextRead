@@ -686,22 +686,38 @@ Se requieren dos responsabilidades de procesamiento independientes:
 
 ### 10.1. Worker de recomendaciones por usuario
 
-Responsabilidades:
+La implementación actual utiliza una fila por usuario en `user_recommendation_jobs`, en Oracle MySQL 8.4. No incorpora Redis ni servicios externos.
 
-- Detectar usuarios cuyas recomendaciones estén pendientes.
-- Agrupar cambios cercanos del mismo usuario.
-- Leer sus preferencias efectivas.
-- Generar candidatos acotados.
-- Calcular puntuaciones.
-- Aplicar diversidad y exploración.
-- Guardar una nueva generación de recomendaciones de forma segura.
-- Marcar el trabajo como completado y registrar errores.
+- Las interacciones que cambian las preferencias actualizan la fila dentro de la misma transacción de la interacción.
+- `request_version` identifica nuevas interacciones y `available_at` agrupa cambios durante el intervalo configurable.
+- La primera petición autenticada sin una generación publicada crea una fila inicial sin ejecutar el motor en la petición HTTP.
+- El worker reclama filas `pending` o leases `processing` vencidos en transacciones breves con `FOR UPDATE SKIP LOCKED`.
+- Un lease con token de fencing, renovación periódica y clave primaria por usuario coordina la recuperación. Además, un bloqueo asesor MySQL por usuario reserva una conexión del pool durante toda la generación, sin dejar una transacción abierta.
+- El motor existente genera y publica; el worker no duplica scoring, selección ni persistencia.
+- Al terminar, solo se marca `completed` si `request_version` no cambió. Si hubo interacciones nuevas, el trabajo vuelve a `pending`.
+- Los errores reintentan con backoff exponencial hasta el máximo configurado; los trabajos agotados quedan `failed`. La siguiente interacción los vuelve a poner en cola.
+- Una generación sin candidatos sigue fallando según la regla existente y no reemplaza la generación publicada.
 
-No debe recalcular a todos los usuarios por cada cambio individual.
+Comando: `npm run worker:recommendations` desde `api/`. El proceso separado se detiene con `SIGINT` o `SIGTERM`; espera los trabajos activos y deja que leases vencidos se recuperen tras una caída. Ejecutar primero `npm run migrate:recommendations`.
 
-La implementación puede utilizar una cola existente o una tabla de trabajos en MySQL si el proyecto no dispone de infraestructura de colas. Antes de incorporar Redis, BullMQ u otra herramienta, investigar qué está instalado y qué necesita realmente el proyecto.
+Configuración opcional:
 
-Debe existir control de concurrencia para que dos workers no regeneren simultáneamente las recomendaciones del mismo usuario.
+| Variable | Predeterminado | Propósito |
+| --- | ---: | --- |
+| `RECOMMENDATION_JOB_DEBOUNCE_MS` | `4000` | Agrupación de interacciones |
+| `RECOMMENDATION_WORKER_POLL_INTERVAL_MS` | `1000` | Espera entre lotes |
+| `RECOMMENDATION_WORKER_BATCH_SIZE` | `5` | Máximo de trabajos reclamados por ciclo |
+| `RECOMMENDATION_WORKER_CONCURRENCY` | `2` | Trabajos simultáneos por proceso |
+| `RECOMMENDATION_WORKER_LEASE_MS` | `300000` | Duración inicial y renovación del lease |
+| `RECOMMENDATION_JOB_MAX_ATTEMPTS` | `5` | Intentos máximos |
+| `RECOMMENDATION_JOB_RETRY_BASE_MS` | `5000` | Base del backoff |
+| `RECOMMENDATION_JOB_RETRY_MAX_MS` | `300000` | Límite del backoff |
+
+La concurrencia efectiva se limita a `pool.max - 1` para reservar al menos una conexión Sequelize a las consultas del motor mientras cada generación mantiene su bloqueo asesor.
+
+La respuesta de recomendaciones continúa siendo `pending` mientras no haya una generación publicada; el frontend no espera el cálculo. Si el primer trabajo agota sus reintentos, la respuesta pasa a `failed` hasta una nueva interacción relevante.
+
+Las pruebas unitarias cubren el coalescing/idempotencia de la fila, claims y leases vencidos, reintentos, protección ante versiones obsoletas, concurrencia entre usuarios y apagado. En MySQL 8.4 también se verificaron claims concurrentes, bloqueo por usuario y recuperación de leases. Finalmente, se ejecutó una generación de extremo a extremo con usuario y libros temporales: interacciones repetidas, una sola lectura/evento, publicación y consulta del candidato; todos los registros temporales se limpiaron. Esto no sustituye pruebas de carga ni recuperación tras matar un proceso durante una generación.
 
 ### 10.2. Worker de estadísticas globales
 
@@ -834,6 +850,7 @@ Casos mínimos:
 - Worker idempotente.
 - Fallo durante generación: conserva caché anterior.
 - Dos ejecuciones simultáneas: no publican resultados parciales ni se pisan incorrectamente.
+- Worker de recomendaciones: coalescing, exclusión de reclamos por usuario, recuperación de leases, reintentos y publicación válida.
 
 ### Rendimiento
 

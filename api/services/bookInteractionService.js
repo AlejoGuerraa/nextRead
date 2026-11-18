@@ -125,7 +125,8 @@ function createBookInteractionService({
     Resena,
     ResenaLike,
     RespuestaResena,
-    UserBookPreferenceSignal
+    UserBookPreferenceSignal,
+    enqueueRecommendationJob
 }) {
     const tagPreferenceService = UserBookPreferenceSignal
         ? createTagPreferenceService({ UserBookPreferenceSignal })
@@ -158,7 +159,7 @@ function createBookInteractionService({
 
     async function update_preferences(user, book, bookId, oldSources, newSources, transaction) {
         if (!tagPreferenceService) return;
-        await tagPreferenceService.update_book_signals({
+        const result = await tagPreferenceService.update_book_signals({
             user,
             bookId,
             tags: book.tags,
@@ -166,6 +167,10 @@ function createBookInteractionService({
             newSources,
             transaction
         });
+        if (result.changed && enqueueRecommendationJob) {
+            await enqueueRecommendationJob({ userId: user.id, transaction });
+        }
+        return result.changed;
     }
 
     async function change_list({ userId, bookId, type, action }) {

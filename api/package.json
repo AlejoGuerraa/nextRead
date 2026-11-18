@@ -7,7 +7,8 @@
     "test": "node --test",
     "migrate:book-states": "node scripts/backfillUserBookStates.js",
     "migrate:tag-preferences": "node scripts/backfillUserTagPreferences.js",
-    "migrate:recommendations": "node scripts/migrateRecommendationSchema.js"
+    "migrate:recommendations": "node scripts/migrateRecommendationSchema.js",
+    "worker:recommendations": "node workers/recommendationWorker.js"
   },
   "keywords": [],
   "author": "",

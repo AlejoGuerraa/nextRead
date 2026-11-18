@@ -2,7 +2,7 @@ const test = require('node:test');
 const assert = require('node:assert/strict');
 const { createBookInteractionService } = require('../services/bookInteractionService');
 
-function create_harness() {
+function create_harness({ enqueueRecommendationJob } = {}) {
     const user = {
         id: 1,
         libros_favoritos: [],
@@ -132,10 +132,11 @@ function create_harness() {
         Resena,
         ResenaLike: null,
         RespuestaResena: null,
-        UserBookPreferenceSignal
+        UserBookPreferenceSignal,
+        enqueueRecommendationJob
     });
 
-    return { book, events, reviews, service, signals, user };
+    return { book, events, reviews, service, signals, transaction, user };
 }
 
 function tag_weight(user) {
@@ -194,4 +195,18 @@ test('replaces and removes rating signals without changing reading counts', asyn
     assert.ok(Math.abs(tag_weight(user) - 0.10) < 1e-10);
     assert.equal(book.read_count, 1);
     assert.equal(events.length, 1);
+});
+
+test('enqueues one recommendation update in the interaction transaction when preferences change', async () => {
+    const calls = [];
+    const { service, transaction } = create_harness({
+        enqueueRecommendationJob: async (job) => calls.push(job)
+    });
+
+    await service.change_list({ userId: 1, bookId: 5, type: 'favoritos', action: 'add' });
+    await service.change_list({ userId: 1, bookId: 5, type: 'favoritos', action: 'add' });
+
+    assert.equal(calls.length, 1);
+    assert.equal(calls[0].userId, 1);
+    assert.equal(calls[0].transaction, transaction);
 });
