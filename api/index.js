@@ -27,7 +27,8 @@ const {
 } = require('./controller/librosController');
 
 const { getAllBanners, getAllIconos } = require('./controller/bannersController');
-const { getAllAutores } = require('./controller/autorController');
+const { getAllAutores, getAuthorDetails } = require('./controller/autorController');
+const { getHomeContextualCarousels } = require('./controller/userCarouselsController');
 
 const { enviarEnlaceRecuperacion, resetearPassword } = require('./controller/recoveryController');
 
@@ -200,6 +201,7 @@ server.get('/nextread/user', isAuth, getUser);
 server.get('/nextread/banners', getAllBanners);
 server.get('/nextread/iconos', getAllIconos);
 server.get('/nextread/autores', getAllAutores);
+server.get('/nextread/autor/:id', searchLimiter, validateParams(idParamSchema), validateQuery(paginationQuerySchema), getAuthorDetails);
 server.get('/nextread/check-email', checkLimiter, validateQuery(checkEmailQuerySchema), checkEmail);
 server.get('/nextread/check-username', checkLimiter, validateQuery(checkUsernameQuerySchema), checkUsername);
 
@@ -262,6 +264,7 @@ server.post('/nextread/decadas-personalizadas', isAuth, sensitiveLimiter, valida
 server.get("/nextread/libros/genero-usuario/:idUsuario", isAuth, expensiveLimiter, validateParams(idUsuarioParamSchema), getGeneroPreferido);
 server.get('/nextread/recomendaciones', isAuth, expensiveLimiter, getRecomendacionesPersonalizadas);
 server.get('/nextread/recomendaciones/carruseles', isAuth, expensiveLimiter, getPersonalizedCarousels);
+server.get('/nextread/recomendaciones/contextuales', isAuth, expensiveLimiter, getHomeContextualCarousels);
 server.get('/nextread/libro/:id', validateParams(idParamSchema), getLibroById);
 server.get('/nextread/libros', getAllBooks);
 server.get('/nextread/libros/recomendaciones/:idUsuario/:idLibro', isAuth, expensiveLimiter, validateParams(recommendationParamsSchema), getRecomendacionesPorLibro);

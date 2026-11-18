@@ -11,6 +11,7 @@ const Seguidos = require('../models/Seguidos_seguidores');
 const bcrypt = require('bcrypt');
 const { Op } = require('sequelize');
 const { escape_like } = require('../utils/querySafety');
+const { parse_custom_lists } = require('../utils/customLists');
 const { sign_access_token } = require('../utils/jwtTokens');
 
 const bcryptSaltRounds = Number(process.env.BCRYPT_SALT_ROUNDS || 10);
@@ -38,22 +39,6 @@ function parseJsonArray(value) {
 function parseIdArray(value) {
     const arr = parseJsonArray(value);
     return arr.map(id => Number(id)).filter(n => Number.isInteger(n));
-}
-
-function parseLists(value) {
-    let lists = value;
-    if (typeof lists === 'string') {
-        try { lists = JSON.parse(lists); } catch { lists = {}; }
-    }
-    if (!lists || typeof lists !== 'object' || Array.isArray(lists)) return {};
-
-    return Object.fromEntries(Object.entries(lists).map(([name, entry]) => {
-        const books = Array.isArray(entry) ? entry : entry?.libros;
-        return [name, {
-            libros: Array.isArray(books) ? books.map(Number).filter(Number.isInteger) : [],
-            isPrivate: entry && !Array.isArray(entry) ? entry.isPrivate === true : false,
-        }];
-    }));
 }
 
 function hasDifferentListShape(value, normalized) {
@@ -359,7 +344,7 @@ const getUser = async (req, res) => {
         const librosLeidosIDs = parseJsonArray(usuario.libros_leidos);
 
         // Parsear listas (puede venir como string JSON o como objeto)
-        const listasObj = parseLists(usuario.listas);
+        const listasObj = parse_custom_lists(usuario.listas);
         if (hasDifferentListShape(usuario.listas, listasObj)) {
             usuario.listas = listasObj;
             await usuario.save();
@@ -625,7 +610,7 @@ const crearLista = async (req, res) => {
         const usuario = await User.findByPk(userId);
         if (!usuario) return res.status(404).json({ error: 'Usuario no encontrado' });
 
-        const listasObj = parseLists(usuario.listas);
+        const listasObj = parse_custom_lists(usuario.listas);
 
         const key = nombre.trim();
         if (listasObj[key]) {
@@ -656,7 +641,7 @@ const agregarLibroAListaEnLista = async (req, res) => {
         const usuario = await User.findByPk(userId);
         if (!usuario) return res.status(404).json({ error: 'Usuario no encontrado' });
 
-        const listasObj = parseLists(usuario.listas);
+        const listasObj = parse_custom_lists(usuario.listas);
 
         const key = nombre.trim();
         if (!listasObj[key]) return res.status(404).json({ error: 'Lista no encontrada' });
@@ -690,7 +675,7 @@ const editarLista = async (req, res) => {
 
         const oldName = req.params.nombre.trim();
         const newName = req.body.nombre.trim();
-        const listasObj = parseLists(usuario.listas);
+        const listasObj = parse_custom_lists(usuario.listas);
 
         if (!Object.prototype.hasOwnProperty.call(listasObj, oldName)) return res.status(404).json({ error: 'Lista no encontrada' });
         if (oldName !== newName && Object.prototype.hasOwnProperty.call(listasObj, newName)) return res.status(400).json({ error: 'Ya existe una lista con ese nombre' });
@@ -719,7 +704,7 @@ const eliminarLista = async (req, res) => {
         if (!usuario) return res.status(404).json({ error: 'Usuario no encontrado' });
 
         const name = req.params.nombre.trim();
-        const listasObj = parseLists(usuario.listas);
+        const listasObj = parse_custom_lists(usuario.listas);
         if (!Object.prototype.hasOwnProperty.call(listasObj, name)) return res.status(404).json({ error: 'Lista no encontrada' });
 
         delete listasObj[name];
@@ -739,7 +724,7 @@ const quitarLibroDeLista = async (req, res) => {
 
         const name = req.params.nombre.trim();
         const bookId = Number(req.params.idLibro);
-        const listasObj = parseLists(usuario.listas);
+        const listasObj = parse_custom_lists(usuario.listas);
         if (!Object.prototype.hasOwnProperty.call(listasObj, name)) return res.status(404).json({ error: 'Lista no encontrada' });
 
         const books = listasObj[name].libros;
@@ -833,7 +818,7 @@ const buscarUsuario = async (req, res) => {
                     : null;
                 usuarioJSON.cantidadResenas = userRatings.length;
 
-                const publicLists = parseLists(u.listas);
+                const publicLists = parse_custom_lists(u.listas);
                 const publicListEntries = Object.entries(publicLists).filter(([, list]) => !list.isPrivate);
                 const listBookIds = publicListEntries.flatMap(([, list]) => list.libros);
                 const listBooks = listBookIds.length > 0

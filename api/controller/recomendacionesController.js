@@ -5,11 +5,13 @@ const { Op, Sequelize } = require("sequelize");
 const sequelize = require("../config/db");
 const { create_recommendation_reader } = require("../services/recommendationService");
 const { build_personalized_carousels } = require("../services/recommendationCarouselService");
+const { create_user_carousel_service } = require("../services/userCarouselService");
 const UserRecommendationJob = require("../models/UserRecommendationJob");
 const { create_recommendation_job_service } = require("../services/recommendationJobService");
 const { get_recommendation_worker_config } = require("../config/recommendationWorker");
 
 const recommendationReader = create_recommendation_reader({ sequelize });
+const userCarouselService = create_user_carousel_service({ sequelize });
 const recommendationJobService = create_recommendation_job_service({
     sequelize,
     UserRecommendationJob,
@@ -110,98 +112,19 @@ const getTendencias = async (req, res) => {
 };
 
 
-// =======================================================
-// ⭐ CORREGIDO — OBTENER LIBROS DEL AUTOR MÁS LEÍDO
-// =======================================================
 const getMasDeAutor = async (req, res) => {
     try {
-        const usuario = await Usuario.findByPk(req.user.id, {
-            attributes: ['id', 'libros_leidos']
+        const carousel = await userCarouselService.get_more_from_authors(req.user.id);
+
+        return res.json({
+            message: carousel?.title || 'Todavía no hay autores con varias lecturas.',
+            libros: carousel?.libros || []
         });
-
-        if (!usuario) {
-            return res.status(404).json({
-                message: 'Usuario no encontrado.'
-            });
-        }
-
-        // ⚠️ libros_leidos llega como JSON string → PARSEAR
-        let librosLeidosIds = usuario.libros_leidos;
-
-        if (typeof librosLeidosIds === "string") {
-            try {
-                librosLeidosIds = JSON.parse(librosLeidosIds);
-            } catch (e) {
-                librosLeidosIds = [];
-            }
-        }
-
-        if (!Array.isArray(librosLeidosIds) || librosLeidosIds.length === 0) {
-            return res.json({
-                message: 'El usuario no tiene libros registrados como leídos.',
-                libros: []
-            });
-        }
-
-        // Obtener autor de cada libro leído
-        const librosLeidos = await Libro.findAll({
-            where: { id: librosLeidosIds },
-            attributes: ['id_autor']
-        });
-
-        // Contar frecuencia
-        const autorCounts = {};
-        for (const libro of librosLeidos) {
-            const idAutor = libro.id_autor;
-            if (idAutor) {
-                autorCounts[idAutor] = (autorCounts[idAutor] || 0) + 1;
-            }
-        }
-
-        // Hallar el autor más leído
-        let autorMasLeidoId = null;
-        let maxLeidos = 0;
-
-        for (const idAutor in autorCounts) {
-            if (autorCounts[idAutor] > maxLeidos) {
-                maxLeidos = autorCounts[idAutor];
-                autorMasLeidoId = parseInt(idAutor);
-            }
-        }
-
-        if (!autorMasLeidoId) {
-            return res.json({
-                message: 'No se pudo determinar un autor preferido entre los libros leídos.',
-                libros: []
-            });
-        }
-
-        // Obtener todos los libros del autor más leído
-        const librosRecomendados = await Libro.findAll({
-            where: {
-                id_autor: autorMasLeidoId,
-            },
-            order: [['anio', 'DESC']],
-            include: [
-                {
-                    model: Autor,
-                    as: 'Autor',
-                    attributes: ['id', 'nombre', 'url_cara'],
-                    required: true,
-                },
-            ],
-        });
-
-        const autorNombre = librosRecomendados[0]?.Autor?.nombre || 'Autor Preferido';
-
-        res.json({
-            message: `Libros de tu autor más leído: ${autorNombre}`,
-            libros: librosRecomendados
-        });
-
     } catch (error) {
-        console.error('Error al obtener libros del autor más leído:', error);
-        res.status(500).json({ message: 'Error interno al procesar la solicitud de recomendaciones.' });
+        console.error('Error al obtener libros de autores leídos:', error);
+        return res.status(500).json({
+            message: 'Error al obtener libros de autores leídos.'
+        });
     }
 };
 
@@ -593,27 +516,6 @@ const getGeneroPreferido = async (req, res) => {
 };
 
 
-function fixGeneros(input) {
-    if (!input) return [];
-
-    if (Array.isArray(input)) return input;
-
-    if (typeof input === "string") {
-        try {
-            const parsed = JSON.parse(input);
-            if (Array.isArray(parsed)) return parsed;
-        } catch { }
-
-        return input
-            .replace(/[\[\]"]+/g, "")
-            .split(",")
-            .map(s => s.trim())
-            .filter(Boolean);
-    }
-
-    return [];
-}
-
 const getRecomendacionesPorLibro = async (req, res) => {
     try {
         const idUsuario = Number(req.user.id);
@@ -623,83 +525,16 @@ const getRecomendacionesPorLibro = async (req, res) => {
             return res.status(400).json({ message: "ID inválidos." });
         }
 
-        const usuario = await Usuario.findByPk(idUsuario);
-        if (!usuario) return res.status(404).json({ message: "Usuario no encontrado" });
-
-        const libroBase = await Libro.findByPk(idLibro);
-        if (!libroBase) return res.status(404).json({ message: "Libro no encontrado" });
-
-        // Normalizar generos
-        const generos = fixGeneros(libroBase.generos);
-
-        // Normalizar libros leídos
-        let librosLeidos = usuario.libros_leidos || [];
-        if (typeof librosLeidos === "string") {
-            try { librosLeidos = JSON.parse(librosLeidos); } catch { librosLeidos = []; }
-        }
-        if (!Array.isArray(librosLeidos)) librosLeidos = [];
-        librosLeidos = librosLeidos.map(id => Number(id)).filter(Number.isInteger);
-
-        // Autor base
-        const autorId = libroBase.id_autor || null;
-
-        // Condiciones por género usando JSON_CONTAINS
-        const generoConditions = generos
-            .filter((g) => typeof g === 'string' && g.trim().length > 0 && g.length <= 120)
-            .map(g =>
-            Sequelize.where(
-                Sequelize.fn("JSON_CONTAINS", Sequelize.col("generos"), JSON.stringify(g)),
-                1
-            )
-        );
-
-        // Exclusiones
-        const baseExcludes = {
-            id: {
-                [Op.and]: [
-                    { [Op.ne]: idLibro },
-                    ...(librosLeidos.length ? [{ [Op.notIn]: librosLeidos }] : [])
-                ]
-            }
-        };
-
-        // OR (autor + géneros)
-        const orConditions = [];
-        if (autorId) orConditions.push({ id_autor: autorId });
-        if (generoConditions.length > 0) orConditions.push(...generoConditions);
-
-        let recomendaciones;
-
-        if (orConditions.length > 0) {
-            recomendaciones = await Libro.findAll({
-                where: {
-                    ...baseExcludes,
-                    [Op.or]: orConditions
-                },
-                include: [{ model: Autor, as: "Autor", attributes: ["id", "nombre", "url_cara"] }],
-                order: [["ranking", "DESC"], ["anio", "DESC"]],
-                limit: 20
+        const result = await userCarouselService
+            .get_similar_books_for_read_source(idUsuario, idLibro);
+        if (!result) {
+            return res.status(404).json({
+                message: 'El libro debe estar leído y tener una valoración de 4 o 5 estrellas.'
             });
         }
-
-        // Fallback si quedó vacío
-        if (!recomendaciones || recomendaciones.length === 0) {
-            recomendaciones = await Libro.findAll({
-                where: baseExcludes,
-                include: [{ model: Autor, as: "Autor", attributes: ["id", "nombre", "url_cara"] }],
-                order: [["ranking", "DESC"], ["anio", "DESC"]],
-                limit: 20
-            });
-        }
-
         return res.json({
-            base: {
-                id: libroBase.id,
-                titulo: libroBase.titulo,
-                generos,
-                id_autor: autorId
-            },
-            libros: recomendaciones
+            base: result.source,
+            libros: result.libros
         });
 
     } catch (error) {

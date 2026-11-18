@@ -1,0 +1,42 @@
+.authors-carousel {
+  display: flex;
+  gap: 20px;
+  overflow-x: auto;
+  padding: 8px 60px 16px;
+  scroll-behavior: smooth;
+}
+
+.author-carousel-card {
+  flex: 0 0 140px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  padding: 12px;
+  border: 0;
+  border-radius: 8px;
+  background: #fff;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  color: #333;
+  cursor: pointer;
+  font: inherit;
+}
+
+.author-carousel-image,
+.author-carousel-placeholder {
+  width: 96px;
+  height: 96px;
+  border-radius: 50%;
+}
+
+.author-carousel-image {
+  object-fit: cover;
+}
+
+.author-carousel-placeholder {
+  display: grid;
+  place-items: center;
+  background: #e7edf2;
+  color: #1a374d;
+  font-size: 40px;
+}

@@ -698,6 +698,24 @@ Todos los carruseles omitidos por falta de resultados no se devuelven como lista
 
 El frontend consume `carousels` de este endpoint para usuarios autenticados y mantiene las décadas generales existentes para visitantes sin sesión. La lectura heredada de `GET /nextread/recomendaciones` se conserva para compatibilidad con otros consumidores.
 
+### 9.5. Carruseles basados en la actividad del usuario
+
+El endpoint autenticado `GET /nextread/recomendaciones/contextuales` devuelve carruseles derivados de `user_book_states`, las valoraciones activas, los autores y las listas JSON del usuario autenticado. No acepta un ID de propietario enviado por el cliente, no vuelve a calcular recomendaciones al cargar Home y omite carruseles con menos de 3 libros.
+
+| Carrusel | Fuente y criterio |
+|---|---|
+| Seguir leyendo | Estados actuales `reading`, ordenados por `status_updated_at` descendente y luego por ID. |
+| Para leer | Estados actuales `to_read`, con el mismo orden estable. |
+| Autores | Devuelve autores, no libros. Cuenta por separado los libros leídos, favoritos y valorados con 4 o 5; ordena primero por valoraciones positivas, luego favoritos y finalmente lecturas. El enlace abre `/autor/:id`. |
+| Más de Autor | Usa autores con al menos dos libros actualmente leídos, excluye sus libros que el usuario ya leyó y limita a 3 por autor cuando combina varios. Si solo califica un autor, puede mostrar hasta 20 obras. |
+| De lista | Elige uniformemente una lista propia no vacía, incluidos los listados privados del propietario, conserva el orden de sus IDs y recupera hasta 20 libros existentes mediante `JSON_TABLE`. Nunca consulta una lista de otro usuario. |
+| Volver a leerlo | Solo incluye libros actualmente leídos con una valoración activa de 4 o 5 o marcados como favoritos. Prioriza valoración, favorito y fecha real de actualización del estado. |
+| Porque leíste… | El origen debe estar actualmente leído y tener una valoración activa de 4 o 5. Rota de forma determinista por día UTC y usuario entre los orígenes elegibles. Recupera candidatos por tags (`MEMBER OF`), autor u otros atributos bibliográficos disponibles; excluye el origen y libros ya leídos, y limita a 3 por autor. |
+
+Las lecturas de estado y listas no seleccionan tags. La similitud consulta tags solamente para el origen y utiliza `MEMBER OF` para que MySQL 8.4 pueda considerar el índice multivaluado de `Libro.tags`; la utilización efectiva del índice depende del plan y la distribución de datos. Los resultados devueltos por el motor de similitud son candidatos acotados, no un recorrido completo del catálogo.
+
+La página pública `/autor/:id` recupera únicamente los atributos de tarjeta y pagina por título e ID (máximo 50 por solicitud, hasta 1.000 páginas). La interfaz muestra cinco columnas en escritorio y carga páginas adicionales para permitir recorrer todas las obras sin descargarlas de una vez.
+
 ---
 
 ## 10. Organización de workers y procesamiento en segundo plano

@@ -51,3 +51,13 @@ export const getPersonalizedCarousels = async () => {
   const response = await api.get('/nextread/recomendaciones/carruseles');
   return response.data;
 };
+
+export const getUserContextualCarousels = async () => {
+  const response = await api.get('/nextread/recomendaciones/contextuales');
+  return response.data;
+};
+
+export const getAuthorDetails = async (authorId, params = {}) => {
+  const response = await api.get(`/nextread/autor/${authorId}`, { params });
+  return response.data;
+};

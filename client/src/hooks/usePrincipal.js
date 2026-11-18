@@ -2,8 +2,8 @@ import { useEffect, useMemo, useState } from 'react';
 import {
   getTrendingBooks,
   getBooksByDecade,
-  getAuthorMostRead,
   getPersonalizedCarousels,
+  getUserContextualCarousels,
 } from '../services/booksService';
 
 const normalizeBookList = (value) => {
@@ -24,9 +24,8 @@ const getDecadeTitle = (decade) => {
 
 export function usePrincipal(user) {
   const [librosTendencias, setLibrosTendencias] = useState([]);
-  const [librosAutor, setLibrosAutor] = useState([]);
-  const [autorMasLeidoNombre, setAutorMasLeidoNombre] = useState(null);
   const [personalizedCarousels, setPersonalizedCarousels] = useState([]);
+  const [contextualCarousels, setContextualCarousels] = useState([]);
   const [recommendationStatus, setRecommendationStatus] = useState('idle');
   const [librosPorDecada, setLibrosPorDecada] = useState([]);
   const [generoSeleccionado, setGeneroSeleccionado] = useState('Género...');
@@ -68,37 +67,6 @@ export function usePrincipal(user) {
 
     fetchDecadasPersonalizadas();
   }, [user?.id]);
-
-  useEffect(() => {
-    const fetchLibrosAutor = async () => {
-      if (!user?.correo) {
-        setLibrosAutor([]);
-        setAutorMasLeidoNombre('Inicia sesión para ver recomendaciones');
-        return;
-      }
-
-      setAutorMasLeidoNombre('Cargando recomendaciones...');
-
-      try {
-        const data = await getAuthorMostRead(user.correo);
-
-        if (data?.libros) {
-          setLibrosAutor(normalizeBookList(data.libros));
-          const nombre = data.message?.match?.(/Libros de tu autor más leído: (.+)/);
-          setAutorMasLeidoNombre(nombre ? nombre[1] : 'Más Libros del Autor');
-        } else {
-          setLibrosAutor([]);
-          setAutorMasLeidoNombre(data?.message || 'No hay recomendaciones');
-        }
-      } catch (error) {
-        console.error('Error cargando libros del autor más leído:', error);
-        setLibrosAutor([]);
-        setAutorMasLeidoNombre('Error al cargar las recomendaciones');
-      }
-    };
-
-    fetchLibrosAutor();
-  }, [user?.correo]);
 
   useEffect(() => {
     let isActive = true;
@@ -153,14 +121,51 @@ export function usePrincipal(user) {
     };
   }, [user?.id]);
 
+  useEffect(() => {
+    let isActive = true;
+
+    const fetchContextualCarousels = async () => {
+      if (!user?.id) {
+        setContextualCarousels([]);
+        return;
+      }
+
+      try {
+        const data = await getUserContextualCarousels();
+        if (data?.status !== 'ready' || !Array.isArray(data.carousels)) {
+          throw new Error('Respuesta inválida de los carruseles de usuario.');
+        }
+
+        if (isActive) {
+          setContextualCarousels(data.carousels
+            .filter((carousel) =>
+              carousel.kind === 'authors'
+                ? Array.isArray(carousel.autores)
+                : Array.isArray(carousel.libros)
+            )
+            .map((carousel) => ({
+              id: carousel.id,
+              title: carousel.title,
+              kind: carousel.kind,
+              books: carousel.libros || [],
+              authors: carousel.autores || [],
+            })));
+        }
+      } catch (error) {
+        console.error('Error cargando carruseles de usuario:', error);
+        if (isActive) setContextualCarousels([]);
+      }
+    };
+
+    fetchContextualCarousels();
+    return () => {
+      isActive = false;
+    };
+  }, [user?.id]);
+
   const bookCarousels = useMemo(() => {
     const carousels = [
       { id: 'tendencias', title: 'Novedades y Tendencias', books: librosTendencias },
-      {
-        id: 'autor',
-        title: autorMasLeidoNombre || 'Recomendaciones Personalizadas',
-        books: librosAutor,
-      },
     ];
 
     if (user?.id && recommendationStatus === 'ready') {
@@ -172,14 +177,13 @@ export function usePrincipal(user) {
         books: normalizeBookList(group.libros),
       })));
     }
+    if (user?.id) carousels.push(...contextualCarousels);
 
     return carousels;
-  }, [autorMasLeidoNombre, librosAutor, librosPorDecada, librosTendencias, personalizedCarousels, recommendationStatus, user?.id]);
+  }, [contextualCarousels, librosPorDecada, librosTendencias, personalizedCarousels, recommendationStatus, user?.id]);
 
   return {
     librosTendencias,
-    librosAutor,
-    autorMasLeidoNombre,
     recommendationStatus,
     librosPorDecada,
     generoSeleccionado,
