@@ -13,8 +13,8 @@ const editarPerfilSchema = z.object({
   descripcion: z.string().trim().max(300).optional(),
   banner: assetRefSchema.optional(),
   icono: assetRefSchema.optional(),
-  genero_preferido: z.string().trim().max(20).optional(),
-  autor_preferido: z.string().trim().max(20).optional(),
+  genero_preferido: z.string().trim().max(255).optional(),
+  autor_preferido: z.string().trim().max(255).optional(),
   titulo_preferido: z.string().trim().max(50).optional(),
 }).strict();
 

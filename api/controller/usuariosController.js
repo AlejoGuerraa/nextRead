@@ -255,7 +255,7 @@ const register = async (req, res) => {
         descripcion: descripcion || '',
         rol: rolFinal,
         // Al registrarse, otorgar los iconos y banners por defecto
-        iconos_obtenidos: [1, 2, 3, 4, 5, 6],
+        iconos_obtenidos: (await Icono.findAll({ attributes: ['id'] })).map((i) => i.id),
         banners_obtenidos: [1, 2, 3, 4, 5]
     });
 
@@ -497,8 +497,8 @@ const editarPerfil = async (req, res) => {
             if (typeof nombre === 'string' && nombre.length > 20) return res.status(400).json({ error: 'Nombre demasiado largo' });
             if (typeof apellido === 'string' && apellido.length > 20) return res.status(400).json({ error: 'Apellido demasiado largo' });
             if (typeof descripcion === 'string' && descripcion.length > 300) return res.status(400).json({ error: 'Descripción demasiado larga' });
-            if (typeof genero_preferido === 'string' && genero_preferido.length > 20) return res.status(400).json({ error: 'Género preferido inválido' });
-            if (typeof autor_preferido === 'string' && autor_preferido.length > 20) return res.status(400).json({ error: 'Autor preferido inválido' });
+            if (typeof genero_preferido === 'string' && genero_preferido.length > 255) return res.status(400).json({ error: 'Género preferido inválido' });
+            if (typeof autor_preferido === 'string' && autor_preferido.length > 255) return res.status(400).json({ error: 'Autor preferido inválido' });
             if (typeof titulo_preferido === 'string' && titulo_preferido.length > 50) return res.status(400).json({ error: 'Título preferido inválido' });
 
         // 🔹 2. Manejar ICONO

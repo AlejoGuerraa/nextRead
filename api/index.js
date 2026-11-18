@@ -1,4 +1,5 @@
 const express = require('express');
+const path = require('node:path');
 const helmet = require("helmet");
 const cors = require("cors");
 const morgan = require("morgan");
@@ -191,6 +192,10 @@ server.use(cors({
     optionsSuccessStatus: 200,
     maxAge: 86400,  // Pre-flight cache: 1 día
 }));
+
+// Archivos públicos (portadas, íconos y banners de client/public) para la app mobile.
+// Va antes del rate limiter para que cargar imágenes no consuma el límite general.
+server.use(express.static(path.join(__dirname, '../client/public'), { maxAge: '7d' }));
 
 server.use(express.json({ limit: '100kb' }));
 server.use(express.urlencoded({ extended: true, limit: '100kb' }));
