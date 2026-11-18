@@ -9,6 +9,7 @@ const {
     score_book
 } = require('../services/recommendationService');
 const {
+    has_book_tag_index,
     has_index,
     supports_multi_valued_indexes
 } = require('../scripts/migrateRecommendationSchema');
@@ -321,7 +322,7 @@ test('candidate SQL uses bounded cursor ranges, safe parameters, and read-only e
     });
 
     assert.equal(queries.length, 2);
-    assert.match(queries[0].sql, /JSON_CONTAINS\(book\.tags, :candidateTags\) = 1/);
+    assert.match(queries[0].sql, /:candidateTag MEMBER OF\(book\.tags\)/);
     assert.match(queries[0].sql, /book\.tema/);
     assert.match(queries[0].sql, /state\.reading_status = 'read'/);
     assert.doesNotMatch(queries[0].sql, /reading_status\s*=\s*'(?:reading|to_read)'/);
@@ -331,7 +332,7 @@ test('candidate SQL uses bounded cursor ranges, safe parameters, and read-only e
     assert.doesNotMatch(queries[0].sql, /ORDER BY (?:CRC32|RAND)\(/);
     assert.equal(queries[0].options.replacements.userId, 12);
     assert.equal(queries[0].options.replacements.limit, 25);
-    assert.equal(queries[0].options.replacements.candidateTags, '["fantasy"]');
+    assert.equal(queries[0].options.replacements.candidateTag, 'fantasy');
     assert.ok(queries[0].options.replacements.cursor >= 1);
     assert.ok(queries[0].options.replacements.cursor <= maxBookId);
 });
@@ -370,6 +371,20 @@ test('recommendation index migration detects compatible MySQL and existing index
         { Key_name: 'uq_generation_book', Column_name: 'generation_id', Seq_in_index: 2, Non_unique: 0 },
         { Key_name: 'uq_generation_book', Column_name: 'book_id', Seq_in_index: 3, Non_unique: 0 }
     ], ['user_id', 'generation_id', 'book_id'], true), true);
+});
+
+test('recommendation migration verifies the multivalued index expression and visibility', () => {
+    const index = {
+        Key_name: 'idx_libro_tags_mvi',
+        Expression: 'cast(`tags` as char(255) array)',
+        Non_unique: 1,
+        Visible: 'YES',
+        Index_type: 'BTREE'
+    };
+
+    assert.equal(has_book_tag_index([index]), true);
+    assert.equal(has_book_tag_index([{ ...index, Expression: 'cast(`tags` as char(100) array)' }]), false);
+    assert.equal(has_book_tag_index([{ ...index, Visible: 'NO' }]), false);
 });
 
 test('replaces a user recommendation set atomically with unique sequential positions', async () => {

@@ -1,5 +1,6 @@
 const { DataTypes } = require('sequelize')
 const sequelize = require('../config/db')
+const bookTypes = require('./BookTypes')
 
 const Libro = sequelize.define('Libro', {
     id: {
@@ -21,30 +22,11 @@ const Libro = sequelize.define('Libro', {
 
     tipo: {
         // Values cover the book types present in the JSON files under api/data/libros.
-        type: DataTypes.ENUM(
-            'Novela',
-            'Cuento',
-            'Novela Corta',
-            'Poesía',
-            'Reportaje',
-            'Ensayo',
-            'Ensayo/Cuento',
-            'Cuento/Ensayo',
-            'Memorias',
-            'Manga',
-            'Biografía',
-            'Fábula',
-            'Teatro',
-            'Cómic',
-            'Epopeya',
-            'Filosófico',
-            'Ficción',
-            'Histórico',
-            'ensayo',
-            'manga',
-            'reportaje'
-        ),
-        allowNull: false
+        type: DataTypes.STRING(50),
+        allowNull: false,
+        validate: {
+            isIn: [bookTypes]
+        }
     },
     // Comentario: tipo de libro (novela, cuento, poesía, manga, ensayo, etc.)
 

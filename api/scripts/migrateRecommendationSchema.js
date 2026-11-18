@@ -1,5 +1,6 @@
 const sequelize = require('../config/db');
 const { QueryTypes } = require('sequelize');
+const bookTypes = require('../models/BookTypes');
 require('../models/indexModel');
 
 const RECOMMENDATION_INDEXES = [
@@ -52,6 +53,20 @@ function has_index(rows, expectedColumns, requireUnique) {
     });
 }
 
+function has_book_tag_index(rows) {
+    const indexRows = rows.filter((row) => row.Key_name === 'idx_libro_tags_mvi');
+    if (indexRows.length !== 1) return false;
+
+    const index = indexRows[0];
+    const expression = String(index.Expression || '')
+        .replace(/[\s`]/g, '')
+        .toLowerCase();
+    return expression === 'cast(tagsaschar(255)array)' &&
+        Number(index.Non_unique) === 1 &&
+        index.Visible === 'YES' &&
+        index.Index_type === 'BTREE';
+}
+
 async function ensure_generation_column() {
     const columns = await sequelize.query(
         'SHOW COLUMNS FROM `user_recommendations`',
@@ -78,6 +93,41 @@ async function ensure_exploration_column() {
     `);
 }
 
+async function ensure_book_type_compatibility() {
+    const columns = await sequelize.query(
+        'SHOW COLUMNS FROM `Libro`',
+        { type: QueryTypes.SELECT }
+    );
+    const typeColumn = columns.find((column) => column.Field === 'tipo');
+    if (!typeColumn) {
+        throw new Error('The Libro.tipo column is missing');
+    }
+
+    if (/^enum\(/i.test(typeColumn.Type)) {
+        await sequelize.query(`
+            ALTER TABLE \`Libro\`
+            MODIFY COLUMN \`tipo\` VARCHAR(50) NOT NULL
+        `);
+    }
+
+    const [constraint] = await sequelize.query(`
+        SELECT CONSTRAINT_NAME
+        FROM INFORMATION_SCHEMA.TABLE_CONSTRAINTS
+        WHERE CONSTRAINT_SCHEMA = DATABASE()
+            AND TABLE_NAME = 'Libro'
+            AND CONSTRAINT_NAME = 'chk_libro_tipo'
+            AND CONSTRAINT_TYPE = 'CHECK'
+    `, { type: QueryTypes.SELECT });
+    if (constraint) return;
+
+    const allowedTypes = bookTypes.map((value) => sequelize.escape(value)).join(', ');
+    await sequelize.query(`
+        ALTER TABLE \`Libro\`
+        ADD CONSTRAINT \`chk_libro_tipo\`
+        CHECK (\`tipo\` IN (${allowedTypes}))
+    `);
+}
+
 async function ensure_recommendation_indexes() {
     const indexes = await sequelize.query(
         'SHOW INDEX FROM `user_recommendations`',
@@ -94,16 +144,29 @@ async function ensure_recommendation_indexes() {
 }
 
 async function ensure_book_tag_index() {
-    const indexes = await sequelize.query(
+    let indexes = await sequelize.query(
         'SHOW INDEX FROM `Libro`',
         { type: QueryTypes.SELECT }
     );
-    if (indexes.some((index) => index.Key_name === 'idx_libro_tags_mvi')) return;
+    const existing = indexes.some((index) => index.Key_name === 'idx_libro_tags_mvi');
+    if (existing) {
+        if (!has_book_tag_index(indexes)) {
+            throw new Error('The existing book tag index has an incompatible definition');
+        }
+        return;
+    }
 
     await sequelize.query(`
         CREATE INDEX \`idx_libro_tags_mvi\`
         ON \`Libro\` ((CAST(\`tags\` AS CHAR(255) ARRAY)))
     `);
+    indexes = await sequelize.query(
+        'SHOW INDEX FROM `Libro`',
+        { type: QueryTypes.SELECT }
+    );
+    if (!has_book_tag_index(indexes)) {
+        throw new Error('The book tag multivalued index was not created as expected');
+    }
 }
 
 async function assert_supported_mysql_version() {
@@ -123,6 +186,7 @@ async function migrate_recommendation_schema() {
     await sequelize.sync({ force: false, alter: false });
     await ensure_generation_column();
     await ensure_exploration_column();
+    await ensure_book_type_compatibility();
     await ensure_recommendation_indexes();
     await ensure_book_tag_index();
     console.log('Recommendation schema migration complete.');
@@ -140,6 +204,7 @@ if (require.main === module) {
 }
 
 module.exports = {
+    has_book_tag_index,
     has_index,
     supports_multi_valued_indexes
 };

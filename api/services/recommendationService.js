@@ -481,7 +481,7 @@ function create_candidate_repository({ sequelize }) {
         if (limit <= 0) return [];
 
         const tagFilter = tag == null ? '' : `
-        AND JSON_CONTAINS(book.tags, :candidateTags) = 1
+        AND :candidateTag MEMBER OF(book.tags)
 `;
         const exclusionFilter = excludedBookIds.length === 0 ? '' : `
         AND book.id NOT IN (:excludedBookIds)
@@ -497,7 +497,7 @@ function create_candidate_repository({ sequelize }) {
                 userId,
                 cursor,
                 limit,
-                ...(tag == null ? {} : { candidateTags: JSON.stringify([tag]) }),
+                ...(tag == null ? {} : { candidateTag: tag }),
                 ...(excludedBookIds.length === 0 ? {} : { excludedBookIds })
             },
             type: QueryTypes.SELECT
