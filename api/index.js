@@ -18,7 +18,7 @@ const {
 } = require('./controller/busquedaController');
 
 const {
-    getTendencias,getLibrosPorDecada,getMasDeAutor,getDecadasPersonalizadas,getGeneroPreferido,
+    getTendencias,getGlobalHomeCarousels,getLibrosPorDecada,getMasDeAutor,getDecadasPersonalizadas,getGeneroPreferido,
     getRecomendacionesPersonalizadas,getPersonalizedCarousels,getRecomendacionesPorLibro
 } = require('./controller/recomendacionesController');
 
@@ -256,6 +256,7 @@ server.post('/nextread/notificacion/:idUsuario', isAuth, isAdmin, validateParams
 // ---------------------- BÚSQUEDAS ----------------------
 server.get('/nextread/buscar', searchLimiter, validateQuery(searchQuerySchema), buscar);
 server.get('/nextread/tendencias', searchLimiter, getTendencias);
+server.get('/nextread/carruseles/globales', searchLimiter, getGlobalHomeCarousels);
 server.get('/nextread/libros/por-decada', searchLimiter, validateQuery(decadeQuerySchema), getLibrosPorDecada);
 
 server.post('/nextread/autorMasLeido', isAuth, sensitiveLimiter, validateBody(emailSchema), getMasDeAutor);

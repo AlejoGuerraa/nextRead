@@ -5,6 +5,11 @@ export const getTrendingBooks = async (params = {}) => {
   return response.data;
 };
 
+export const getGlobalHomeCarousels = async () => {
+  const response = await api.get('/nextread/carruseles/globales');
+  return response.data;
+};
+
 export const getBooksByDecade = async () => {
   const response = await api.get('/nextread/libros/por-decada');
   return response.data;

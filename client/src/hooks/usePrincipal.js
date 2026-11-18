@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
+import { compose_home_carousels } from './composeHomeCarousels';
 import {
-  getTrendingBooks,
+  getGlobalHomeCarousels,
   getBooksByDecade,
   getPersonalizedCarousels,
   getUserContextualCarousels,
@@ -23,31 +24,43 @@ const getDecadeTitle = (decade) => {
 };
 
 export function usePrincipal(user) {
-  const [librosTendencias, setLibrosTendencias] = useState([]);
+  const [globalCarousels, setGlobalCarousels] = useState([]);
   const [personalizedCarousels, setPersonalizedCarousels] = useState([]);
   const [contextualCarousels, setContextualCarousels] = useState([]);
   const [recommendationStatus, setRecommendationStatus] = useState('idle');
   const [librosPorDecada, setLibrosPorDecada] = useState([]);
-  const [generoSeleccionado, setGeneroSeleccionado] = useState('Género...');
 
   useEffect(() => {
-    const fetchTendencias = async () => {
+    let isActive = true;
+
+    const fetchGlobalCarousels = async () => {
       try {
-        const params = {};
-        if (generoSeleccionado && generoSeleccionado !== 'Género...') {
-          params.genero = generoSeleccionado;
+        const data = await getGlobalHomeCarousels();
+        if (data?.status !== 'ready' || !Array.isArray(data.carousels)) {
+          throw new Error('Respuesta inválida de los carruseles globales.');
         }
 
-        const data = await getTrendingBooks(params);
-        setLibrosTendencias(Array.isArray(data) ? data : []);
+        if (isActive) {
+          setGlobalCarousels(data.carousels
+            .filter((carousel) => Array.isArray(carousel.libros))
+            .map((carousel) => ({
+              id: carousel.id,
+              title: carousel.title,
+              books: carousel.libros,
+              period: carousel.period,
+            })));
+        }
       } catch (error) {
-        console.error('Error cargando los libros de tendencias:', error);
-        setLibrosTendencias([]);
+        console.error('Error cargando carruseles globales:', error);
+        if (isActive) setGlobalCarousels([]);
       }
     };
 
-    fetchTendencias();
-  }, [generoSeleccionado]);
+    fetchGlobalCarousels();
+    return () => {
+      isActive = false;
+    };
+  }, []);
 
   useEffect(() => {
     const fetchDecadasPersonalizadas = async () => {
@@ -164,35 +177,27 @@ export function usePrincipal(user) {
   }, [user?.id]);
 
   const bookCarousels = useMemo(() => {
-    const carousels = [];
-    if (librosTendencias.length > 0) {
-      carousels.push({
-        id: 'tendencias',
-        title: 'Tendencias de lectura',
-        books: librosTendencias,
-      });
-    }
-
-    if (user?.id && recommendationStatus === 'ready') {
-      carousels.push(...personalizedCarousels);
-    } else if (!user?.id && Array.isArray(librosPorDecada) && librosPorDecada.length > 0) {
-      carousels.push(...librosPorDecada.map((group, index) => ({
+    const publicDecadeCarousels = !user?.id && Array.isArray(librosPorDecada)
+      ? librosPorDecada.map((group, index) => ({
         id: `decada-${group.decade ?? index}`,
         title: getDecadeTitle(group.decade),
         books: normalizeBookList(group.libros),
-      })));
-    }
-    if (user?.id) carousels.push(...contextualCarousels);
+      }))
+      : [];
 
-    return carousels;
-  }, [contextualCarousels, librosPorDecada, librosTendencias, personalizedCarousels, recommendationStatus, user?.id]);
+    return compose_home_carousels({
+      globalCarousels,
+      personalizedCarousels,
+      contextualCarousels,
+      publicDecadeCarousels,
+      userId: user?.id,
+      recommendationStatus,
+    });
+  }, [contextualCarousels, globalCarousels, librosPorDecada, personalizedCarousels, recommendationStatus, user?.id]);
 
   return {
-    librosTendencias,
     recommendationStatus,
     librosPorDecada,
-    generoSeleccionado,
-    setGeneroSeleccionado,
     bookCarousels,
   };
 }

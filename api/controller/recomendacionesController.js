@@ -7,6 +7,8 @@ const { create_recommendation_reader } = require("../services/recommendationServ
 const { build_personalized_carousels } = require("../services/recommendationCarouselService");
 const { create_user_carousel_service } = require("../services/userCarouselService");
 const { create_reading_trend_service } = require("../services/readingTrendService");
+const { create_global_carousel_service } = require("../services/globalCarouselService");
+const { create_public_decade_carousel_service } = require("../services/publicDecadeCarouselService");
 const UserRecommendationJob = require("../models/UserRecommendationJob");
 const { create_recommendation_job_service } = require("../services/recommendationJobService");
 const { get_recommendation_worker_config } = require("../config/recommendationWorker");
@@ -14,6 +16,11 @@ const { get_recommendation_worker_config } = require("../config/recommendationWo
 const recommendationReader = create_recommendation_reader({ sequelize });
 const userCarouselService = create_user_carousel_service({ sequelize });
 const readingTrendService = create_reading_trend_service({ sequelize });
+const globalCarouselService = create_global_carousel_service({
+    sequelize,
+    readingTrendService
+});
+const publicDecadeCarouselService = create_public_decade_carousel_service({ sequelize });
 const recommendationJobService = create_recommendation_job_service({
     sequelize,
     UserRecommendationJob,
@@ -90,6 +97,18 @@ const getTendencias = async (_req, res) => {
     } catch (error) {
         console.error('Error calculating reading trends:', error);
         return res.status(500).json({ message: 'Error al obtener las tendencias' });
+    }
+};
+
+const getGlobalHomeCarousels = async (_req, res) => {
+    try {
+        const carousels = await globalCarouselService.get_global_carousels();
+        return res.json({ status: 'ready', carousels });
+    } catch (error) {
+        console.error('Error loading global home carousels:', error);
+        return res.status(500).json({
+            message: 'Error al obtener los carruseles globales.'
+        });
     }
 };
 
@@ -175,18 +194,7 @@ async function porDecada(libros) {
 const getLibrosPorDecada = async (req, res) => {
     try {
         const { decade } = req.query;
-
-        // -------------------------
-        // 📌 ATRIBUTOS QUE MANDAMOS
-        // -------------------------
-        const baseAttributes = [
-            "id",
-            "titulo",
-            "anio",
-            "url_portada",
-            "generos",
-            "ranking"   // 👈 RANKING SIEMPRE INCLUIDO
-        ];
+        let requestedDecade = null;
 
         if (decade) {
             const decadaMatch = decade.match(/^(\d{4})s?$/);
@@ -196,66 +204,25 @@ const getLibrosPorDecada = async (req, res) => {
                 });
             }
 
-            const decadaBase = parseInt(decadaMatch[1]);
-
-            const libros = await Libro.findAll({
-                where: {
-                    anio: {
-                        [Op.gte]: decadaBase,
-                        [Op.lte]: decadaBase + 9,
-                    },
-                },
-                attributes: baseAttributes,
-                order: [['anio', 'DESC']],
-                include: [
-                    {
-                        model: Autor,
-                        as: 'Autor',
-                        attributes: ['id', 'nombre', 'url_cara'],
-                        required: false,
-                    },
-                ],
-            });
-
-            return res.json({
-                decade: `${decadaBase}s`,
-                start: decadaBase,
-                end: decadaBase + 9,
-                count: libros.length,
-                libros,
-            });
+            requestedDecade = Number(decadaMatch[1]);
         }
 
-        // -------------------------
-        // 📌 TODAS LAS DÉCADAS
-        // -------------------------
-        const libros = await Libro.findAll({
-            attributes: baseAttributes,
-            include: [
-                {
-                    model: Autor,
-                    as: 'Autor',
-                    attributes: ['id', 'nombre', 'url_cara'],
-                    required: false,
-                },
-            ],
-        });
+        const groups = await publicDecadeCarouselService.get_decades(requestedDecade);
 
-        const grupos = await porDecada(
-            libros.map(l => {
-                const lib = l.toJSON();
-                // 🔹 Normalizar ranking
-                lib.ranking = lib.ranking !== undefined && lib.ranking !== null
-                    ? Math.floor(Number(lib.ranking))
-                    : 0;
-                return lib;
-            })
-        );
+        if (requestedDecade !== null) {
+            const group = groups[0] ?? {
+                decade: `${requestedDecade}s`,
+                start: requestedDecade,
+                end: requestedDecade + 9,
+                count: 0,
+                libros: []
+            };
+            return res.json(group);
+        }
 
-        res.json({ decades: grupos });
-
+        return res.json({ decades: groups });
     } catch (error) {
-        console.error(error);
+        console.error('Error obteniendo libros por década:', error);
         res.status(500).json({ error: "Error obteniendo libros por década" });
     }
 };
@@ -527,6 +494,7 @@ const getRecomendacionesPorLibro = async (req, res) => {
 
 module.exports = {
     getTendencias,
+    getGlobalHomeCarousels,
     getLibrosPorDecada,
     getMasDeAutor,
     getDecadasPersonalizadas,

@@ -401,8 +401,9 @@ La selección debe mantener relevancia y variedad. La variación no significa el
 - Fuente: contador actual `read_count`.
 - Ordenar por cantidad de usuarios que actualmente tienen el libro marcado como leído.
 - No confundirlo con nuevas lecturas del mes.
-- Utilizar resultados globales precalculados.
-- Aplicar límites y filtros de disponibilidad del libro.
+- Consultar `read_count` directamente mientras el costo del catálogo siga siendo bajo.
+- Aplicar un máximo de 20 libros y un máximo de 3 por autor; omitir el carrusel si no alcanza el mínimo general.
+- Reconciliar el contador desde `user_book_states`, sin mantener un contador histórico paralelo.
 
 ### 7.8. `Volver a leerlo` (variable)
 
@@ -417,8 +418,8 @@ La selección debe mantener relevancia y variedad. La variación no significa el
 - Detectar crecimiento de nuevas lecturas en períodos cortos.
 - Utilizar eventos de lectura con fecha, no solamente `read_count`.
 - Comparar el período reciente con el anterior.
-- Evitar que pocos eventos produzcan una tendencia engañosa.
-- Utilizar el caché global actualizado por worker.
+- Contar usuarios únicos y aplicar el umbral configurable compartido con las tendencias mensuales.
+- Reutilizar la fórmula de la sección 8.2 mediante consultas limitadas al índice temporal existente.
 
 ### 7.10. `Épocas` (variable)
 
@@ -450,10 +451,10 @@ La selección debe mantener relevancia y variedad. La variación no significa el
 
 ### 7.14. `Nuevos lanzamientos` (variable)
 
-- Utilizar fecha de publicación y actividad reciente.
-- Definir un período configurable para considerar un libro nuevo.
-- Priorizar libros nuevos que estén recibiendo lecturas positivas o una tendencia reciente.
-- No asumir que la fecha de publicación está completa o en un formato homogéneo sin auditar el catálogo.
+- Utilizar el año `Libro.anio`, no presentarlo como una fecha exacta de publicación.
+- Considerar por defecto el año UTC actual y el anterior; configurar el número de años con `NEW_RELEASES_WINDOW_YEARS`.
+- Excluir años fuera del período y años futuros; ordenar por año descendente y ranking como desempate estable.
+- El catálogo actual no registra fecha ni edición. No inferir una fecha exacta ni afirmar que todos los años identifican la misma edición.
 
 ### 7.15. Libros por `tema` (variable)
 
@@ -481,10 +482,10 @@ La selección debe mantener relevancia y variedad. La variación no significa el
 
 ### 7.18. `Tendencias del mes` (variable)
 
-- Utilizar eventos de nuevas lecturas del mes correspondiente.
-- Contar usuarios únicos por libro dentro del período para evitar que un mismo usuario infle artificialmente la tendencia.
-- Ordenar por cantidad de nuevos lectores.
-- El período debe estar definido por fechas y zona horaria coherentes.
+- Utilizar eventos del mes calendario UTC en curso, desde el primer día del mes inclusive hasta el inicio de la consulta exclusive.
+- Contar usuarios únicos por libro; varias transiciones del mismo usuario dentro del mes cuentan una sola vez.
+- Aplicar `READING_TRENDS_MIN_UNIQUE_USERS` (default 30), ordenar por cantidad de nuevos lectores y desempatar de forma estable.
+- Devolver los límites del período y la zona horaria en la respuesta.
 
 ### 7.19. `Tendencias del año` (futura)
 
@@ -494,9 +495,9 @@ La selección debe mantener relevancia y variedad. La variación no significa el
 
 ---
 
-## 8. Estadísticas globales y tendencias: eventos y caché
+## 8. Estadísticas globales, eventos y caché
 
-Los carruseles globales tienen los mismos resultados para todos los usuarios en un momento dado. No deben calcularse en cada petición de inicio.
+Los carruseles globales tienen los mismos resultados para todos los usuarios en un momento dado. Se debe evaluar el costo de las consultas antes de introducir una caché o un worker: las consultas pequeñas e indexadas pueden ejecutarse directamente; el precálculo se incorpora cuando las mediciones lo justifiquen.
 
 ### 8.1. Diferenciar popularidad de tendencia
 
@@ -578,59 +579,30 @@ Un contador diario de usuarios únicos no bastaría para reconstruir R o P exact
 
 El agente debe elegir una estructura que permita contar usuarios únicos correctamente. Una opción es consultar eventos con `COUNT(DISTINCT user_id)` sobre ventanas acotadas y luego optimizar con agregaciones adecuadas cuando el volumen lo justifique. No sacrificar exactitud sin documentarlo.
 
-### 8.4. Caché persistente de carruseles globales
+### 8.4. Decisión de caché y actualización
 
-Crear o adaptar una estructura de caché persistente, nombre de referencia `HomeCarouselCache`.
+La auditoría se realizó contra MySQL 8.4.13. La base inspeccionada no contiene filas en `Libro`, `user_book_states` ni `book_read_events`; por ello, el conteo de discrepancias de `read_count` es cero, pero no demuestra reconciliación con actividad real. El catálogo fuente del seeder contiene 264 libros, cada uno con un `anio` entero entre 1597 y 2025; el año es el único dato temporal del libro y no identifica una fecha ni edición exacta.
 
-Campos posibles:
+Los cuatro SQL se ejecutaron en MySQL 8.4.13 y devolvieron listas vacías, consistente con las tablas sin filas. Los planes de `most_read` y `new_releases` recorren `Libro` y ordenan el resultado. No hay índices para `read_count` o `anio`; el optimizador estima una fila debido a que la tabla activa está vacía. Con un catálogo fuente de 264 filas, esos escaneos acotados son preferibles a agregar índices o persistencia antes de medir un catálogo mayor. Para ambas tendencias, `EXPLAIN` selecciona el índice temporal `book_read_events_occurred_at_book_id_user_id`; al no haber eventos, informa `type=index` y no permite estimar el costo con historial real. El plan completo también muestra el join de libros y ordenamiento requerido por diversidad/ranking.
 
-| Campo | Propósito |
-|---|---|
-| `id` | Identificador. |
-| `carousel_key` | Clave del carrusel. |
-| `period` | Período asociado, si aplica. |
-| `data` | IDs ordenados de libros o autores y metadatos mínimos necesarios. |
-| `generated_at` | Fecha de generación. |
-| `expires_at` | Vencimiento opcional. |
+Por este volumen no se crea `HomeCarouselCache` ni un worker global. `GET /nextread/carruseles/globales` calcula como máximo cuatro conjuntos de hasta 20 libros en cada solicitud de Home y no ejecuta escrituras ni altera contadores. Los resultados se ordenan de forma estable, aplican máximo de tres libros por autor y se omiten cuando tienen menos de tres libros. El endpoint existente `GET /nextread/tendencias` se conserva por compatibilidad.
 
-Ejemplos de claves:
+Frecuencias y períodos:
 
-- `most_read`
-- `spontaneous_trends`
-- `monthly_trends`
-- `yearly_trends`
-- `new_releases`
+- Más leídos: lectura directa de `Libro.read_count` en cada solicitud; solo libros con contador positivo.
+- Tendencias espontáneas: ventanas móviles UTC de 30 días recientes y 30 anteriores, fórmula de la sección 8.2 y umbral compartido.
+- Tendencias del mes: período calendario UTC `[primer día del mes, instante de consulta normalizado a segundos)`, `COUNT(DISTINCT user_id)` y el mismo umbral configurable.
+- Nuevos lanzamientos: `Libro.anio` entre el año UTC actual y los años previos indicados por `NEW_RELEASES_WINDOW_YEARS` (default 2). Se ordena primero por año y luego por ranking; no se atribuye actividad reciente que los datos no permiten demostrar.
 
-La clave debe ser única según la combinación de carrusel y período. Los IDs guardados deben corresponder a libros/autores válidos. No duplicar toda la información bibliográfica en el JSON.
+Las tendencias del año podrán usar el mismo event store e índice con límites `[1 de enero UTC, instante de consulta)`; no requieren una tabla anual ni aproximar usuarios únicos sumando días.
 
-Si el proyecto ya cuenta con Redis u otra caché apropiada, investigar si conviene utilizarla. No agregar una dependencia externa sin necesidad. Una tabla MySQL puede ser suficiente para una primera implementación, especialmente si los resultados son pequeños y se actualizan una vez al día.
-
-### 8.5. Worker global diario
-
-Un worker independiente debe actualizar los carruseles globales una vez al día.
-
-Proceso esperado:
-
-1. Consultar los eventos y agregados necesarios.
-2. Calcular `most_read`, tendencias, lanzamientos y demás carruseles globales.
-3. Aplicar umbrales, períodos, filtros de disponibilidad y límites.
-4. Guardar el nuevo resultado.
-5. Publicar el nuevo conjunto únicamente cuando esté completo.
-6. Mantener el resultado anterior si el cálculo falla.
-
-La actualización debe ser atómica desde el punto de vista del lector. La página de inicio nunca debe recibir una lista parcialmente escrita.
-
-El worker debe tener manejo de errores, logs, métricas y protección contra ejecuciones simultáneas. Debe ser posible volver a ejecutarlo sin duplicar resultados ni alterar contadores.
-
-El horario debe definirse con una zona horaria explícita. Para estadísticas globales se recomienda utilizar una referencia uniforme, preferentemente UTC, y documentar cómo se interpretan los límites de mes y año.
+Como los cálculos se consultan directamente, la ejecución manual consiste en solicitar `GET /nextread/carruseles/globales`; no existe un comando administrativo ni un job que ejecutar. Se debe reconsiderar caché/worker cuando haya mediciones con volumen real que justifiquen sustituir estas consultas.
 
 ---
 
 ## 9. Composición de la página de inicio y endpoints
 
-La página de inicio debe coordinar las fuentes de datos sin convertir un único endpoint en una consulta gigante.
-
-Puede existir un endpoint general, por ejemplo `GET /api/home`, si el contrato actual del frontend lo permite. Debe actuar como orquestador de servicios especializados, no contener toda la lógica de negocio ni ejecutar cálculos pesados.
+La página de inicio debe coordinar las fuentes de datos sin convertir un único endpoint en una consulta gigante. La implementación conserva endpoints especializados y delega su composición al frontend; la decisión y sus razones se detallan en 9.0.
 
 Fuentes principales:
 
@@ -639,7 +611,32 @@ Fuentes principales:
 | Personalizados | `UserRecommendation` | Para vos, épocas, géneros, tipos, temas, países, joyas. |
 | Datos del usuario | Relación usuario-libro y listas | Seguir leyendo, para leer, de lista, volver a leerlo. |
 | Contextuales | Libros leídos, autores y similitud | Porque leíste, más de autor, autores. |
-| Globales | `HomeCarouselCache` | Más leídos, tendencias, lanzamientos. |
+| Globales | Consultas SQL a `Libro` y `book_read_events` | Más leídos, tendencias, lanzamientos. |
+
+`GET /nextread/carruseles/globales` expone las listas globales en `{ status: "ready", carousels: [...] }`. Cada carrusel incluye `id`, `title` y `libros`, y los períodos mensuales o de lanzamientos incluyen sus límites. Se omiten listas que no alcanzan tres libros. El endpoint es público y usa el limitador de búsquedas existente.
+
+### 9.0. Decisión de composición
+
+No se agrega un endpoint general `GET /api/home` ni `/nextread/home`. El frontend ya coordina los servicios especializados en paralelo desde `usePrincipal`; un wrapper de backend ejecutaría las mismas consultas, no reduciría el trabajo de MySQL y acoplaría errores de fuentes distintas. Se preserva la degradación parcial: cada carga falla de forma independiente y el resto de Home sigue disponible.
+
+La respuesta final que consume `Principal` es una lista ordenada de carruseles normalizados por el hook: primero globales; para usuarios autenticados, personalizados listos y luego contextuales; para visitantes, las décadas públicas existentes. El hook omite filas sin libros/autores. Un autor se representa como `authors`; los carruseles de libros usan `books`. La capa HTTP conserva los nombres y contratos existentes (`libros`, `autores`).
+
+El endpoint público de décadas consulta en MySQL 8.4 solo las cinco décadas más recientes y hasta 20 libros por grupo, mediante CTE y `ROW_NUMBER()`. `COUNT(*) OVER` conserva el total real del grupo sin transferir todos sus libros. Los campos recuperados son los de tarjeta, ranking y autor; no se consultan géneros porque Home no los usa en ese carrusel. El parámetro opcional de década conserva su respuesta individual y aplica el mismo límite. No necesita el índice multivaluado de `Libro.tags`: este endpoint filtra y agrupa por `anio`, mientras que el MVI se usa en la recuperación de candidatos, no al leer la generación persistida de Home.
+
+El SQL se ejecutó y explicó en Oracle MySQL 8.4.13. El plan usa escaneos de `Libro` y acceso `eq_ref` a `Autor` por su clave primaria; no existe un índice de año. La base inspeccionada no contiene libros y el catálogo fuente documentado tiene 264 filas, así que el plan no demuestra el costo sobre un catálogo de producción ni justifica agregar un índice todavía.
+
+### 9.0.1. Endpoints finales
+
+| Endpoint | Acceso y fuente | Contrato/uso en Home |
+|---|---|---|
+| `GET /nextread/carruseles/globales` | Público; `Libro` y `book_read_events`; limitador de búsquedas. | `{ status: "ready", carousels }`; cada elemento usa `id`, `title`, `libros` y `period` opcional. |
+| `GET /nextread/tendencias` | Público; se conserva por compatibilidad. | Arreglo de libros de tendencias espontáneas con `Autor` y contadores de período. |
+| `GET /nextread/libros/por-decada` | Público; `decade` opcional, validado. | `{ decades }` (máximo cinco grupos) para visitantes o un grupo de hasta 20 libros cuando se solicita una década. |
+| `GET /nextread/recomendaciones/carruseles` | `isAuth`; el usuario se toma de `req.user.id`. | `ready` con `generation_id` y `carousels`, `pending` si no existe generación o `failed` si agotó reintentos. |
+| `GET /nextread/recomendaciones/contextuales` | `isAuth`; usa únicamente el usuario autenticado. | `{ status: "ready", carousels }`; puede incluir libros (`libros`) o autores (`autores`). |
+| `GET /nextread/recomendaciones` | `isAuth`; contrato heredado. | Se conserva para otros consumidores; Home usa el contrato de carruseles. |
+
+Home no envía IDs de usuario ni de lista en estas solicitudes. Los endpoints autenticados derivan la identidad de `req.user`; `De lista` solo consulta listas del usuario propietario. Los parámetros no confiables no se interpolan en SQL.
 
 ### 9.1. Consultas específicas por endpoint
 
@@ -703,7 +700,7 @@ Todos los carruseles omitidos por falta de resultados no se devuelven como lista
 
 Épocas, tipos, géneros y temas con menos de 3 libros elegibles se omiten. Las consultas y la selección se limitan a candidatos de la generación publicada, por lo que la popularidad usada por “Joyas” es relativa a ese conjunto y no al catálogo completo. Si se requiere popularidad global o carruseles por país, primero debe incorporarse metadata confiable a las etapas de catálogo/importación; no se debe inferir durante la lectura de Home.
 
-El frontend consume `carousels` de este endpoint para usuarios autenticados y mantiene las décadas generales existentes para visitantes sin sesión. La lectura heredada de `GET /nextread/recomendaciones` se conserva para compatibilidad con otros consumidores.
+El frontend consume `carousels` del endpoint personalizado para usuarios autenticados y mantiene las décadas generales existentes para visitantes sin sesión. La lectura heredada de `GET /nextread/recomendaciones` se conserva para compatibilidad con otros consumidores.
 
 ### 9.5. Carruseles basados en la actividad del usuario
 
@@ -764,18 +761,9 @@ La respuesta de recomendaciones continúa siendo `pending` mientras no haya una 
 
 Las pruebas unitarias cubren el coalescing/idempotencia de la fila, claims y leases vencidos, reintentos, protección ante versiones obsoletas, concurrencia entre usuarios y apagado. En MySQL 8.4 también se verificaron claims concurrentes, bloqueo por usuario y recuperación de leases. Finalmente, se ejecutó una generación de extremo a extremo con usuario y libros temporales: interacciones repetidas, una sola lectura/evento, publicación y consulta del candidato; todos los registros temporales se limpiaron. Esto no sustituye pruebas de carga ni recuperación tras matar un proceso durante una generación.
 
-### 10.2. Worker de estadísticas globales
+### 10.2. Estadísticas globales
 
-Responsabilidades:
-
-- Ejecutarse con una frecuencia diaria.
-- Calcular los carruseles globales.
-- Actualizar agregados si corresponde.
-- Escribir el nuevo caché de forma atómica.
-- Mantener el resultado anterior ante fallos.
-- Registrar duración, cantidad de elementos y errores.
-
-Los workers deben poder ejecutarse de forma independiente del servidor web y no deben bloquear el event loop con cálculos sin límite. Los lotes deben tener tamaños controlados.
+No hay un worker global en la implementación actual. Las consultas directas del carrusel global se justifican por el catálogo fuente de 264 libros y se ejecutan al solicitar Home; no escriben cachés ni contadores. MySQL 8.4 usa el índice temporal existente para eventos, mientras los escaneos del catálogo se reevaluarán con datos y mediciones representativos antes de agregar índices, caché o worker.
 
 ---
 
@@ -892,9 +880,7 @@ Casos mínimos:
 - Conteo de usuarios únicos por período.
 - Umbral mínimo de 30 para tendencias.
 - Períodos mensuales y ventanas móviles correctamente delimitados.
-- Worker idempotente.
-- Fallo durante generación: conserva caché anterior.
-- Dos ejecuciones simultáneas: no publican resultados parciales ni se pisan incorrectamente.
+- No existe worker global ni caché persistida; las pruebas de publicación, recuperación y concurrencia de ese worker no aplican a la implementación actual.
 - Worker de recomendaciones: coalescing, exclusión de reclamos por usuario, recuperación de leases, reintentos y publicación válida.
 
 ### Rendimiento
@@ -941,7 +927,7 @@ El trabajo debe realizarse en etapas pequeñas, revisables y con pruebas.
 7. **Carruseles personalizados:** implementar `Para vos` y carruseles que reutilizan candidatos.
 8. **Carruseles del usuario y contextuales:** implementar consultas específicas y filtros.
 9. **Eventos y estadísticas:** registrar nuevas lecturas y construir métricas globales.
-10. **Worker global y caché:** precalcular tendencias y popularidad.
+10. **Estadísticas globales:** medir las consultas de tendencias y popularidad; agregar caché o worker solo si el volumen demuestra que las consultas directas son insuficientes.
 11. **Composición de inicio:** coordinar los carruseles sin convertir el endpoint en una consulta pesada.
 12. **Optimización y pruebas:** revisar índices, SQL, N+1, carga, seguridad y observabilidad.
 
