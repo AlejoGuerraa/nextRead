@@ -1,5 +1,6 @@
 const { DataTypes } = require('sequelize')
 const sequelize = require('../config/db')
+const bookTypes = require('./BookTypes')
 
 const Libro = sequelize.define('Libro', {
     id: {
@@ -13,41 +14,19 @@ const Libro = sequelize.define('Libro', {
         allowNull: false
     },
 
-    fecha_publicacion: {
-        type: DataTypes.DATE,
-        allowNull: false
-    },
-
     anio: {
         type: DataTypes.INTEGER,
-        allowNull: true
+        allowNull: false
     },
     // Comentario: año de publicación del libro, extra para búsquedas rápidas
 
     tipo: {
-        // valores permitidos para la columna "tipo" — ampliados para cubrir los valores
-        // existentes en api/data/libros.json (p. ej. "Novela Corta", "Reportaje", combinaciones)
-        type: DataTypes.ENUM(
-            'Novela',
-            'Cuento',
-            'Novela Corta',
-            'Poesía',
-            'Reportaje',
-            'Ensayo',
-            'Ensayo/Cuento',
-            'Cuento/Ensayo',
-            'Memorias',
-            'Manga',
-            'Biografía',
-            'Fábula',
-            'Teatro',
-            'Cómic',
-            'Epopeya',
-            'Filosófico',
-            'Ficción',
-            'Histórico'
-        ),
-        allowNull: false
+        // Values cover the book types present in the JSON files under api/data/libros.
+        type: DataTypes.STRING(50),
+        allowNull: false,
+        validate: {
+            isIn: [bookTypes]
+        }
     },
     // Comentario: tipo de libro (novela, cuento, poesía, manga, ensayo, etc.)
 
@@ -64,7 +43,7 @@ const Libro = sequelize.define('Libro', {
     // Comentario: resumen del tema principal del libro
 
     ranking: {
-        type: DataTypes.INTEGER,
+        type: DataTypes.FLOAT,
         allowNull: false
     },
     // Comentario: ranking general del libro
@@ -74,7 +53,19 @@ const Libro = sequelize.define('Libro', {
         allowNull: true
     },
     // Comentario: géneros del libro en formato JSON
+
+    tags: {
+        type: DataTypes.JSON,
+        allowNull: false
+    },
+    // Comentario: etiquetas de búsqueda y clasificación del libro
     
+    read_count: {
+        type: DataTypes.INTEGER,
+        allowNull: false,
+        defaultValue: 0
+    },
+
     url_portada: {
         type: DataTypes.TEXT,
         allowNull: true

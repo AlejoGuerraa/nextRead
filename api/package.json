@@ -6,6 +6,11 @@
     "start": "node --watch index.js",
     "migrate:multiple-reviews": "node scripts/migrateMultipleBookReviews.js",
     "migrate:optional-review-rating": "node scripts/migrateOptionalReviewRating.js"
+    "test": "node --test",
+    "migrate:book-states": "node scripts/backfillUserBookStates.js",
+    "migrate:tag-preferences": "node scripts/backfillUserTagPreferences.js",
+    "migrate:recommendations": "node scripts/migrateRecommendationSchema.js",
+    "worker:recommendations": "node workers/recommendationWorker.js"
   },
   "keywords": [],
   "author": "",

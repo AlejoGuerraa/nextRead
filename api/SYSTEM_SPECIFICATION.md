@@ -1,0 +1,978 @@
+# NextRead | Especificación técnica del sistema de recomendaciones
+
+> **Documento de referencia para desarrollo.** Esta especificación define el comportamiento esperado, las responsabilidades, las reglas de negocio y los requisitos técnicos del sistema de recomendaciones de NextRead. Debe consultarse antes de crear, modificar, eliminar o ampliar cualquier recomendación o carrusel.
+
+## 1. Propósito y nivel de exigencia
+
+NextRead ya cuenta con una implementación inicial de recomendaciones basada principalmente en autores, épocas y valoraciones. Esa implementación es básica y debe evolucionar hacia un sistema más completo, personalizado, modular y escalable.
+
+El objetivo no es agregar condiciones aisladas a los endpoints existentes. Se debe **revisar, robustecer y reorganizar el sistema actual**, reutilizando lo que esté bien implementado y reemplazando lo que no sea compatible con esta especificación.
+
+Este trabajo es importante para el futuro de la aplicación. Debe realizarse con criterio de ingeniería senior: investigar primero, comprender el código y el modelo de datos existentes, validar las relaciones y los flujos reales, diseñar antes de modificar y probar cada cambio. No se deben inventar modelos, columnas, relaciones, endpoints, servicios ni comportamientos que no existan sin justificar su incorporación.
+
+### Escala objetivo
+
+El diseño debe contemplar:
+
+- Hasta **100.000 usuarios activos** como objetivo de capacidad.
+- Un catálogo de al menos **50.000 libros**.
+- Crecimiento posterior del catálogo y de la cantidad de usuarios.
+- Múltiples carruseles en la página de inicio.
+- Consultas concurrentes sin cargar innecesariamente la base de datos.
+
+Estas cifras son objetivos de diseño, no una afirmación de que cualquier implementación los soportará automáticamente. La capacidad real debe validarse con mediciones y pruebas de carga.
+
+### Principios obligatorios
+
+1. Consultar únicamente los campos necesarios para cada operación.
+2. No recuperar el catálogo completo para después filtrar en Node.js.
+3. No recalcular recomendaciones en cada visita a la página de inicio.
+4. Reutilizar candidatos, puntuaciones, estadísticas y consultas cuando corresponda.
+5. Separar cálculos pesados de las peticiones HTTP mediante workers.
+6. Utilizar índices, límites, paginación y consultas SQL eficientes.
+7. Evitar consultas N+1 y relaciones cargadas innecesariamente.
+8. Mantener consistencia entre estados de lectura, valoraciones, preferencias y contadores.
+9. Evitar duplicaciones, procesamiento doble y condiciones de carrera.
+10. Mantener una arquitectura modular, documentada, segura y fácil de mantener.
+
+---
+
+## 2. Antes de modificar: auditoría obligatoria del proyecto
+
+Antes de escribir código, el agente debe inspeccionar la implementación existente. No debe asumir que los nombres de modelos, tablas, columnas, rutas o relaciones coinciden con los ejemplos de este documento.
+
+Debe investigar, como mínimo:
+
+- Modelos Sequelize de usuarios, libros, autores, listas y relación usuario-libro.
+- Dónde se almacena actualmente el estado de lectura y la valoración.
+- Cómo se marca un libro como leído, cómo se modifica ese estado y cómo se elimina una lectura.
+- Cómo se guardan actualmente favoritos y listas.
+- Estructura real y normalización de `tags` en los libros.
+- Endpoints actuales de recomendaciones y página de inicio.
+- Controllers, services, repositories, middlewares y rutas involucradas.
+- Consultas Sequelize existentes, scopes, asociaciones e índices.
+- Cómo se autentican y autorizan las peticiones.
+- Si ya existe algún worker, scheduler, cola de tareas o mecanismo de procesamiento en segundo plano.
+- Cómo se ejecutan las migraciones y cómo se configuran los entornos.
+- Tests existentes y convenciones del repositorio.
+
+### Reglas durante la auditoría
+
+- No duplicar una tabla, asociación o funcionalidad que ya exista.
+- No crear un endpoint nuevo si uno existente puede evolucionar de forma segura y compatible.
+- No cambiar contratos que consume el frontend sin localizar primero todos sus usos.
+- No eliminar recomendaciones actuales hasta comprender sus dependencias.
+- No modificar datos existentes de manera destructiva.
+- No inventar datos bibliográficos ni completar etiquetas mediante suposiciones.
+- Si falta información para implementar una regla, identificarla y explicar qué decisión se necesita.
+- Antes de modificar, presentar un resumen breve de la arquitectura encontrada y de los cambios necesarios.
+
+El agente debe distinguir entre **lo que ya existe**, **lo que se propone agregar** y **lo que requiere una decisión**. Los nombres de tablas de este documento son nombres de referencia, no autorización para crear duplicados.
+
+---
+
+## 3. Fuentes de información del recomendador
+
+El sistema debe basarse principalmente en los `tags` de cada libro y en las interacciones reales del usuario.
+
+### 3.1. Datos de los libros
+
+Los libros ya cuentan con información bibliográfica y etiquetas. Un ejemplo representativo:
+
+```json
+{
+  "titulo": "Historias de cronopios y de famas",
+  "anio": 1962,
+  "tipo": "Cuento",
+  "tema": "Surrealismo",
+  "ranking": 4.16,
+  "generos": ["Cuento", "Absurdo"],
+  "read_count": 152,
+  "url_portada": "/portadasLibros/Cortazar/HistoriasDeCronopiosYdeFamasCortazar.png",
+  "id_autor": 1,
+  "tags": [
+    "1960",
+    "julio cortazar",
+    "fantasia",
+    "comedia",
+    "cuento",
+    "argentina",
+    "espanol",
+    "medio",
+    "adolescentes",
+    "adultos",
+    "absurdo",
+    "humor",
+    "rutina",
+    "sociedad",
+    "imaginacion"
+  ]
+}
+```
+
+Los `tags` pueden representar, entre otros atributos:
+
+- Géneros y subgéneros.
+- Temas y subtemas.
+- Tipo de obra.
+- Década o período.
+- Autor.
+- País.
+- Idioma.
+- Complejidad.
+- Público o rango de edad.
+- Otras características disponibles en el catálogo.
+
+**No se debe asumir que todos los libros tienen todos los atributos ni que todos los tags están completos.** La lógica debe tolerar valores ausentes, listas vacías y diferencias de calidad en los datos.
+
+El formato actual de `tags` debe investigarse y respetarse. No se debe cambiar su estructura ni crear un sistema paralelo de etiquetas sin una justificación técnica y una migración planificada.
+
+### 3.2. Interacciones relevantes
+
+El recomendador puede utilizar las siguientes acciones:
+
+- Marcar un libro como favorito.
+- Pasar un libro al estado `leyendo`.
+- Pasar un libro al estado `leído`.
+- Pasar un libro al estado `para leer`.
+- Valorar un libro de 1 a 5 estrellas.
+- Modificar o quitar una valoración.
+- Modificar el estado de lectura.
+- Configurar preferencias explícitas, si esa funcionalidad existe o se incorpora posteriormente.
+
+Abrir la página de un libro **no equivale a leerlo** y no debe modificar las preferencias ni los contadores de lectura.
+
+Las acciones deben procesarse según su transición real. Repetir una petición con el mismo estado no puede volver a sumar el mismo efecto.
+
+---
+
+## 4. Individual tag preferences
+
+Each user has an independent affinity for each normalized tag. The aggregate profile remains in `Usuario.preferences` under `recommendation.tags`; each entry contains `weight`, `updated_at`, `evidence_sum`, `evidence_scale`, `evidence_offset`, and `contribution_count`. `recommendation.signals_initialized` records whether existing interactions have been backfilled.
+
+Tag normalization trims surrounding whitespace, applies Unicode NFC normalization, and lowercases without removing accents. Duplicate normalized tags on one book contribute only once. Missing or invalid tags produce no contribution.
+
+### 4.1. Signal scale and combination
+
+Weights use the bounded normalized interval `(-1, 1)`. To give the proposed percentage for one signal its direct interpretation as the resulting affinity of an otherwise neutral tag, each signal impact `p` is converted to evidence with `atanh(p)`. For a tag:
+
+```text
+evidence_sum = sum(active per-book signal evidence)
+weight = tanh(evidence_scale * evidence_sum + evidence_offset)
+```
+
+The initial `evidence_scale` is `1` and `evidence_offset` is `0`. The stored weight is clamped to `[-(1 - 10^-12), +(1 - 10^-12)]` for finite floating-point values. Multiple signals combine additively in evidence space and saturate asymptotically in weight space; negative signals can offset positive ones.
+
+| Signal | Normalized impact `p` |
+|---|---:|
+| Favorite | +0.30 |
+| `reading` state | +0.05 |
+| `to_read` state | +0.15 |
+| `read` with no active rating | +0.10 |
+| Rating 5/5 | +0.40 |
+| Rating 4/5 | +0.25 |
+| Rating 3/5 | +0.15 |
+| Rating 2/5 | -0.20 |
+| Rating 1/5 | -0.30 |
+
+Favorite is independent of reading state and rating. A reading state is mutually exclusive with other reading states. An active rating replaces the `read`-without-rating signal; it does not add to it. An unrated `read` state contributes only while no active rating exists.
+
+### 4.2. Reversible per-book signals
+
+`user_book_preference_signals` stores one row per `(user_id, book_id)`, with the normalized tags and raw evidence contributions currently attributed to that book. It has a composite primary key and foreign keys to `Usuario` and `Libro`. This ledger is required because the current catalog tags may change after a signal was applied; reverting against current tags alone could not remove the original contribution reliably.
+
+Interaction changes update this ledger and `Usuario.preferences` in the same transaction as the state, rating, or favorite. The service subtracts the old ledger contribution and adds the new contribution, and writes nothing for an unchanged signal. Repeated requests therefore do not duplicate evidence. A tag aggregate is removed when its contribution count reaches zero.
+
+Existing interaction dates cannot be reconstructed from the legacy arrays. The one-time backfill initializes their contributions at migration time, after the user-book-state backfill. Future updates use the ledger snapshot rather than reconstructing prior signals from catalog tags.
+
+### 4.3. Deferred temporal decay
+
+Each tag decays independently:
+
+```text
+effective_weight = previous_weight * 0.8^(days_elapsed / 150)
+```
+
+This retains 80% after 150 days, 64% after 300 days, and the corresponding exponential factor after 75 days. Decay is calculated when an interaction updates that tag or when a future consumer reads effective preferences. Reads do not persist decay.
+
+When applying a new signal, the service first computes the effective decayed weight and derives the scale of the existing evidence. It subtracts the old per-book contribution at that decayed scale, then adds the new contribution at its full impact. `evidence_offset` preserves aggregate evidence in the edge case where active per-book contributions sum to zero. The result is stored with a fresh `updated_at`, so a new interaction is not aged immediately. Multiplication by a positive decay factor moves positive and negative weights toward zero without changing their sign.
+
+---
+
+## 5. Conjunto dinámico de libros candidatos por usuario
+
+El sistema debe generar un conjunto personalizado de aproximadamente **100 a 200 libros candidatos por usuario**. Este conjunto será reutilizado por los carruseles que necesiten recomendaciones personalizadas.
+
+### 5.1. Generación de candidatos
+
+La selección debe utilizar las preferencias individuales y los `tags` de los libros.
+
+No debe limitarse a consultar los libros que coincidan con el tag de mayor peso. Debe contemplar distintos intereses del usuario y producir resultados variados.
+
+La generación debe combinar:
+
+1. Coincidencia con tags de peso positivo.
+2. Representación de varios intereses, evitando que un único tag monopolice los candidatos.
+3. Diversidad de autores, géneros, épocas, tipos de obra y temáticas.
+4. Exclusión de libros que el usuario ya leyó para los carruseles de descubrimiento.
+5. Tratamiento de señales negativas según las reglas de puntuación definidas.
+6. Un componente de exploración para descubrir libros fuera de los intereses más evidentes.
+7. Variación entre usuarios, incluso cuando tengan gustos parecidos.
+
+No se debe traer todo el catálogo a memoria para filtrar en JavaScript. La base de datos debe acotar los candidatos mediante consultas selectivas, índices y límites. La lógica de puntuación y diversidad debe trabajar sobre un conjunto acotado.
+
+La implementación consulta hasta ocho tags positivos con mayor peso efectivo. Los empates se resuelven mediante un hash estable de usuario, generación y tag, no por el orden de las propiedades del JSON. El resto de los tags del perfil también participa del score aunque no origine una consulta. Cada grupo está limitado; los grupos se combinan y deduplican antes de puntuar.
+
+Las búsquedas usan `JSON_CONTAINS` parametrizado por tag y un cursor sobre el ID primario, con una segunda consulta de wrap-around si el primer rango no alcanza el límite. Esto evita ordenar todo el conjunto coincidente con `CRC32` o `RAND`. La consulta de exploración excluye los IDs obtenidos por afinidad. La indexación multivalor de `Libro.tags` requiere ejecutar `npm run migrate:recommendations` con Oracle MySQL 8.0.17 o superior; la migración falla explícitamente en versiones no compatibles. No se debe afirmar soporte de escala hasta revisar `EXPLAIN` con la base y volumen representativos.
+
+Para recomendar son indispensables un título no vacío y un array de tags válido y no vacío. Año, tipo, autor y géneros son útiles para diversidad pero opcionales para la admisión del candidato. Popularidad/ranking y portada no se usan para puntuar compatibilidad ni para filtrar esta etapa; el filtro `ranking > 3` pertenece a la presentación del carrusel.
+
+### 5.2. Puntuación
+
+Cada libro candidato debe recibir un `score` de compatibilidad con el usuario.
+
+La puntuación debe combinar los pesos efectivos de los tags compartidos, teniendo en cuenta señales negativas y evitando que un libro gane únicamente por contener muchas etiquetas.
+
+La implementación usa pesos efectivos (peso con decaimiento temporal) y normaliza solo sobre los tags conocidos que comparte el libro con el usuario:
+
+```text
+compatibilidad = sum(peso_efectivo[tag]) / max(1, sum(abs(peso_efectivo[tag])))
+score = clamp(compatibilidad, -1, 1)
+```
+
+La suma incluye pesos negativos, que reducen la compatibilidad; si no hay tags compartidos con peso conocido, el score es `0`. Los tags duplicados se cuentan una sola vez; los ausentes, inválidos o desconocidos no agregan peso ni denominador. El score no se modula por completitud bibliográfica: hacerlo apenas cambiaba el resultado porque los campos requeridos en la consulta imponían una calidad mínima alta. En su lugar, solo título y tags son filtros de admisión, mientras que los metadatos disponibles alimentan la diversidad.
+
+Ejemplos:
+
+- Un libro que comparte `fantasía` con peso efectivo `0.8` obtiene `0.8 / max(1, 0.8) = 0.8`.
+- Si además comparte `terror` con peso `-0.4`, obtiene `(0.8 - 0.4) / 1.2 = 0.33`.
+- Si comparte dos intereses positivos de `0.8` y `0.4`, obtiene `1.2 / 1.2 = 1.0`; agregar más tags conocidos no puede superar el límite `1`.
+- Añadir tags no conocidos al segundo libro no cambia su score: no representan evidencia de afinidad.
+
+El score mide compatibilidad, no popularidad: no utiliza `Libro.ranking` ni `read_count`. La posición final se decide después, con diversidad y exploración.
+
+La puntuación de compatibilidad no debe confundirse con la posición final. Después de puntuar, debe ejecutarse una etapa de diversidad y selección.
+
+### 5.3. Diversidad y exploración
+
+El conjunto no debe ser una lista de 200 libros casi idénticos.
+
+Debe distribuir los candidatos entre intereses relevantes del usuario y mantener variedad de autores, géneros, períodos y tipos de obra.
+
+Cuando `Libro.tema` tenga un valor no vacío, la diversidad puede considerar ese texto literal tras quitar espacios externos, normalizar Unicode NFC y convertir a minúsculas. No se deben inferir categorías ni equiparar temas distintos. La repetición aplica únicamente una penalización suave con tope de `0.05`; no altera el score de afinidad. Los valores nulos o vacíos no participan.
+
+Se propone reservar aproximadamente un **20% de los resultados para exploración**. Este porcentaje es una referencia inicial configurable, no una obligación de incluir libros irrelevantes. La muestra se obtiene por rangos del ID primario y una semilla reproducible de usuario y generación. Una generación nueva obtiene otra posición de inicio, mientras que repetir la misma semilla reproduce el conjunto. Se excluyen los libros ya obtenidos por afinidad, por lo que la proporción solo cuenta libros realmente seleccionados desde exploración independiente.
+
+La exploración debe seguir teniendo un criterio de calidad: los libros deben superar los filtros mínimos del catálogo y no ser elegidos completamente al azar. Si no existen suficientes libros independientes, el resultado contiene menos del 20% de exploración en vez de etiquetar candidatos de afinidad como exploración. Cuando no hay ningún candidato de compatibilidad, el conjunto puede completarse con libros exploratorios válidos.
+
+### 5.4. Almacenamiento independiente
+
+Crear o adaptar una tabla independiente para almacenar recomendaciones por usuario. Nombre de referencia: `UserRecommendation`.
+
+Campos mínimos propuestos:
+
+| Campo | Propósito |
+|---|---|
+| `id` | Identificador del registro. |
+| `user_id` | Usuario propietario. |
+| `generation_id` | Secuencia de generación que produjo la fila. |
+| `book_id` | Libro candidato. |
+| `score` | Compatibilidad calculada. |
+| `position` | Orden final dentro de la generación. |
+| `is_exploration` | Indica que el candidato se obtuvo por la consulta independiente de exploración. |
+| `created_at` | Fecha de creación. |
+
+Se deben utilizar claves foráneas y restricciones adecuadas. Como mínimo, revisar:
+
+- Unicidad de libro dentro de la generación activa de un usuario.
+- Unicidad de posición dentro de la generación.
+- Índice para recuperar candidatos por usuario y posición.
+- Índices necesarios para filtrar y ordenar.
+- Eliminación o tratamiento consistente de candidatos cuyo libro deje de estar disponible.
+
+La tabla no duplica datos bibliográficos. La columna `is_exploration` conserva el origen de exploración para reutilizar la selección sin inferirlo a partir del score. El motor de base de datos de destino es Oracle MySQL 8.4 LTS; MariaDB no está soportado. La migración `npm run migrate:recommendations` crea las columnas de generación y exploración, los índices necesarios y el índice multivalor de tags. `Libro.tipo` se almacena como `VARCHAR(50)` con allowlist en el modelo y restricción `CHECK`, para conservar valores de catálogo que difieren solo por mayúsculas y no pueden coexistir en un `ENUM` bajo la collation por defecto de MySQL. La recuperación de candidatos consulta cada tag con `MEMBER OF`, forma que el MVI puede indexar; las formas probadas de `JSON_CONTAINS` y `JSON_OVERLAPS` no utilizaron el MVI. Los MVI existen desde Oracle MySQL 8.0.17, pero la presencia del índice no demuestra que la consulta real lo aproveche: validar la definición con `SHOW INDEX` y el plan de las consultas con `EXPLAIN` en la base de destino.
+
+`Usuario.preferences.recommendation.generation_sequence` se incrementa bajo bloqueo breve del usuario antes del cálculo. El motor calcula fuera de la transacción, luego vuelve a bloquear al usuario y publica solo si la secuencia y la huella de tags siguen vigentes. Así una generación vieja no reemplaza una posterior ni una que quedó obsoleta por una interacción. El borrado e inserción de las filas y su `generation_id` ocurren en una transacción corta; hasta el commit, la generación anterior sigue visible. Un fallo antes de publicar no borra el conjunto anterior.
+
+No guardar la lista de candidatos como un JSON dentro de `User`. La tabla independiente permite filtrar, ordenar, relacionar y actualizar mediante SQL.
+
+No duplicar en esta tabla título, portada, autor ni tags. Esos datos pertenecen al libro y deben obtenerse mediante una consulta con los campos necesarios.
+
+### 5.5. Actualización de candidatos
+
+No regenerar el conjunto en cada visita a la página de inicio.
+
+Marcar las recomendaciones como pendientes de actualización cuando cambien datos relevantes:
+
+- Se registra una nueva lectura.
+- Se modifica una valoración.
+- Cambia un estado de lectura que influye en las recomendaciones.
+- Se agrega o quita un favorito.
+- Se modifican preferencias explícitas.
+
+No regenerar por abrir una página, cambiar el avatar, cambiar el nombre u otras acciones irrelevantes.
+
+El trabajo debe ejecutarse en segundo plano. Varias acciones cercanas deben agruparse para evitar múltiples regeneraciones.
+
+La página de inicio debe poder utilizar el último conjunto válido mientras se prepara el nuevo. Si todavía no existe ningún conjunto, se debe definir un comportamiento inicial seguro: generar una primera tanda bajo demanda controlada o mostrar carruseles globales y de descubrimiento hasta que el worker termine. No bloquear una petición HTTP esperando un cálculo costoso.
+
+---
+
+## 6. Reglas generales de los carruseles
+
+Reglas compartidas:
+
+- Máximo **20 libros por carrusel**.
+- Máximo **3 libros del mismo autor** dentro de un carrusel.
+- Evitar recomendar libros que el usuario ya leyó en carruseles de descubrimiento.
+- Permitir libros ya leídos únicamente en carruseles cuyo propósito lo requiera, como `Volver a leerlo`.
+- Variar moderadamente el orden y algunos resultados para evitar que la página sea siempre idéntica.
+- Mantener estabilidad razonable durante una sesión o período; no randomizar sin control en cada petición.
+- No mostrar carruseles que no cumplan sus condiciones mínimas.
+- Evitar duplicar un mismo libro en varios carruseles cuando no tenga sentido.
+- Aplicar límites y filtros en la base de datos siempre que sea posible, no después de descargar grandes cantidades de resultados.
+
+La variación debe ser reproducible durante un período razonable o basarse en una semilla controlada. No debe cambiar toda la selección ante cada refresco.
+
+---
+
+## 7. Carruseles y criterios de cálculo
+
+Los carruseles se dividen en cuatro grupos: personalizados, basados directamente en datos del usuario, contextuales y globales.
+
+### 7.1. `Para vos` (fijo)
+
+Es el carrusel principal.
+
+- Fuente: conjunto de `UserRecommendation`.
+- Utilizar los candidatos con mayor compatibilidad.
+- Incorporar variación controlada, por ejemplo, alternando algunos resultados de posiciones intermedias entre los puestos 10 y 50.
+- Respetar el máximo de 3 libros por autor.
+- Excluir libros ya leídos.
+- Mantener un componente de exploración aproximado del 20%.
+- Mostrar como máximo 20 libros.
+- No ordenar por valoración global de mayor a menor.
+
+**Regla específica del catálogo:** solo mostrar libros con `ranking > 3.0`. Este filtro debe aplicarse en la consulta que obtiene los libros, no después de traer el conjunto completo. Si `ranking` puede ser nulo, los nulos no deben superar el filtro.
+
+La selección debe mantener relevancia y variedad. La variación no significa elegir 20 libros aleatorios de todo el catálogo.
+
+### 7.2. `Seguir leyendo` (fijo)
+
+- Fuente: relación del usuario con los libros.
+- Mostrar únicamente libros con estado `leyendo`.
+- No necesita calcular compatibilidad ni utilizar `UserRecommendation`.
+- Recuperar solo los campos necesarios para las tarjetas.
+- Ordenar mediante un criterio real disponible, por ejemplo última actualización, después de verificar qué fecha almacena el modelo.
+
+### 7.3. `Para leer` (variable)
+
+- Fuente: relación del usuario con los libros.
+- Mostrar libros con estado `para leer`.
+- No necesita el conjunto de candidatos.
+- Aplicar límites y orden consistente.
+
+### 7.4. `Autores` (variable)
+
+- Mostrar autores, no libros.
+- Utilizar autores relevantes para los intereses o actividad del usuario.
+- Cada elemento debe conducir a la página del autor.
+- La página de autor es una funcionalidad relacionada que debe verificarse antes de asumir que ya existe.
+- No cargar todos los libros de cada autor para construir este carrusel.
+
+### 7.5. `Más de Autor` (variable)
+
+- Detectar autores de los que el usuario haya leído al menos dos libros.
+- Mostrar otras obras de esos autores.
+- Excluir los libros ya leídos cuando el objetivo sea descubrir nuevas lecturas.
+- Aplicar máximo 3 libros del mismo autor por carrusel; si el carrusel representa a un solo autor, esta regla debe interpretarse de forma coherente con su propósito y documentarse.
+- Ordenar por compatibilidad cuando exista puntuación disponible; no inventar puntuaciones.
+
+### 7.6. `De lista` (variable)
+
+- Mostrar libros de una lista específica del usuario.
+- Consultar la relación de lista y libros.
+- No necesita el recomendador.
+- Verificar permisos y propiedad de la lista.
+- No cargar listas ni libros ajenos sin autorización.
+
+### 7.7. `Los más leídos en NextRead` (fijo)
+
+- Fuente: contador actual `read_count`.
+- Ordenar por cantidad de usuarios que actualmente tienen el libro marcado como leído.
+- No confundirlo con nuevas lecturas del mes.
+- Consultar `read_count` directamente mientras el costo del catálogo siga siendo bajo.
+- Aplicar un máximo de 20 libros y un máximo de 3 por autor; omitir el carrusel si no alcanza el mínimo general.
+- Reconciliar el contador desde `user_book_states`, sin mantener un contador histórico paralelo.
+
+### 7.8. `Volver a leerlo` (variable)
+
+- Fuente: libros que el usuario ya leyó.
+- Priorizar valoraciones altas, favoritos u otras señales positivas existentes.
+- Puede incluir libros ya leídos, porque ese es su propósito.
+- No debe confundirse con el carrusel de descubrimiento.
+- Si el usuario no tiene lecturas suficientes, no mostrarlo.
+
+### 7.9. `Tendencias espontáneas` (variable)
+
+- Detectar crecimiento de nuevas lecturas en períodos cortos.
+- Utilizar eventos de lectura con fecha, no solamente `read_count`.
+- Comparar el período reciente con el anterior.
+- Contar usuarios únicos y aplicar el umbral configurable compartido con las tendencias mensuales.
+- Reutilizar la fórmula de la sección 8.2 mediante consultas limitadas al índice temporal existente.
+
+### 7.10. `Épocas` (variable)
+
+- Agrupar candidatos por tags de década o período.
+- Priorizar períodos con afinidad positiva.
+- Mostrar únicamente grupos con suficientes candidatos.
+- No consultar todo el catálogo: reutilizar `UserRecommendation` y las etiquetas necesarias.
+
+### 7.11. `Tipo de cuentos` / tipo de obra (variable)
+
+- Agrupar candidatos por tipo de obra: novela, cuento, poesía, ensayo, biografía, autobiografía, crónica, teatro, reportaje u otros tipos existentes.
+- Mostrar los tipos con afinidad y cantidad suficiente.
+- No asumir que los valores están todos normalizados; inspeccionar los datos reales.
+
+### 7.12. `Género` (variable)
+
+- Agrupar candidatos por género o subgénero.
+- Priorizar los géneros con afinidad positiva.
+- Evitar mostrar grupos vacíos o con muy pocos libros.
+- Reutilizar el conjunto de candidatos.
+
+### 7.13. `Joyas por descubrir` (variable)
+
+- Combinar afinidad personalizada y baja popularidad.
+- No seleccionar libros únicamente por ser poco leídos.
+- Utilizar `read_count` u otra métrica global disponible.
+- Excluir libros ya leídos.
+- Evitar que un libro con datos incompletos sea considerado una joya solamente por no tener estadísticas.
+
+### 7.14. `Nuevos lanzamientos` (variable)
+
+- Utilizar el año `Libro.anio`, no presentarlo como una fecha exacta de publicación.
+- Considerar por defecto el año UTC actual y el anterior; configurar el número de años con `NEW_RELEASES_WINDOW_YEARS`.
+- Excluir años fuera del período y años futuros; ordenar por año descendente y ranking como desempate estable.
+- El catálogo actual no registra fecha ni edición. No inferir una fecha exacta ni afirmar que todos los años identifican la misma edición.
+
+### 7.15. Libros por `tema` (variable)
+
+- Agrupar candidatos por el atributo `tema` o los tags temáticos disponibles.
+- Mostrar temas recurrentes y relevantes para el usuario.
+- No confundir el campo singular `tema` con la lista `tags` sin comprobar su relación real.
+- Evitar consultas generales sobre todo el catálogo.
+
+### 7.16. Mejores libros de `país` (variable)
+
+- Utilizar el tag de país de origen.
+- Agrupar candidatos por país y seleccionar los grupos con afinidad.
+- Ordenar dentro de cada grupo por compatibilidad, y aplicar un criterio de calidad del catálogo si existe.
+- No asumir que el país del autor y el país de origen de la obra son necesariamente lo mismo.
+
+### 7.17. `Porque leíste...` (variable)
+
+- Requiere al menos un libro leído y valorado con 4 o 5 estrellas.
+- Cada recomendación parte de un libro concreto.
+- Buscar otros libros que compartan tags, autor, género, temática, tipo o época.
+- La similitud debe utilizar datos reales disponibles.
+- Excluir el libro de origen y libros ya leídos.
+- Mostrar el carrusel únicamente cuando exista un libro de origen válido y suficientes resultados.
+- Si hay varios libros de origen, elegirlos con una regla estable y evitar repetir el mismo carrusel sin necesidad.
+
+### 7.18. `Tendencias del mes` (variable)
+
+- Utilizar eventos del mes calendario UTC en curso, desde el primer día del mes inclusive hasta el inicio de la consulta exclusive.
+- Contar usuarios únicos por libro; varias transiciones del mismo usuario dentro del mes cuentan una sola vez.
+- Aplicar `READING_TRENDS_MIN_UNIQUE_USERS` (default 30), ordenar por cantidad de nuevos lectores y desempatar de forma estable.
+- Devolver los límites del período y la zona horaria en la respuesta.
+
+### 7.19. `Tendencias del año` (futura)
+
+- Mismo criterio general que tendencias del mes, pero agrupado por año.
+- No es necesario implementarlo si todavía no forma parte del alcance inmediato.
+- La estructura de eventos debe permitir incorporarlo sin rediseñar el sistema.
+
+---
+
+## 8. Estadísticas globales, eventos y caché
+
+Los carruseles globales tienen los mismos resultados para todos los usuarios en un momento dado. Se debe evaluar el costo de las consultas antes de introducir una caché o un worker: las consultas pequeñas e indexadas pueden ejecutarse directamente; el precálculo se incorpora cuando las mediciones lo justifiquen.
+
+### 8.1. Diferenciar popularidad de tendencia
+
+`read_count` representa la cantidad actual de usuarios que tienen un libro en estado `leído`.
+
+No informa cuándo ocurrió cada lectura. Por lo tanto, no alcanza para calcular tendencias.
+
+Se necesita registrar cada transición válida hacia `leído` como un evento.
+
+Nombre de referencia: `BookReadEvent` o `book_read_events`.
+
+Campos mínimos:
+
+| Campo | Propósito |
+|---|---|
+| `id` | Identificador del evento. |
+| `user_id` | Usuario que realizó la transición. |
+| `book_id` | Libro que pasó a leído. |
+| `occurred_at` | Instante UTC de la transición. |
+
+La tabla existente tiene índices `book_read_events_occurred_at_book_id_user_id` y `book_read_events_user_id_book_id_occurred_at`, además de su clave primaria. El primero permite acotar los eventos por fecha y agrupar por libro/usuario; no se agrega otro índice para la consulta inicial.
+
+**¿Cómo sabe el sistema cuándo una persona leyó un libro?**
+
+No se deduce de una visita ni de una valoración aislada. Se sabe porque el backend recibe una operación válida que cambia el estado de lectura del usuario a `leído`.
+
+El servicio registra un evento cuando `readCountDelta > 0`, dentro de la misma transacción que cambia `user_book_states`, ajusta `read_count` y actualiza las preferencias. Las filas de estado se bloquean durante la operación, y el usuario también se bloquea al resolver el estado heredado, por lo que una petición repetida que no produzca una transición no genera otro evento.
+
+Cada transición válida de un estado distinto de `read` a `read` crea un evento. Esto incluye la primera lectura y una relectura posterior a salir de `read`. Repetir la petición mientras el estado ya es `read` no crea otro evento.
+
+Si el usuario pasa de `leído` a `leyendo` o `para leer`, se decrementa `read_count`, pero no se borra el evento histórico. El evento representa que esa transición a leído ocurrió; el contador representa el estado actual. Esta distinción permite que las tendencias históricas no desaparezcan cuando alguien modifica posteriormente su estado.
+
+`read_count` representa usuarios que actualmente tienen el libro marcado como leído; cada transición lo incrementa o decrementa en la misma transacción. El backfill existente lo reconcilia contando `user_book_states` actuales. No representa actividad histórica.
+
+El backfill de estados no reconstruye eventos pasados. Por eso `book_read_events` puede tener un historial incompleto desde que comenzó el registro; no se inventan fechas históricas a partir del estado actual o de `read_count`.
+
+### 8.2. Cálculo de tendencias
+
+La consulta implementada para `GET /nextread/tendencias` calcula por libro:
+
+- `R`: usuarios únicos que registraron una nueva lectura durante los últimos 30 días.
+- `P`: usuarios únicos que registraron una nueva lectura durante los 30 días anteriores.
+
+Las ventanas son intervalos UTC semiabiertos y contiguos, evaluados al inicio de la consulta con `asOf`:
+
+- Reciente: `[asOf - 30 días, asOf)`.
+- Anterior: `[asOf - 60 días, asOf - 30 días)`.
+
+Los límites se enlazan como fechas UTC con precisión de segundos, que coincide con la columna `DATETIME` existente. El instante de cálculo y los eventos nuevos se normalizan a segundos enteros. Un evento exactamente en `asOf - 30 días` pertenece a R; uno exactamente en `asOf - 60 días` pertenece a P; uno exactamente en `asOf` queda para la siguiente consulta.
+
+Se cuenta `COUNT(DISTINCT user_id)` por libro y ventana. Si un usuario realiza varias transiciones a leído del mismo libro dentro de la misma ventana, cuenta una sola vez en esa ventana. Si aparece en ambas ventanas, cuenta una vez en cada una.
+
+La fórmula está centralizada en `readingTrendService.js`:
+
+```text
+T = R + 0.5 * max(0, R - P)
+```
+
+Se exige `R >= READING_TRENDS_MIN_UNIQUE_USERS`, configurable por variable de entorno y con valor inicial 30. Si el valor no está definido, se usa 30; un valor inválido detiene la inicialización del servicio. No hay fallback a orden por ranking cuando no hay tendencias suficientes: el endpoint devuelve una lista vacía.
+
+Los resultados se ordenan por `T` y aplican un máximo de tres libros por autor antes del límite de 20. Los libros sin autor se tratan como autores independientes.
+
+El umbral sigue siendo un valor inicial conservador. La base inspeccionada no contiene eventos ni estados de lectura, así que no permite calibrarlo contra actividad real de usuarios.
+
+### 8.3. Agregación diaria
+
+Para evitar consultar millones de eventos cada vez que se calculan tendencias, se puede mantener una tabla agregada diaria, por ejemplo `BookReadStatsDaily`.
+
+Campos de referencia:
+
+- `book_id`
+- `date`
+- `read_count` o cantidad de eventos del día
+- Si se necesita contar usuarios únicos de manera exacta, la estructura debe conservar información suficiente para deduplicar por usuario y período. Un simple contador diario no permite deduplicar un usuario que aparezca en varios días del mismo período.
+
+La consulta directa actual restringe lógicamente los eventos a los últimos 60 días y fuerza el índice existente `book_read_events_occurred_at_book_id_user_id`, que cubre fecha, libro y usuario. En MySQL 8.4.13, `EXPLAIN` selecciona ese índice; como la tabla tiene cero filas, el plan informa un recorrido de índice (`type=index`) y no permite medir selectividad ni extrapolar el costo con historial real. El plan de la consulta completa también muestra ordenamiento para la diversidad por autor y el ranking final, además de un escaneo estimado de una fila de `Libro`; el catálogo inspeccionado no permite estimar su comportamiento a escala. No se crea una tabla diaria: no hay evidencia de que una agregación se justifique todavía. Se volverá a evaluar con volumen y mediciones reales.
+
+Un contador diario de usuarios únicos no bastaría para reconstruir R o P exactos porque el mismo usuario puede aparecer en varios días. Si el volumen futuro justifica una agregación, esta deberá conservar la identidad usuario-libro-fecha necesaria para deduplicar ventanas exactas y podrá reconstruirse desde `book_read_events`.
+
+El agente debe elegir una estructura que permita contar usuarios únicos correctamente. Una opción es consultar eventos con `COUNT(DISTINCT user_id)` sobre ventanas acotadas y luego optimizar con agregaciones adecuadas cuando el volumen lo justifique. No sacrificar exactitud sin documentarlo.
+
+### 8.4. Decisión de caché y actualización
+
+La auditoría se realizó contra MySQL 8.4.13. La base inspeccionada no contiene filas en `Libro`, `user_book_states` ni `book_read_events`; por ello, el conteo de discrepancias de `read_count` es cero, pero no demuestra reconciliación con actividad real. El catálogo fuente del seeder contiene 264 libros, cada uno con un `anio` entero entre 1597 y 2025; el año es el único dato temporal del libro y no identifica una fecha ni edición exacta.
+
+Los cuatro SQL se ejecutaron en MySQL 8.4.13 y devolvieron listas vacías, consistente con las tablas sin filas. Los planes de `most_read` y `new_releases` recorren `Libro` y ordenan el resultado. No hay índices para `read_count` o `anio`; el optimizador estima una fila debido a que la tabla activa está vacía. Con un catálogo fuente de 264 filas, esos escaneos acotados son preferibles a agregar índices o persistencia antes de medir un catálogo mayor. Para ambas tendencias, `EXPLAIN` selecciona el índice temporal `book_read_events_occurred_at_book_id_user_id`; al no haber eventos, informa `type=index` y no permite estimar el costo con historial real. El plan completo también muestra el join de libros y ordenamiento requerido por diversidad/ranking.
+
+Por este volumen no se crea `HomeCarouselCache` ni un worker global. `GET /nextread/carruseles/globales` calcula como máximo cuatro conjuntos de hasta 20 libros en cada solicitud de Home y no ejecuta escrituras ni altera contadores. Los resultados se ordenan de forma estable, aplican máximo de tres libros por autor y se omiten cuando tienen menos de tres libros. El endpoint existente `GET /nextread/tendencias` se conserva por compatibilidad.
+
+Frecuencias y períodos:
+
+- Más leídos: lectura directa de `Libro.read_count` en cada solicitud; solo libros con contador positivo.
+- Tendencias espontáneas: ventanas móviles UTC de 30 días recientes y 30 anteriores, fórmula de la sección 8.2 y umbral compartido.
+- Tendencias del mes: período calendario UTC `[primer día del mes, instante de consulta normalizado a segundos)`, `COUNT(DISTINCT user_id)` y el mismo umbral configurable.
+- Nuevos lanzamientos: `Libro.anio` entre el año UTC actual y los años previos indicados por `NEW_RELEASES_WINDOW_YEARS` (default 2). Se ordena primero por año y luego por ranking; no se atribuye actividad reciente que los datos no permiten demostrar.
+
+Las tendencias del año podrán usar el mismo event store e índice con límites `[1 de enero UTC, instante de consulta)`; no requieren una tabla anual ni aproximar usuarios únicos sumando días.
+
+Como los cálculos se consultan directamente, la ejecución manual consiste en solicitar `GET /nextread/carruseles/globales`; no existe un comando administrativo ni un job que ejecutar. Se debe reconsiderar caché/worker cuando haya mediciones con volumen real que justifiquen sustituir estas consultas.
+
+---
+
+## 9. Composición de la página de inicio y endpoints
+
+La página de inicio debe coordinar las fuentes de datos sin convertir un único endpoint en una consulta gigante. La implementación conserva endpoints especializados y delega su composición al frontend; la decisión y sus razones se detallan en 9.0.
+
+Fuentes principales:
+
+| Tipo | Fuente | Carruseles |
+|---|---|---|
+| Personalizados | `UserRecommendation` | Para vos, épocas, géneros, tipos, temas, países, joyas. |
+| Datos del usuario | Relación usuario-libro y listas | Seguir leyendo, para leer, de lista, volver a leerlo. |
+| Contextuales | Libros leídos, autores y similitud | Porque leíste, más de autor, autores. |
+| Globales | Consultas SQL a `Libro` y `book_read_events` | Más leídos, tendencias, lanzamientos. |
+
+`GET /nextread/carruseles/globales` expone las listas globales en `{ status: "ready", carousels: [...] }`. Cada carrusel incluye `id`, `title` y `libros`, y los períodos mensuales o de lanzamientos incluyen sus límites. Se omiten listas que no alcanzan tres libros. El endpoint es público y usa el limitador de búsquedas existente.
+
+### 9.0. Decisión de composición
+
+No se agrega un endpoint general `GET /api/home` ni `/nextread/home`. El frontend ya coordina los servicios especializados en paralelo desde `usePrincipal`; un wrapper de backend ejecutaría las mismas consultas, no reduciría el trabajo de MySQL y acoplaría errores de fuentes distintas. Se preserva la degradación parcial: cada carga falla de forma independiente y el resto de Home sigue disponible.
+
+La respuesta final que consume `Principal` es una lista ordenada de carruseles normalizados por el hook: primero globales; para usuarios autenticados, personalizados listos y luego contextuales; para visitantes, las décadas públicas existentes. El hook omite filas sin libros/autores. Un autor se representa como `authors`; los carruseles de libros usan `books`. La capa HTTP conserva los nombres y contratos existentes (`libros`, `autores`).
+
+El endpoint público de décadas consulta en MySQL 8.4 solo las cinco décadas más recientes y hasta 20 libros por grupo, mediante CTE y `ROW_NUMBER()`. `COUNT(*) OVER` conserva el total real del grupo sin transferir todos sus libros. Los campos recuperados son los de tarjeta, ranking y autor; no se consultan géneros porque Home no los usa en ese carrusel. El parámetro opcional de década conserva su respuesta individual y aplica el mismo límite. No necesita el índice multivaluado de `Libro.tags`: este endpoint filtra y agrupa por `anio`, mientras que el MVI se usa en la recuperación de candidatos, no al leer la generación persistida de Home.
+
+El SQL se ejecutó y explicó en Oracle MySQL 8.4.13. El plan usa escaneos de `Libro` y acceso `eq_ref` a `Autor` por su clave primaria; no existe un índice de año. La base inspeccionada no contiene libros y el catálogo fuente documentado tiene 264 filas, así que el plan no demuestra el costo sobre un catálogo de producción ni justifica agregar un índice todavía.
+
+### 9.0.1. Endpoints finales
+
+| Endpoint | Acceso y fuente | Contrato/uso en Home |
+|---|---|---|
+| `GET /nextread/carruseles/globales` | Público; `Libro` y `book_read_events`; limitador de búsquedas. | `{ status: "ready", carousels }`; cada elemento usa `id`, `title`, `libros` y `period` opcional. |
+| `GET /nextread/tendencias` | Público; se conserva por compatibilidad. | Arreglo de libros de tendencias espontáneas con `Autor` y contadores de período. |
+| `GET /nextread/libros/por-decada` | Público; `decade` opcional, validado. | `{ decades }` (máximo cinco grupos) para visitantes o un grupo de hasta 20 libros cuando se solicita una década. |
+| `GET /nextread/recomendaciones/carruseles` | `isAuth`; el usuario se toma de `req.user.id`. | `ready` con `generation_id` y `carousels`, `pending` si no existe generación o `failed` si agotó reintentos. |
+| `GET /nextread/recomendaciones/contextuales` | `isAuth`; usa únicamente el usuario autenticado. | `{ status: "ready", carousels }`; puede incluir libros (`libros`) o autores (`autores`). |
+| `GET /nextread/recomendaciones` | `isAuth`; contrato heredado. | Se conserva para otros consumidores; Home usa el contrato de carruseles. |
+
+Home no envía IDs de usuario ni de lista en estas solicitudes. Los endpoints autenticados derivan la identidad de `req.user`; `De lista` solo consulta listas del usuario propietario. Los parámetros no confiables no se interpolan en SQL.
+
+### 9.1. Consultas específicas por endpoint
+
+Cada endpoint debe seleccionar únicamente los atributos que necesita.
+
+Ejemplo conceptual:
+
+- `for_you`: necesita `id`, `titulo`, `url_portada`, `ranking`, `id_autor` y `tags` para aplicar filtros o construir la respuesta. No debe devolver descripción extensa, campos administrativos ni relaciones que no utilice.
+- `seguir_leyendo`: necesita los datos de tarjeta y el estado/fecha de la relación. No necesita `tags` si no los utiliza.
+- `para_leer`: necesita datos de tarjeta y la relación de lectura. No necesita `tags`.
+- `most_read`: necesita datos de tarjeta y `read_count` o los IDs precalculados. No necesita `tags`.
+- `porque_leiste`: necesita los atributos necesarios para la similitud, incluidos los tags relevantes, pero solo de los candidatos acotados.
+- `de_lista`: necesita datos de tarjeta y la relación con la lista. No necesita `tags` salvo que la interfaz o la regla lo requiera.
+
+Los ejemplos son orientativos. El agente debe verificar qué campos consume realmente el frontend.
+
+**No incluir `tags` en todas las respuestas por comodidad.** Es un atributo potencialmente pesado y solo debe recuperarse cuando la lógica del endpoint lo necesite. Del mismo modo, no seleccionar descripciones largas, metadatos o relaciones que no se utilizan.
+
+### 9.2. Consultas SQL y Sequelize
+
+- Utilizar `attributes` para proyectar solo los campos necesarios.
+- Utilizar `include` únicamente para relaciones requeridas.
+- Evitar `include` anidados innecesarios.
+- Aplicar `where`, `limit`, `order` y filtros en SQL.
+- No traer 50.000 libros para filtrarlos en JavaScript.
+- Evitar consultas N+1.
+- No ejecutar una consulta por cada libro para obtener su autor o portada.
+- Usar consultas agrupadas y joins cuando sean adecuados.
+- Revisar el SQL generado por Sequelize en consultas críticas.
+- Analizar planes de ejecución (`EXPLAIN`) para consultas importantes.
+- No utilizar `raw: true` o consultas manuales indiscriminadamente: elegir según necesidad y mantener seguridad.
+- No construir SQL mediante concatenación de valores proporcionados por el usuario.
+
+### 9.3. Límites, paginación y respuestas
+
+- Máximo 20 libros por carrusel.
+- Limitar resultados en la base de datos.
+- Para listados extensos, utilizar paginación adecuada; evaluar paginación por cursor cuando el volumen y el orden lo requieran.
+- Validar parámetros y establecer máximos del lado del servidor.
+- No permitir que el cliente solicite cantidades arbitrarias.
+- Evitar respuestas enormes que incluyan todos los datos de cada libro.
+- Mantener un contrato consistente para que el frontend pueda representar carruseles vacíos u omitidos.
+
+La composición debe omitir carruseles que no cumplan las condiciones mínimas. No debe devolver carruseles vacíos solo para mantener una estructura fija.
+
+### 9.4. Carruseles personalizados de Home
+
+El endpoint autenticado `GET /nextread/recomendaciones/carruseles` lee la última generación publicada de `UserRecommendation`. Recupera hasta 200 candidatos con sus atributos bibliográficos necesarios, autor, ranking, popularidad (`read_count`) y estado de lectura actual. La consulta comienza por las filas persistidas de esa generación; no recorre el catálogo ni vuelve a calcular afinidad. Si aún no existe una generación, devuelve `pending` y encola la primera generación mediante el worker existente. Home no espera ese cálculo. Mientras una nueva generación está en proceso, se sigue usando la última publicada.
+
+Todos los carruseles omitidos por falta de resultados no se devuelven como listas vacías. Los carruseles existentes tienen un máximo de 20 libros, sin duplicados y con un máximo de 3 por autor identificable. Se excluyen libros leídos en todos los carruseles personalizados de descubrimiento. El mínimo para mostrar un carrusel es de 3 libros, para evitar filas con muy poco contenido. No se limita el número de períodos, tipos o temas que cumplan ese mínimo; géneros se limita a los 3 grupos más afines para evitar una Home saturada.
+
+| Carrusel | Regla de selección |
+|---|---|
+| Para vos | Conserva el orden de posiciones persistidas, exige `ranking > 3`, descarta rankings nulos y usa `is_exploration` guardado por el motor para reservar hasta 4 de 20 lugares a exploración. Si hay menos candidatos personalizados, reduce proporcionalmente los lugares de exploración y muestra una lista más corta; si la generación es solo exploratoria (por ejemplo, un usuario sin preferencias), omite el carrusel en vez de presentar libros arbitrarios como personalizados. |
+| Épocas | Usa `anio` y solo agrupa si `tags` contiene exactamente la década numérica correspondiente al año. No asigna década a libros sin año o sin el tag concordante. |
+| Tipo de obra | Agrupa los valores existentes de `Libro.tipo`; solo normaliza mayúsculas y diacríticos, sin crear equivalencias semánticas. |
+| Géneros | Agrupa los valores existentes de `Libro.generos`; normaliza mayúsculas y diacríticos, sin inventar ni fusionar categorías semánticamente distintas. Publica como máximo los 3 grupos con mejor afinidad media entre sus libros seleccionados. |
+| Libros por tema | Agrupa exclusivamente por `Libro.tema`, no por tags ni por géneros. |
+| Joyas por descubrir | Considera candidatos no leídos con score de afinidad positivo, `ranking > 3` (el mismo piso de calidad usado por “Para vos”) y `read_count` disponible. Solo aparece si hay al menos dos niveles de popularidad y tres resultados bajo o igual a la mediana de `read_count` de ese conjunto elegible. Ordena esa selección por el promedio con peso igual de percentiles de afinidad, ranking y menor popularidad para que ninguna escala domine a las otras, con posición persistida como desempate. |
+| Mejores libros de país | No se publica: el catálogo actual no tiene un país de origen confiable por obra y los tags geográficos no distinguen país de autor, idioma u otros usos. La respuesta identifica el carrusel omitido con `country_of_origin_metadata_unavailable`; no se infiere país de los tags ni de la nacionalidad del autor. |
+
+Épocas, tipos, géneros y temas con menos de 3 libros elegibles se omiten. Las consultas y la selección se limitan a candidatos de la generación publicada, por lo que la popularidad usada por “Joyas” es relativa a ese conjunto y no al catálogo completo. Si se requiere popularidad global o carruseles por país, primero debe incorporarse metadata confiable a las etapas de catálogo/importación; no se debe inferir durante la lectura de Home.
+
+El frontend consume `carousels` del endpoint personalizado para usuarios autenticados y mantiene las décadas generales existentes para visitantes sin sesión. La lectura heredada de `GET /nextread/recomendaciones` se conserva para compatibilidad con otros consumidores.
+
+### 9.5. Carruseles basados en la actividad del usuario
+
+El endpoint autenticado `GET /nextread/recomendaciones/contextuales` devuelve carruseles derivados de `user_book_states`, las valoraciones activas, los autores y las listas JSON del usuario autenticado. No acepta un ID de propietario enviado por el cliente, no vuelve a calcular recomendaciones al cargar Home y omite carruseles con menos de 3 libros.
+
+| Carrusel | Fuente y criterio |
+|---|---|
+| Seguir leyendo | Estados actuales `reading`, ordenados por `status_updated_at` descendente y luego por ID. |
+| Para leer | Estados actuales `to_read`, con el mismo orden estable. |
+| Autores | Devuelve autores, no libros. Cuenta por separado los libros leídos, favoritos y valorados con 4 o 5; ordena primero por valoraciones positivas, luego favoritos y finalmente lecturas. El enlace abre `/autor/:id`. |
+| Más de Autor | Usa autores con al menos dos libros actualmente leídos, excluye sus libros que el usuario ya leyó y limita a 3 por autor cuando combina varios. Si solo califica un autor, puede mostrar hasta 20 obras. |
+| De lista | Elige uniformemente una lista propia no vacía, incluidos los listados privados del propietario, conserva el orden de sus IDs y recupera hasta 20 libros existentes mediante `JSON_TABLE`. Nunca consulta una lista de otro usuario. |
+| Volver a leerlo | Solo incluye libros actualmente leídos con una valoración activa de 4 o 5 o marcados como favoritos. Prioriza valoración, favorito y fecha real de actualización del estado. |
+| Porque leíste… | El origen debe estar actualmente leído y tener una valoración activa de 4 o 5. Rota de forma determinista por día UTC y usuario entre los orígenes elegibles. Recupera candidatos por tags (`MEMBER OF`), autor u otros atributos bibliográficos disponibles; excluye el origen y libros ya leídos, y limita a 3 por autor. |
+
+Las lecturas de estado y listas no seleccionan tags. La similitud consulta tags solamente para el origen y utiliza `MEMBER OF` para que MySQL 8.4 pueda considerar el índice multivaluado de `Libro.tags`; la utilización efectiva del índice depende del plan y la distribución de datos. Los resultados devueltos por el motor de similitud son candidatos acotados, no un recorrido completo del catálogo.
+
+La página pública `/autor/:id` recupera únicamente los atributos de tarjeta y pagina por título e ID (máximo 50 por solicitud, hasta 1.000 páginas). La interfaz muestra cinco columnas en escritorio y carga páginas adicionales para permitir recorrer todas las obras sin descargarlas de una vez.
+
+---
+
+## 10. Organización de workers y procesamiento en segundo plano
+
+Se requieren dos responsabilidades de procesamiento independientes:
+
+### 10.1. Worker de recomendaciones por usuario
+
+La implementación actual utiliza una fila por usuario en `user_recommendation_jobs`, en Oracle MySQL 8.4. No incorpora Redis ni servicios externos.
+
+- Las interacciones que cambian las preferencias actualizan la fila dentro de la misma transacción de la interacción.
+- `request_version` identifica nuevas interacciones y `available_at` agrupa cambios durante el intervalo configurable.
+- La primera petición autenticada sin una generación publicada crea una fila inicial sin ejecutar el motor en la petición HTTP.
+- El worker reclama filas `pending` o leases `processing` vencidos en transacciones breves con `FOR UPDATE SKIP LOCKED`.
+- Un lease con token de fencing, renovación periódica y clave primaria por usuario coordina la recuperación. Además, un bloqueo asesor MySQL por usuario reserva una conexión del pool durante toda la generación, sin dejar una transacción abierta.
+- El motor existente genera y publica; el worker no duplica scoring, selección ni persistencia.
+- Al terminar, solo se marca `completed` si `request_version` no cambió. Si hubo interacciones nuevas, el trabajo vuelve a `pending`.
+- Los errores reintentan con backoff exponencial hasta el máximo configurado; los trabajos agotados quedan `failed`. La siguiente interacción los vuelve a poner en cola.
+- Una generación sin candidatos sigue fallando según la regla existente y no reemplaza la generación publicada.
+
+Comando: `npm run worker:recommendations` desde `api/`. El proceso separado se detiene con `SIGINT` o `SIGTERM`; espera los trabajos activos y deja que leases vencidos se recuperen tras una caída. Ejecutar primero `npm run migrate:recommendations`.
+
+Configuración opcional:
+
+| Variable | Predeterminado | Propósito |
+| --- | ---: | --- |
+| `RECOMMENDATION_JOB_DEBOUNCE_MS` | `4000` | Agrupación de interacciones |
+| `RECOMMENDATION_WORKER_POLL_INTERVAL_MS` | `1000` | Espera entre lotes |
+| `RECOMMENDATION_WORKER_BATCH_SIZE` | `5` | Máximo de trabajos reclamados por ciclo |
+| `RECOMMENDATION_WORKER_CONCURRENCY` | `2` | Trabajos simultáneos por proceso |
+| `RECOMMENDATION_WORKER_LEASE_MS` | `300000` | Duración inicial y renovación del lease |
+| `RECOMMENDATION_JOB_MAX_ATTEMPTS` | `5` | Intentos máximos |
+| `RECOMMENDATION_JOB_RETRY_BASE_MS` | `5000` | Base del backoff |
+| `RECOMMENDATION_JOB_RETRY_MAX_MS` | `300000` | Límite del backoff |
+
+La concurrencia efectiva se limita a `pool.max - 1` para reservar al menos una conexión Sequelize a las consultas del motor mientras cada generación mantiene su bloqueo asesor.
+
+La respuesta de recomendaciones continúa siendo `pending` mientras no haya una generación publicada; el frontend no espera el cálculo. Si el primer trabajo agota sus reintentos, la respuesta pasa a `failed` hasta una nueva interacción relevante.
+
+Las pruebas unitarias cubren el coalescing/idempotencia de la fila, claims y leases vencidos, reintentos, protección ante versiones obsoletas, concurrencia entre usuarios y apagado. En MySQL 8.4 también se verificaron claims concurrentes, bloqueo por usuario y recuperación de leases. Finalmente, se ejecutó una generación de extremo a extremo con usuario y libros temporales: interacciones repetidas, una sola lectura/evento, publicación y consulta del candidato; todos los registros temporales se limpiaron. Esto no sustituye pruebas de carga ni recuperación tras matar un proceso durante una generación.
+
+### 10.2. Estadísticas globales
+
+No hay un worker global en la implementación actual. Las consultas directas del carrusel global se justifican por el catálogo fuente de 264 libros y se ejecutan al solicitar Home; no escriben cachés ni contadores. MySQL 8.4 usa el índice temporal existente para eventos, mientras los escaneos del catálogo se reevaluarán con datos y mediciones representativos antes de agregar índices, caché o worker.
+
+---
+
+## 11. Seguridad y consistencia
+
+La implementación debe seguir las prácticas de seguridad del backend existente y reforzarlas donde sea necesario.
+
+### SQL injection
+
+- Utilizar Sequelize con parámetros y condiciones estructuradas.
+- En SQL manual, utilizar parámetros enlazados (`bind`/replacements) correctamente.
+- Nunca concatenar strings del usuario para construir `WHERE`, `ORDER BY`, nombres de columnas o fragmentos SQL.
+- Los campos dinámicos de ordenamiento deben seleccionarse desde una lista permitida del servidor.
+- Validar tipos, rangos y formatos de todos los parámetros.
+
+### Autorización
+
+- Los endpoints personalizados deben obtener el usuario desde el contexto autenticado, no confiar en un `user_id` enviado libremente por el cliente.
+- Verificar que el usuario tenga permiso para acceder a listas y datos privados.
+- Evitar que un usuario pueda consultar o regenerar las recomendaciones de otro.
+- Proteger endpoints administrativos y tareas de mantenimiento.
+
+### Validación y límites
+
+- Validar parámetros y cuerpos con el mecanismo de validación ya incorporado en el proyecto.
+- Establecer límites de resultados, paginación y frecuencia.
+- Aplicar rate limiting donde corresponda.
+- Evitar endpoints que permitan disparar regeneraciones costosas repetidamente.
+- No permitir que el cliente controle pesos, puntuaciones o contadores internos sin validación y reglas de negocio del servidor.
+
+### Transacciones e idempotencia
+
+- Mantener consistentes la relación usuario-libro, `read_count`, eventos y preferencias.
+- Registrar eventos solo ante transiciones válidas.
+- Evitar incrementos duplicados por reintentos.
+- Utilizar transacciones donde varias escrituras formen una única operación lógica.
+- Definir cómo recuperar trabajos fallidos y cómo reintentar sin duplicar efectos.
+
+### Datos y logs
+
+- No registrar tokens, contraseñas ni datos sensibles.
+- Registrar errores con contexto suficiente para diagnosticar, sin exponer información privada.
+- No devolver trazas internas ni consultas SQL al cliente en producción.
+
+---
+
+## 12. Rendimiento: objetivo de 100.000 usuarios activos
+
+La arquitectura debe diseñarse para ese objetivo desde el principio, pero las decisiones deben basarse en mediciones.
+
+### Requisitos obligatorios
+
+1. **Índices:** revisar índices en claves foráneas y columnas usadas para filtrar, unir y ordenar. Evaluar índices compuestos según las consultas reales.
+2. **Proyección:** seleccionar solo atributos necesarios; `tags` se consulta únicamente cuando el endpoint lo necesita.
+3. **Filtros en base de datos:** evitar traer el catálogo y filtrar en memoria.
+4. **Límites:** todas las consultas de carruseles deben tener límites definidos.
+5. **N+1:** evitar consultas por elemento del carrusel.
+6. **Caché:** reutilizar resultados globales y recomendaciones persistidas.
+7. **Workers:** sacar cálculos costosos del ciclo HTTP.
+8. **Concurrencia:** agrupar regeneraciones y evitar trabajos duplicados.
+9. **Consultas eficientes:** revisar SQL generado y planes de ejecución.
+10. **Observabilidad:** medir latencia, cantidad de filas leídas, consultas por endpoint, errores y duración de workers.
+11. **Pruebas de carga:** probar escenarios de concurrencia y volumen representativos antes de afirmar que se soportan 100.000 usuarios activos.
+12. **Degradación controlada:** si un worker falla, la aplicación debe seguir mostrando el último conjunto válido o carruseles alternativos; la página de inicio no debe quedar inutilizable.
+
+No asumir que 100.000 usuarios activos equivalen a 100.000 peticiones simultáneas. Se deben definir escenarios de carga realistas y medirlos. Tampoco se debe afirmar que el sistema escala únicamente por agregar índices: hay que revisar consultas, conexiones, pool de Sequelize, workers y límites de la infraestructura.
+
+---
+
+## 13. Pruebas obligatorias
+
+El sistema debe contar con tests unitarios y de integración para las reglas de negocio y las consultas críticas.
+
+Casos mínimos:
+
+### Preferencias
+
+- Crear preferencias cuando el usuario no tiene ninguna.
+- Actualizar un tag existente.
+- Aplicar decaimiento tras 75, 150 y 300 días.
+- Decaer pesos positivos y negativos hacia cero.
+- No cambiar el signo de un peso.
+- Modificar una valoración sin duplicar el efecto anterior.
+- Repetir una acción sin duplicar el efecto.
+- Quitar un favorito y verificar el tratamiento de su señal.
+
+### Estados y estadísticas
+
+- `para leer -> leído`: `read_count` aumenta una vez y se registra un evento.
+- `leyendo -> leído`: aumenta una vez y se registra un evento.
+- `leído -> para leer`: disminuye una vez, no elimina el evento histórico.
+- `leído -> leyendo`: disminuye una vez.
+- `leído -> leído`: no cambia el contador ni registra otro evento.
+- Reintento de una petición: no duplica estadísticas.
+- Dos operaciones concurrentes: no dejan contadores inconsistentes.
+
+### Recomendaciones
+
+- Usuario sin preferencias.
+- Usuario con preferencias positivas.
+- Usuario con preferencias negativas.
+- Usuario con varios intereses.
+- Usuario con tags ausentes en algunos libros.
+- Exclusión de libros leídos en carruseles de descubrimiento.
+- `Para vos` excluye `ranking <= 3.0` y nulos.
+- Máximo 3 libros por autor.
+- Máximo 20 libros por carrusel.
+- Aproximadamente 20% de exploración cuando haya candidatos válidos.
+- Variación controlada y resultados estables durante el período definido.
+- Carruseles omitidos cuando no cumplen condiciones.
+
+### Globales y workers
+
+- Conteo de usuarios únicos por período.
+- Umbral mínimo de 30 para tendencias.
+- Períodos mensuales y ventanas móviles correctamente delimitados.
+- No existe worker global ni caché persistida; las pruebas de publicación, recuperación y concurrencia de ese worker no aplican a la implementación actual.
+- Worker de recomendaciones: coalescing, exclusión de reclamos por usuario, recuperación de leases, reintentos y publicación válida.
+
+### Rendimiento
+
+- Verificar que cada endpoint selecciona solo sus atributos necesarios.
+- Verificar que endpoints que no utilizan tags no consultan ni devuelven `tags`.
+- Verificar límites máximos.
+- Revisar consultas N+1.
+- Ejecutar `EXPLAIN` sobre consultas importantes.
+- Crear pruebas de carga para escenarios definidos.
+
+---
+
+## 14. Alcance futuro: no implementar ahora sin aprobación
+
+La arquitectura debe permitir evolucionar, pero no se deben incorporar estas tecnologías como parte de la primera implementación sin una necesidad demostrada.
+
+Posibles mejoras futuras:
+
+- Google Analytics u otra herramienta de analítica para entender el uso de los carruseles.
+- Registro de impresiones, clics, omisiones y acciones sobre recomendaciones, con criterios de privacidad y retención.
+- Embeddings para encontrar similitud semántica entre sinopsis y libros.
+- Modelos de machine learning para ranking o personalización.
+- Recomendaciones basadas en usuarios con gustos similares.
+- Caché distribuida si las mediciones justifican Redis u otra solución.
+- Procesamiento distribuido si un único worker deja de ser suficiente.
+- Experimentos A/B para comparar algoritmos.
+- Ajuste automático de parámetros a partir de resultados medidos.
+
+Estas son posibilidades de evolución, no requisitos actuales. No agregar IA, embeddings, servicios pagos o infraestructura externa por anticipado.
+
+---
+
+## 15. Plan de implementación recomendado
+
+El trabajo debe realizarse en etapas pequeñas, revisables y con pruebas.
+
+1. **Auditoría:** documentar modelos, relaciones, endpoints, consultas y dependencias existentes.
+2. **Diseño de datos:** definir cómo se almacenan preferencias, candidatos, eventos y caché, reutilizando estructuras existentes.
+3. **Consistencia de interacciones:** asegurar transiciones de lectura, valoraciones, favoritos y contadores idempotentes.
+4. **Preferencias:** implementar actualización de tags, reversión/cambio de señales y decaimiento.
+5. **Candidatos:** implementar generación acotada, puntuación, diversidad y almacenamiento independiente.
+6. **Worker personalizado:** procesar regeneraciones sin bloquear peticiones.
+7. **Carruseles personalizados:** implementar `Para vos` y carruseles que reutilizan candidatos.
+8. **Carruseles del usuario y contextuales:** implementar consultas específicas y filtros.
+9. **Eventos y estadísticas:** registrar nuevas lecturas y construir métricas globales.
+10. **Estadísticas globales:** medir las consultas de tendencias y popularidad; agregar caché o worker solo si el volumen demuestra que las consultas directas son insuficientes.
+11. **Composición de inicio:** coordinar los carruseles sin convertir el endpoint en una consulta pesada.
+12. **Optimización y pruebas:** revisar índices, SQL, N+1, carga, seguridad y observabilidad.
+
+No es necesario realizar todo en un único cambio. Cada etapa debe dejar el sistema en un estado funcional y probado.
+
+---
+
+## 16. Entrega y comunicación de cambios
+
+Al finalizar cada etapa, el agente debe informar:
+
+- Qué archivos inspeccionó.
+- Qué comportamiento encontró en la implementación anterior.
+- Qué archivos modificó y por qué.
+- Qué tablas, columnas, índices, asociaciones o migraciones agregó o modificó.
+- Qué endpoints cambió o creó y qué contrato tienen.
+- Qué lógica anterior reemplazó y cómo se mantuvo la compatibilidad.
+- Qué tests ejecutó y sus resultados.
+- Qué decisiones quedaron pendientes.
+- Qué riesgos o limitaciones siguen existiendo.
+
+Debe comentar el código donde la lógica no sea evidente, especialmente en cálculos de preferencias, transiciones de estado, idempotencia, selección de candidatos y workers. No llenar el código de comentarios redundantes que repitan lo que ya expresa la implementación.
+
+No declarar una tarea terminada si no se ejecutaron las pruebas relevantes o si quedan errores conocidos sin informar.
+
+---
+
+## 17. Criterios de aceptación
+
+La implementación puede considerarse preparada para su siguiente etapa cuando:
+
+- Las recomendaciones antiguas fueron auditadas y su reemplazo está documentado.
+- Las preferencias individuales se actualizan de forma consistente y sin duplicaciones.
+- El decaimiento temporal funciona con `updated_at` por tag.
+- Los candidatos se generan de forma acotada y se almacenan en una tabla independiente.
+- Los carruseles personalizados reutilizan candidatos y no recorren el catálogo completo.
+- `Para vos` aplica `ranking > 3.0`, máximo 20 libros, máximo 3 por autor y exploración controlada.
+- Los carruseles del usuario consultan únicamente sus relaciones.
+- Las nuevas lecturas se registran mediante transiciones reales a `leído`.
+- `read_count` representa el estado actual y no se confunde con eventos históricos.
+- Los carruseles globales se precalculan y almacenan para reutilizarlos entre usuarios.
+- Los workers pueden reintentarse sin duplicar efectos y conservan resultados válidos ante fallos.
+- Los endpoints proyectan únicamente los atributos necesarios y omiten `tags` cuando no se utiliza.
+- Las consultas críticas tienen índices revisados y no presentan N+1 conocidos.
+- La implementación tiene tests de reglas de negocio, seguridad e integración.
+- La capacidad objetivo está acompañada por pruebas de carga y métricas, no por suposiciones.
+
+**Regla final:** actuar como un ingeniero senior responsable de un sistema de producción. Investigar antes de modificar, diseñar antes de implementar, reutilizar antes de duplicar, medir antes de optimizar y no inventar comportamientos ni datos. La prioridad es que el sistema sea correcto, consistente, seguro, eficiente y mantenible a medida que NextRead crezca.

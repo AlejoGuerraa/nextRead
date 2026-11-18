@@ -129,7 +129,12 @@ const Usuario = sequelize.define('User', {
   notificaciones: {
     type: DataTypes.JSON,
     allowNull: true
-  }
+  },
+
+  preferences: {
+    type: DataTypes.JSON,
+    allowNull: true
+  },
 
 }, {
   timestamps: false,

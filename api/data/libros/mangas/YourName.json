@@ -1,0 +1,53 @@
+[
+  {
+    "titulo": "Your Name - 1",
+    "anio": 2016,
+    "tipo": "Manga",
+    "descripcion": "Mitsuha Miyamizu vive en un pequeño pueblo entre montañas y sueña con escapar de la rutina rural, mientras que Taki Tachibana disfruta de la vida urbana en Tokio. Un día, ambos comienzan a intercambiar misteriosamente sus cuerpos, despertándose en vidas que no les pertenecen. Entre situaciones inesperadas, recuerdos confusos y una conexión cada vez más profunda, tendrán que descubrir qué los une y por qué está sucediendo este extraño fenómeno.",
+    "tema": "Destino, conexión y memoria",
+    "ranking": 4.4,
+    "generos": [
+      "Sobrenatural",
+      "Romance",
+      "Fantasia",
+      "Drama"
+    ],
+    "tags": ["2010", "ranmaru kotone", "romance", "manga", "japon", "japones", "medio", "adolescentes", "destino", "memoria", "ninguno"],
+    "url_portada": "/portadasLibros/mangas/Your Name/1.jpg",
+    "id_autor": 75
+  },
+  {
+    "titulo": "Your Name - 2",
+    "anio": 2016,
+    "tipo": "Manga",
+    "descripcion": "El misterioso intercambio de cuerpos entre Mitsuha y Taki empieza a complicarse cuando, de repente, deja de ocurrir. Incapaz de ignorar los recuerdos de una chica a la que nunca ha conocido en persona, Taki emprende una búsqueda para encontrarla, guiado por las pocas pistas que conserva. Lo que parecía una experiencia extraordinaria entre dos adolescentes se transforma en un enigma que desafía su comprensión del tiempo y de los vínculos humanos.",
+    "tema": "Destino, conexión y memoria",
+    "ranking": 4.4,
+    "generos": [
+      "Sobrenatural",
+      "Romance",
+      "Fantasia",
+      "Drama"
+    ],
+    "tags": ["2010", "ranmaru kotone", "romance", "manga", "japon", "japones", "medio", "adolescentes", "destino", "memoria", "muerte"],
+    "url_portada": "/portadasLibros/mangas/Your Name/2.jpg",
+    "id_autor": 75
+  },
+  {
+    "titulo": "Your Name - 3",
+    "anio": 2016,
+    "tipo": "Manga",
+    "descripcion": "Mientras intenta comprender la conexión que lo une a Mitsuha, Taki descubre que sus recuerdos esconden una realidad mucho más compleja de lo que imaginaba. Frente a circunstancias extraordinarias y un destino aparentemente imposible de cambiar, ambos deberán encontrar la manera de llegar el uno al otro. El volumen final combina romance, misterio y tensión emocional en una historia sobre los recuerdos, la esperanza y los lazos que trascienden las distancias.",
+    "tema": "Destino, conexión y memoria",
+    "ranking": 4.5,
+    "generos": [
+      "Sobrenatural",
+      "Romance",
+      "Fantasia",
+      "Drama"
+    ],
+    "tags": ["2010", "ranmaru kotone", "romance", "manga", "japon", "japones", "medio", "adolescentes", "destino", "memoria", "muerte"],
+    "url_portada": "/portadasLibros/mangas/Your Name/3.jpg",
+    "id_autor": 75
+  }
+]

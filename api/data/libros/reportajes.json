@@ -1,0 +1,17 @@
+[
+  {
+    "titulo": "relato de un náufrago",
+    "anio": 1955,
+    "tipo": "reportaje",
+    "descripcion": "relato de un náufrago reconstruye la historia real de luis alejandro velasco, un marinero que sobrevivió diez días a la deriva en una balsa en el mar caribe después de caer de un buque militar. gabriel garcía márquez, entonces joven periodista, escuchó su testimonio y lo transformó en una narración directa y potente sobre la resistencia, el miedo y la lucha por sobrevivir. el reportaje, publicado originalmente por entregas en el periódico el espectador en 1955, reveló irregularidades relacionadas con la armada colombiana y generó un escándalo político.",
+    "tema": "supervivencia",
+    "ranking": 3.9,
+    "generos": [
+      "no ficción",
+      "crónica"
+    ],
+    "url_portada": "/portadasLibros/GabrielaMarquez/RelatoDeUnNaufragoMarquez.jpg",
+    "id_autor": 4,
+    "tags": ["1950", "gabriel garcía márquez", "drama", "reportaje", "colombia", "español", "medio", "adultos", "supervivencia", "resistencia", "denuncia política", "cerrado", "muerte", "violencia", "guerra"]
+  }
+]

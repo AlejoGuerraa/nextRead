@@ -149,6 +149,15 @@ npm install
 
 Crear archivo `.env` o configurar conexión a MySQL en `config/db.js`
 
+Para actualizar una base existente, ejecutar el backfill antes de iniciar la API:
+
+```bash
+npm run migrate:book-states
+npm run migrate:tag-preferences
+```
+
+Run both migrations with the API stopped and before enabling traffic. The first creates the user-book relation, migrates existing states and favorites, and recalculates `read_count`. The second creates the per-book preference-signal ledger and initializes tag affinities from current states, active ratings, and catalog tags. Legacy interaction dates cannot be reconstructed, so their initial preference timestamp is the migration time. If the state migration finds a book in multiple reading states for one user, resolve the conflict before retrying.
+
 ```bash
 npm start
 ```

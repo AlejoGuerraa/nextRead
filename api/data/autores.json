@@ -1,4 +1,5 @@
 [
+  
   {
     "nombre": "Julio Cortázar",
     "url_cara": ""
@@ -19,6 +20,7 @@
     "nombre": "Jane Austen",
     "url_cara": ""
   },
+
   {
     "nombre": "Jorge Luis Borges",
     "url_cara": ""
@@ -39,6 +41,7 @@
     "nombre": "Ana María Matute",
     "url_cara": ""
   },
+
   {
     "nombre": "Isabel Allende",
     "url_cara": ""
@@ -59,6 +62,7 @@
     "nombre": "Virginia Woolf",
     "url_cara": ""
   },
+
   {
     "nombre": "Charles Dickens",
     "url_cara": ""
@@ -79,6 +83,7 @@
     "nombre": "Clarice Lispector",
     "url_cara": ""
   },
+  
   {
     "nombre": "Edgar Allan Poe",
     "url_cara": ""

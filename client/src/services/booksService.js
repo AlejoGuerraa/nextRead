@@ -5,6 +5,11 @@ export const getTrendingBooks = async (params = {}) => {
   return response.data;
 };
 
+export const getGlobalHomeCarousels = async () => {
+  const response = await api.get('/nextread/carruseles/globales');
+  return response.data;
+};
+
 export const getBooksByDecade = async () => {
   const response = await api.get('/nextread/libros/por-decada');
   return response.data;
@@ -39,5 +44,25 @@ export const saveBookRating = async (bookId, rating) => {
 
 export const getRecommendationsForBook = async (userId, bookId) => {
   const response = await api.get(`/nextread/libros/recomendaciones/${userId}/${bookId}`);
+  return response.data;
+};
+
+export const getPersonalizedRecommendations = async () => {
+  const response = await api.get('/nextread/recomendaciones');
+  return response.data;
+};
+
+export const getPersonalizedCarousels = async () => {
+  const response = await api.get('/nextread/recomendaciones/carruseles');
+  return response.data;
+};
+
+export const getUserContextualCarousels = async () => {
+  const response = await api.get('/nextread/recomendaciones/contextuales');
+  return response.data;
+};
+
+export const getAuthorDetails = async (authorId, params = {}) => {
+  const response = await api.get(`/nextread/autor/${authorId}`, { params });
   return response.data;
 };

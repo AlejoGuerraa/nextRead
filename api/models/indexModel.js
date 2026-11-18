@@ -3,6 +3,11 @@ const sequelize = require('../config/db');
 
 const Usuario = require('./Usuario');
 const Libro = require('./Libro');
+const UserBookState = require('./UserBookState');
+const BookReadEvent = require('./BookReadEvent');
+const UserBookPreferenceSignal = require('./UserBookPreferenceSignal');
+const UserRecommendation = require('./UserRecommendation');
+const UserRecommendationJob = require('./UserRecommendationJob');
 const Autor = require('./Autor');
 const Resena = require('./Resena');
 const ResenaLike = require('./ResenaLike');
@@ -13,7 +18,119 @@ const Usuario_Logro = require('./Usuario_Logro');
 const Icono = require('./Icono');
 const Banner = require('./Banner');
 
+Usuario.hasMany(UserBookState, {
+    foreignKey: 'user_id',
+    as: 'BookStates',
+    onDelete: 'CASCADE',
+    onUpdate: 'CASCADE'
+});
 
+UserBookState.belongsTo(Usuario, {
+    foreignKey: 'user_id',
+    as: 'User'
+});
+
+Libro.hasMany(UserBookState, {
+    foreignKey: 'book_id',
+    as: 'UserStates',
+    onDelete: 'CASCADE',
+    onUpdate: 'CASCADE'
+});
+
+UserBookState.belongsTo(Libro, {
+    foreignKey: 'book_id',
+    as: 'Book'
+});
+
+Usuario.hasMany(BookReadEvent, {
+    foreignKey: 'user_id',
+    as: 'BookReadEvents',
+    onDelete: 'CASCADE',
+    onUpdate: 'CASCADE'
+});
+
+BookReadEvent.belongsTo(Usuario, {
+    foreignKey: 'user_id',
+    as: 'User'
+});
+
+Libro.hasMany(BookReadEvent, {
+    foreignKey: 'book_id',
+    as: 'ReadEvents',
+    onDelete: 'RESTRICT',
+    onUpdate: 'CASCADE'
+});
+
+BookReadEvent.belongsTo(Libro, {
+    foreignKey: 'book_id',
+    as: 'Book'
+});
+
+Usuario.hasMany(UserBookPreferenceSignal, {
+    foreignKey: 'user_id',
+    as: 'BookPreferenceSignals',
+    onDelete: 'CASCADE',
+    onUpdate: 'CASCADE'
+});
+
+UserBookPreferenceSignal.belongsTo(Usuario, {
+    foreignKey: 'user_id',
+    as: 'User'
+});
+
+Libro.hasMany(UserBookPreferenceSignal, {
+    foreignKey: 'book_id',
+    as: 'PreferenceSignals',
+    onDelete: 'CASCADE',
+    onUpdate: 'CASCADE'
+});
+
+UserBookPreferenceSignal.belongsTo(Libro, {
+    foreignKey: 'book_id',
+    as: 'Book'
+});
+
+Usuario.hasMany(UserRecommendation, {
+    foreignKey: 'user_id',
+    as: 'Recommendations',
+    onDelete: 'CASCADE',
+    onUpdate: 'CASCADE'
+});
+
+UserRecommendation.belongsTo(Usuario, {
+    foreignKey: 'user_id',
+    as: 'User',
+    onDelete: 'CASCADE',
+    onUpdate: 'CASCADE'
+});
+
+Usuario.hasOne(UserRecommendationJob, {
+    foreignKey: 'user_id',
+    as: 'RecommendationJob',
+    onDelete: 'CASCADE',
+    onUpdate: 'CASCADE'
+});
+
+UserRecommendationJob.belongsTo(Usuario, {
+    foreignKey: 'user_id',
+    as: 'User',
+    onDelete: 'CASCADE',
+    onUpdate: 'CASCADE'
+});
+
+Libro.hasMany(UserRecommendation, {
+    foreignKey: 'book_id',
+    as: 'Recommendations',
+    onDelete: 'CASCADE',
+    onUpdate: 'CASCADE'
+});
+
+UserRecommendation.belongsTo(Libro, {
+    foreignKey: 'book_id',
+    as: 'Book',
+    onDelete: 'CASCADE',
+    onUpdate: 'CASCADE'
+});
 
 // 📘 Usuario ↔ Libro (por medio de Reseñas)
 Usuario.belongsToMany(Libro, {
@@ -178,4 +295,21 @@ Usuario.belongsToMany(Usuario, {
     otherKey: 'id_remitente'
 });
 
-module.exports = { Usuario, Libro, Resena, ResenaLike, RespuestaResena, Seguidos_Seguidores, Logro, Usuario_Logro, Autor, Icono, Banner };
+module.exports = {
+    Usuario,
+    Libro,
+    UserBookState,
+    BookReadEvent,
+    UserBookPreferenceSignal,
+    UserRecommendation,
+    UserRecommendationJob,
+    Resena,
+    ResenaLike,
+    RespuestaResena,
+    Seguidos_Seguidores,
+    Logro,
+    Usuario_Logro,
+    Autor,
+    Icono,
+    Banner
+};

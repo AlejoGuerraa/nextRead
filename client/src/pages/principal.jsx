@@ -5,6 +5,7 @@ import { usePrincipal } from '../hooks/usePrincipal';
 import Header from '../components/header';
 import Carousel from '../components/carrouselImagenes';
 import BookList from '../components/carrouselLibros';
+import AuthorsCarousel from '../components/AuthorsCarousel';
 import Footer from '../components/footer';
 import RestrictionPopover from '../components/popOver';
 
@@ -32,12 +33,7 @@ const mockCarouselData = [
 
 export default function Principal() {
   const { user } = useAuth();
-  const {
-    generoSeleccionado,
-    setGeneroSeleccionado,
-    bookCarousels,
-    ultimoLibroObj,
-  } = usePrincipal(user);
+  const { bookCarousels, recommendationStatus } = usePrincipal(user);
 
   const [currentIndex, setCurrentIndex] = useState(0);
   const headerRightRef = useRef(null);
@@ -127,9 +123,27 @@ export default function Principal() {
               {carousel.title}
             </h2>
 
-            <BookList libros={carousel.books} onBookClick={handleBookCardClick} />
+            {carousel.kind === 'authors' ? (
+              <AuthorsCarousel autores={carousel.authors} />
+            ) : (
+              <BookList libros={carousel.books} onBookClick={handleBookCardClick} />
+            )}
           </section>
         ))}
+
+        {user?.id && recommendationStatus === 'pending' && (
+          <section className="book-section">
+            <h2 className="titulo-section">Recomendados para vos</h2>
+            <p>Todavía no hay recomendaciones generadas.</p>
+          </section>
+        )}
+
+        {user?.id && recommendationStatus === 'error' && (
+          <section className="book-section">
+            <h2 className="titulo-section">Recomendados para vos</h2>
+            <p>No se pudieron cargar las recomendaciones.</p>
+          </section>
+        )}
 
       </main>
 

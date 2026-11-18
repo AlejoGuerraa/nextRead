@@ -3,12 +3,12 @@ const sequelize = require('../config/db');
 
 const Usuario_Logro = sequelize.define('Usuario_Logro', {
     usuario_id: {
-        type: DataTypes.SMALLINT,
+        type: DataTypes.INTEGER,
         allowNull: false
     },
 
     logro_id: {
-        type: DataTypes.SMALLINT,
+        type: DataTypes.INTEGER,
         allowNull: false
     },
 

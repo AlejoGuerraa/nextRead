@@ -1,0 +1,178 @@
+[
+  {
+    "titulo": "otras inquisiciones",
+    "anio": 1952,
+    "tipo": "ensayo",
+    "descripcion": "los textos reunidos en este volumen sostienen un mismo diálogo: el de borges con la tradición literaria y con las preguntas que rodean al acto de leer y escribir. a través de ensayos que abarcan temas y épocas diversas, el autor examina la figura múltiple de quevedo, cuestiona la idea de una personalidad fija, reflexiona sobre la continuidad de la tradición literaria y propone una mirada novedosa sobre el concepto de influencia, como en su célebre texto “kafka y sus precursores”. el conjunto forma un itinerario intelectual que revela la profundidad crítica y la curiosidad inagotable que atraviesan toda su obra.",
+    "tema": "crítica",
+    "ranking": 4.4,
+    "generos": [
+      "ensayo",
+      "crítica"
+    ],
+    "url_portada": "/portadaslibros/borges/otrasinquisicionesborges.jpg",
+    "id_autor": 6,
+    "tags": [
+      "1950",
+      "jorge luis borges",
+      "filosofia",
+      "ensayo",
+      "argentina",
+      "espanol",
+      "complejo",
+      "adultos",
+      "literatura",
+      "critica literaria",
+      "tradicion",
+      "influencia literaria"
+    ]
+  },
+  {
+    "titulo": "el mito de sisifo",
+    "anio": 1942,
+    "tipo": "ensayo",
+    "descripcion": "el mito de sisifo es un ensayo filosófico en el que albert camus analiza el “absurdo”: la sensación de que la vida no tiene un sentido definitivo. a partir de ese conflicto, camus reflexiona sobre cómo seguir viviendo pese a esa falta de sentido. usando la figura de sisifo —condenado a empujar una piedra eternamente— propone que el ser humano puede encontrar dignidad y libertad aceptando el absurdo y aun así continuando la lucha cotidiana.",
+    "tema": "filosofía",
+    "ranking": 4.2,
+    "generos": [
+      "ensayo",
+      "existencialismo"
+    ],
+    "url_portada": "/portadaslibros/albertcamus/elmitodesisifocamus.jpg",
+    "id_autor": 9,
+    "tags": [
+      "1940",
+      "albert camus",
+      "filosofia",
+      "ensayo",
+      "francia",
+      "frances",
+      "muy complejo",
+      "adultos",
+      "existencialismo",
+      "absurdo",
+      "sentido de la vida",
+      "libertad",
+      "muerte"
+    ]
+  },
+  {
+    "titulo": "un cuarto propio",
+    "anio": 1929,
+    "tipo": "ensayo",
+    "descripcion": "ensayo fundamental del feminismo moderno, plantea que para escribir, una mujer necesita independencia económica y un espacio propio. virginia woolf reflexiona sobre la representación histórica de la mujer y la relación entre lo personal y lo político, combinando ensueño y realidad con un estilo equilibrado y musical.",
+    "tema": "feminismo",
+    "ranking": 4.1,
+    "generos": [
+      "ensayo",
+      "feminista"
+    ],
+    "url_portada": "/portadaslibros/virginiawoolf/uncuartopropiowoolf.png",
+    "id_autor": 15,
+    "tags": [
+      "1920",
+      "virginia woolf",
+      "ensayo",
+      "reino unido",
+      "ingles",
+      "complejo",
+      "adultos",
+      "feminismo",
+      "igualdad",
+      "mujeres",
+      "independencia",
+      "literatura"
+    ]
+  },
+  {
+    "titulo": "la condesa sangrienta",
+    "anio": 1968,
+    "tipo": "ensayo",
+    "descripcion": "acusada del asesinato de seiscientas cincuenta jóvenes, erzebet bathory se convirtió en una de las criminales más siniestras de la historia. en su castillo de los cárpatos, a finales del siglo xvii, la condesa desangraba a sus víctimas para preservar su juventud. la condesa sangrienta, obra clave de alejandra pizarnik, construye un perturbador retrato del sadismo y la locura, magistralmente recreado en las ilustraciones de santiago caruso.",
+    "tema": "historia",
+    "ranking": 4.0,
+    "generos": [
+      "no ficción",
+      "histórico"
+    ],
+    "url_portada": "/portadaslibros/alejandrapizarnik/lacondesasangrientapizarnik.png",
+    "id_autor": 19,
+    "tags": [
+      "1960",
+      "alejandra pizarnik",
+      "terror",
+      "drama",
+      "ensayo",
+      "argentina",
+      "espanol",
+      "complejo",
+      "adultos",
+      "historia",
+      "sadismo",
+      "locura",
+      "asesinato",
+      "muerte",
+      "violencia"
+    ]
+  },
+  {
+    "titulo": "el segundo sexo",
+    "anio": 1949,
+    "tipo": "ensayo",
+    "descripcion": "el texto de simone de beauvoir plantea reflexiones sobre cómo el hecho de ser mujeres ha condicionado la vida y las oportunidades de las mujeres a lo largo del tiempo. se interroga sobre qué derechos y posibilidades han sido concedidos o negados, y cómo orientar a las generaciones futuras. señala que la literatura femenina contemporánea tiende menos a la reivindicación directa y más a la búsqueda de lucidez y comprensión de la situación femenina.",
+    "tema": "feminismo",
+    "ranking": 4.3,
+    "generos": [
+      "ensayo",
+      "filosófico"
+    ],
+    "url_portada": "/portadaslibros/simonedebeauvoir/elsegundosexobeauvoir.jpg",
+    "id_autor": 52,
+    "tags": [
+      "1940",
+      "simone de beauvoir",
+      "filosofia",
+      "ensayo",
+      "francia",
+      "frances",
+      "muy complejo",
+      "adultos",
+      "feminismo",
+      "igualdad",
+      "mujeres",
+      "sociedad",
+      "derechos",
+      "discriminación"
+    ]
+  },
+  {
+    "titulo": "el ser y la nada",
+    "anio": 1943,
+    "tipo": "ensayo",
+    "descripcion": "el ser y la nada es la obra en la que jean-paul sartre expone de manera completa su existencialismo, facilitando también la comprensión de su producción literaria. publicada en 1943, en plena europa devastada por la guerra, sartre ya había escrito varias obras filosóficas y literarias, incluyendo la náusea y el muro. este ensayo constituye la base de su pensamiento y continúa influyendo en toda su obra posterior.",
+    "tema": "ontología",
+    "ranking": 4.1,
+    "generos": [
+      "ensayo",
+      "existencialismo"
+    ],
+    "url_portada": "/portadaslibros/jeanpaul sartre/elsery lanadasartre.png",
+    "id_autor": 53,
+    "tags": [
+      "1940",
+      "jean paul sartre",
+      "filosofia",
+      "ensayo",
+      "francia",
+      "frances",
+      "muy complejo",
+      "adultos",
+      "existencialismo",
+      "ontologia",
+      "libertad",
+      "conciencia",
+      "existencia",
+      "guerra"
+    ]
+  }
+]

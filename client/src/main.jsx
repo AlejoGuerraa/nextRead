@@ -6,6 +6,7 @@ import Principal from './pages/principal';
 import Acceso from './pages/acceso';
 import Perfil from './pages/perfil';
 import PaginaLibro from './pages/libro';
+import AuthorPage from './pages/AuthorPage';
 import EditarPerfil from './pages/editarPerfil';
 import Seguidores from './pages/seguidores';
 import Seguidos from './pages/seguidos';
@@ -31,6 +32,8 @@ function TitleManager() {
 
     if (path.startsWith("/libro/")) {
       document.title = "NextRead - Detalle del libro";
+    } else if (path.startsWith("/autor/")) {
+      document.title = "NextRead - Autor";
     } else if (path === "/acceso") {
       document.title = "NextRead - Acceder";
     } else if (path === "/principal") {
@@ -73,6 +76,7 @@ const router = createBrowserRouter([
       { path: "/nosotros", element: <SobreNosotros /> },
       { path: "/reset-password", element: <ResetPassword /> },
       { path: "/libro/:id", element: <PaginaLibro /> },
+      { path: "/autor/:id", element: <AuthorPage /> },
       {
         element: <ProtectedRoute />,
         children: [

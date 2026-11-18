@@ -1,0 +1,23 @@
+module.exports = Object.freeze([
+    'Novela',
+    'Cuento',
+    'Novela Corta',
+    'Poesía',
+    'Reportaje',
+    'Ensayo',
+    'Ensayo/Cuento',
+    'Cuento/Ensayo',
+    'Memorias',
+    'Manga',
+    'Biografía',
+    'Fábula',
+    'Teatro',
+    'Cómic',
+    'Epopeya',
+    'Filosófico',
+    'Ficción',
+    'Histórico',
+    'ensayo',
+    'manga',
+    'reportaje'
+]);
