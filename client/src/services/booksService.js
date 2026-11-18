@@ -41,3 +41,8 @@ export const getRecommendationsForBook = async (userId, bookId) => {
   const response = await api.get(`/nextread/libros/recomendaciones/${userId}/${bookId}`);
   return response.data;
 };
+
+export const getPersonalizedRecommendations = async () => {
+  const response = await api.get('/nextread/recomendaciones');
+  return response.data;
+};

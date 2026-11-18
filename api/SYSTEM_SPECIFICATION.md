@@ -259,6 +259,8 @@ El conjunto no debe ser una lista de 200 libros casi idénticos.
 
 Debe distribuir los candidatos entre intereses relevantes del usuario y mantener variedad de autores, géneros, períodos y tipos de obra.
 
+Cuando `Libro.tema` tenga un valor no vacío, la diversidad puede considerar ese texto literal tras quitar espacios externos, normalizar Unicode NFC y convertir a minúsculas. No se deben inferir categorías ni equiparar temas distintos. La repetición aplica únicamente una penalización suave con tope de `0.05`; no altera el score de afinidad. Los valores nulos o vacíos no participan.
+
 Se propone reservar aproximadamente un **20% de los resultados para exploración**. Este porcentaje es una referencia inicial configurable, no una obligación de incluir libros irrelevantes. La muestra se obtiene por rangos del ID primario y una semilla reproducible de usuario y generación. Una generación nueva obtiene otra posición de inicio, mientras que repetir la misma semilla reproduce el conjunto. Se excluyen los libros ya obtenidos por afinidad, por lo que la proporción solo cuenta libros realmente seleccionados desde exploración independiente.
 
 La exploración debe seguir teniendo un criterio de calidad: los libros deben superar los filtros mínimos del catálogo y no ser elegidos completamente al azar. Si no existen suficientes libros independientes, el resultado contiene menos del 20% de exploración en vez de etiquetar candidatos de afinidad como exploración. Cuando no hay ningún candidato de compatibilidad, el conjunto puede completarse con libros exploratorios válidos.

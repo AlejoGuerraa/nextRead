@@ -2,6 +2,22 @@ const Usuario = require("../models/Usuario")
 const Libro = require("../models/Libro");
 const Autor = require("../models/Autor");
 const { Op, Sequelize } = require("sequelize");
+const sequelize = require("../config/db");
+const { create_recommendation_reader } = require("../services/recommendationService");
+
+const recommendationReader = create_recommendation_reader({ sequelize });
+
+const getRecomendacionesPersonalizadas = async (req, res) => {
+    try {
+        const recommendations = await recommendationReader.get_published_for_user(req.user.id);
+        return res.json(recommendations);
+    } catch (error) {
+        console.error("Error cargando recomendaciones persistidas:", error);
+        return res.status(500).json({
+            message: "Error al obtener las recomendaciones."
+        });
+    }
+};
 
 // =======================================================
 // 🔥 TENDENCIAS (ranking + año)
@@ -638,5 +654,6 @@ module.exports = {
     getMasDeAutor,
     getDecadasPersonalizadas,
     getGeneroPreferido,
+    getRecomendacionesPersonalizadas,
     getRecomendacionesPorLibro
 };

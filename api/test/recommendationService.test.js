@@ -179,6 +179,58 @@ test('spreads compatibility results across authors, genres, decades, and work ty
     assert.ok(new Set(selectedBooks.flatMap(({ generos }) => generos)).size >= 3);
 });
 
+test('uses normalized literal themes as a soft diversity dimension without changing affinity scores', async () => {
+    const candidates = [
+        book(1, { id_autor: 1, anio: 1990, tema: 'Mystery' }),
+        book(2, { id_autor: 1, anio: 1990, tema: ' mystery ' }),
+        book(3, { id_autor: 1, anio: 1990, tema: 'Adventure' })
+    ];
+    const weights = new Map([['fantasy', 0.8]]);
+    const recommendations = await generate_candidate_set({
+        userId: 10,
+        preferences: {
+            recommendation: { tags: { fantasy: preference(0.8) } }
+        },
+        fetch_candidates_by_tag: async () => candidates,
+        fetch_exploration_candidates: async () => [],
+        targetSize: 3,
+        explorationRatio: 0,
+        now: NOW
+    });
+    const selected = recommendations.map(({ book_id }) =>
+        candidates.find(({ id }) => id === book_id)
+    );
+    const normalize_theme = (theme) => theme.trim().normalize('NFC').toLowerCase();
+
+    assert.equal(new Set(candidates.map((candidate) =>
+        score_book(candidate, weights).score
+    )).size, 1);
+    assert.notEqual(
+        normalize_theme(selected[0].tema),
+        normalize_theme(selected[1].tema)
+    );
+    assert.equal(recommendations.length, candidates.length);
+});
+
+test('ignores missing and blank themes during diversity selection', async () => {
+    const candidates = [
+        book(1, { tema: null }),
+        book(2, { tema: '  ' }),
+        book(3, { tema: undefined })
+    ];
+    const recommendations = await generate_candidate_set({
+        userId: 11,
+        preferences: null,
+        fetch_candidates_by_tag: async () => [],
+        fetch_exploration_candidates: async () => candidates,
+        targetSize: 3,
+        now: NOW
+    });
+
+    assert.equal(recommendations.length, candidates.length);
+    assert.equal(new Set(recommendations.map(({ book_id }) => book_id)).size, candidates.length);
+});
+
 test('fills a candidate set from exploration when no compatibility candidates exist', async () => {
     const catalogSample = Array.from({ length: 20 }, (_, index) => book(index + 1, {
         tags: ['unfamiliar'],
@@ -270,6 +322,7 @@ test('candidate SQL uses bounded cursor ranges, safe parameters, and read-only e
 
     assert.equal(queries.length, 2);
     assert.match(queries[0].sql, /JSON_CONTAINS\(book\.tags, :candidateTags\) = 1/);
+    assert.match(queries[0].sql, /book\.tema/);
     assert.match(queries[0].sql, /state\.reading_status = 'read'/);
     assert.doesNotMatch(queries[0].sql, /reading_status\s*=\s*'(?:reading|to_read)'/);
     assert.match(queries[0].sql, /book\.id >= :cursor/);
@@ -496,6 +549,54 @@ test('a candidate failure leaves the previously published set untouched', async 
     await assert.rejects(
         service.generate_for_user(5, { now: NOW }),
         /Candidate lookup failed/
+    );
+    assert.equal(destroyCalls, 0);
+    assert.deepEqual(storedRows, previousRows);
+});
+
+test('an empty generation cannot replace the previously published set', async () => {
+    const previousRows = [{ user_id: 5, book_id: 99, generation_id: 7, position: 1 }];
+    let storedRows = [...previousRows];
+    let destroyCalls = 0;
+    let preferences = {
+        recommendation: { tags: { fantasy: preference(0.8) } }
+    };
+    const service = create_recommendation_service({
+        sequelize: {
+            async transaction(callback) {
+                return callback({ LOCK: { UPDATE: 'UPDATE' } });
+            }
+        },
+        Usuario: {
+            async findByPk() {
+                return {
+                    id: 5,
+                    preferences: JSON.parse(JSON.stringify(preferences)),
+                    async save() {
+                        preferences = JSON.parse(JSON.stringify(this.preferences));
+                    }
+                };
+            }
+        },
+        UserRecommendation: {
+            async destroy() {
+                destroyCalls += 1;
+                storedRows = [];
+            },
+            async bulkCreate(rows) {
+                storedRows = rows;
+            }
+        },
+        candidateRepository: {
+            async fetch_candidates_by_tag() { return []; },
+            async fetch_exploration_candidates() { return []; }
+        },
+        targetSize: 10
+    });
+
+    await assert.rejects(
+        service.generate_for_user(5, { now: NOW }),
+        { code: 'RECOMMENDATION_GENERATION_EMPTY' }
     );
     assert.equal(destroyCalls, 0);
     assert.deepEqual(storedRows, previousRows);

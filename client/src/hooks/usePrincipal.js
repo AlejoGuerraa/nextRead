@@ -5,8 +5,7 @@ import {
   getDecadesPersonalizadas,
   getAuthorMostRead,
   getBooksByUserGenre,
-  getBookById,
-  getRecommendationsForBook,
+  getPersonalizedRecommendations,
 } from '../services/booksService';
 
 const generosRotativos = [
@@ -31,22 +30,6 @@ const normalizeBookList = (value) => {
   return [];
 };
 
-const normalizeReadList = (value) => {
-  if (!value) return [];
-  if (Array.isArray(value)) return value;
-
-  if (typeof value === 'string') {
-    try {
-      const parsed = JSON.parse(value);
-      return Array.isArray(parsed) ? parsed : [];
-    } catch {
-      return [];
-    }
-  }
-
-  return [];
-};
-
 const getDecadeTitle = (decade) => {
   const raw = String(decade ?? '').replace(/s$/, '');
   if (!raw) return 'Libros de la década';
@@ -65,7 +48,7 @@ export function usePrincipal(user) {
   const [generoUsuario, setGeneroUsuario] = useState(null);
   const [librosGeneroUsuario, setLibrosGeneroUsuario] = useState([]);
   const [librosRecomendados, setLibrosRecomendados] = useState([]);
-  const [ultimoLibroObj, setUltimoLibroObj] = useState(null);
+  const [recommendationStatus, setRecommendationStatus] = useState('idle');
   const [librosPorDecada, setLibrosPorDecada] = useState([]);
   const [generoSeleccionado, setGeneroSeleccionado] = useState('Género...');
 
@@ -172,65 +155,38 @@ export function usePrincipal(user) {
     let isActive = true;
 
     const fetchRecomendaciones = async () => {
+      if (!user?.id) {
+        setLibrosRecomendados([]);
+        setRecommendationStatus('idle');
+        return;
+      }
+
+      setLibrosRecomendados([]);
+      setRecommendationStatus('loading');
+
       try {
-        if (!user?.id) {
-          setLibrosRecomendados([]);
-          setUltimoLibroObj(null);
-          return;
-        }
-
-        const leidos = normalizeReadList(user.libros_leidos);
-        if (leidos.length === 0) {
-          setLibrosRecomendados([]);
-          setUltimoLibroObj(null);
-          return;
-        }
-
-        const ultimo = leidos[leidos.length - 1];
-        const ultimoId = Number(
-          typeof ultimo === 'object' && ultimo !== null
-            ? ultimo.id ?? ultimo.idLibro ?? ultimo.id_libro ?? 0
-            : ultimo
-        );
-
-        if (!Number.isInteger(ultimoId) || ultimoId <= 0) {
-          setLibrosRecomendados([]);
-          setUltimoLibroObj(null);
-          return;
-        }
-
-        let detalleLibro = null;
-        if (typeof ultimo === 'object' && ultimo !== null) {
-          const ultimoLibroId = Number(ultimo.id ?? ultimo.idLibro ?? ultimo.id_libro ?? 0);
-          if (Number.isInteger(ultimoLibroId) && ultimoLibroId > 0) {
-            detalleLibro = {
-              ...ultimo,
-              id: ultimoLibroId,
-            };
+        const data = await getPersonalizedRecommendations();
+        if (data?.status === 'pending') {
+          if (isActive) {
+            setLibrosRecomendados([]);
+            setRecommendationStatus('pending');
           }
+          return;
         }
 
-        if (!detalleLibro) {
-          try {
-            detalleLibro = await getBookById(ultimoId);
-          } catch (error) {
-            console.warn('No se pudo obtener detalle del último libro leído:', error);
-          }
+        if (data?.status !== 'ready' || !Array.isArray(data.libros)) {
+          throw new Error('Respuesta inválida del servicio de recomendaciones.');
         }
 
         if (isActive) {
-          setUltimoLibroObj(detalleLibro || null);
-        }
-
-        const data = await getRecommendationsForBook(user.id, ultimoId);
-
-        if (isActive) {
-          setLibrosRecomendados(Array.isArray(data?.libros) ? data.libros : []);
+          setLibrosRecomendados(data.libros);
+          setRecommendationStatus('ready');
         }
       } catch (error) {
         console.error('Error cargando recomendaciones:', error);
         if (isActive) {
           setLibrosRecomendados([]);
+          setRecommendationStatus('error');
         }
       }
     };
@@ -240,7 +196,7 @@ export function usePrincipal(user) {
     return () => {
       isActive = false;
     };
-  }, [user?.id, user?.libros_leidos]);
+  }, [user?.id]);
 
   const tituloGenero = useMemo(() => {
     if (!generoUsuario) return null;
@@ -258,10 +214,10 @@ export function usePrincipal(user) {
       },
     ];
 
-    if (librosRecomendados.length > 0) {
+    if (recommendationStatus === 'ready' && librosRecomendados.length > 0) {
       carousels.push({
-        id: 'recomendados-ultimo',
-        title: ultimoLibroObj?.titulo ? `Porque leíste ${ultimoLibroObj.titulo}` : 'Recomendados para vos',
+        id: 'recomendados',
+        title: 'Recomendados para vos',
         books: librosRecomendados,
       });
     }
@@ -285,7 +241,7 @@ export function usePrincipal(user) {
     }
 
     return carousels;
-  }, [autorMasLeidoNombre, generoUsuario, librosAutor, librosGeneroUsuario, librosPorDecada, librosRecomendados, librosTendencias, tituloGenero, ultimoLibroObj]);
+  }, [autorMasLeidoNombre, generoUsuario, librosAutor, librosGeneroUsuario, librosPorDecada, librosRecomendados, librosTendencias, recommendationStatus, tituloGenero]);
 
   return {
     librosTendencias,
@@ -294,7 +250,7 @@ export function usePrincipal(user) {
     generoUsuario,
     librosGeneroUsuario,
     librosRecomendados,
-    ultimoLibroObj,
+    recommendationStatus,
     librosPorDecada,
     generoSeleccionado,
     setGeneroSeleccionado,

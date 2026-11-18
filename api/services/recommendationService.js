@@ -23,6 +23,7 @@ const CANDIDATE_SELECT = `
         book.titulo,
         book.anio,
         book.tipo,
+        book.tema,
         book.generos,
         book.tags,
         book.id_autor
@@ -188,11 +189,15 @@ function get_candidate_dimensions(candidate, effectiveWeights) {
         );
     const genres = parse_metadata_array(candidate.generos);
     const year = Number(candidate.anio);
+    const theme = typeof candidate.tema === 'string'
+        ? candidate.tema.trim().normalize('NFC').toLowerCase()
+        : '';
     return {
         author: candidate.id_autor == null ? null : String(candidate.id_autor),
         genres,
         decade: Number.isInteger(year) && year > 0 ? Math.floor(year / 10) * 10 : null,
         type: typeof candidate.tipo === 'string' ? candidate.tipo.trim().toLowerCase() : null,
+        theme: theme || null,
         primaryInterest: positiveTags[0] || null
     };
 }
@@ -215,6 +220,9 @@ function diversity_penalty(candidate, counts, effectiveWeights) {
     if (dimensions.type) {
         penalty += (counts.types.get(dimensions.type) || 0) * 0.02;
     }
+    if (dimensions.theme) {
+        penalty += Math.min(counts.themes.get(dimensions.theme) || 0, 5) * 0.01;
+    }
     if (dimensions.primaryInterest) {
         penalty += (counts.interests.get(dimensions.primaryInterest) || 0) * 0.04;
     }
@@ -232,6 +240,7 @@ function update_diversity_counts(candidate, counts, effectiveWeights) {
     dimensions.genres.forEach((genre) => increment_count(counts.genres, genre));
     increment_count(counts.decades, dimensions.decade);
     increment_count(counts.types, dimensions.type);
+    increment_count(counts.themes, dimensions.theme);
     increment_count(counts.interests, dimensions.primaryInterest);
 }
 
@@ -254,6 +263,7 @@ function select_diverse(
         genres: new Map(),
         decades: new Map(),
         types: new Map(),
+        themes: new Map(),
         interests: new Map()
     };
 
@@ -537,6 +547,78 @@ function create_candidate_repository({ sequelize }) {
     };
 }
 
+function create_recommendation_reader({ sequelize }) {
+    async function get_published_for_user(userId) {
+        const numericUserId = Number(userId);
+        if (!Number.isSafeInteger(numericUserId) || numericUserId <= 0) {
+            throw new Error('A valid user id is required to read recommendations');
+        }
+
+        // Reservations may advance without publishing; persisted IDs still increase monotonically.
+        const recommendations = await sequelize.query(`
+            SELECT
+                recommendation.generation_id,
+                recommendation.score,
+                recommendation.position,
+                recommendation.is_exploration,
+                book.id,
+                book.titulo,
+                book.url_portada,
+                book.ranking,
+                author.nombre AS nombre_autor
+            FROM \`user_recommendations\` AS recommendation
+            INNER JOIN (
+                SELECT user_id, MAX(generation_id) AS generation_id
+                FROM \`user_recommendations\`
+                WHERE user_id = :userId
+                    AND generation_id > 0
+                GROUP BY user_id
+            ) AS published
+                ON published.user_id = recommendation.user_id
+                AND published.generation_id = recommendation.generation_id
+            INNER JOIN \`Libro\` AS book
+                ON book.id = recommendation.book_id
+            LEFT JOIN \`Autor\` AS author
+                ON author.id = book.id_autor
+            WHERE recommendation.user_id = :userId
+            ORDER BY recommendation.position ASC
+            LIMIT 20
+        `, {
+            replacements: { userId: numericUserId },
+            type: QueryTypes.SELECT
+        });
+
+        if (recommendations.length === 0) {
+            return {
+                status: 'pending',
+                generation_id: null,
+                libros: []
+            };
+        }
+
+        const generationId = Number(recommendations[0].generation_id);
+        if (
+            !Number.isSafeInteger(generationId) ||
+            generationId < 0 ||
+            recommendations.some((recommendation) =>
+                Number(recommendation.generation_id) !== generationId
+            )
+        ) {
+            const error = new Error('Published recommendation generation is invalid');
+            error.code = 'RECOMMENDATION_PUBLICATION_INVALID';
+            throw error;
+        }
+
+        return {
+            status: 'ready',
+            generation_id: generationId,
+            libros: recommendations
+        };
+    }
+
+    return { get_published_for_user };
+}
+
 function create_recommendation_service({
     sequelize,
     Usuario,
@@ -617,20 +699,24 @@ function create_recommendation_service({
                 return false;
             }
 
+            if (recommendations.length === 0) {
+                const error = new Error('Recommendation generation produced no candidates');
+                error.code = 'RECOMMENDATION_GENERATION_EMPTY';
+                throw error;
+            }
+
             await UserRecommendation.destroy({
                 where: { user_id: userId },
                 transaction
             });
-            if (recommendations.length > 0) {
-                await UserRecommendation.bulkCreate(recommendations.map((recommendation) => ({
-                    user_id: userId,
-                    book_id: recommendation.book_id,
-                    generation_id: generation.generationId,
-                    score: recommendation.score,
-                    position: recommendation.position,
-                    is_exploration: recommendation.is_exploration
-                })), { transaction });
-            }
+            await UserRecommendation.bulkCreate(recommendations.map((recommendation) => ({
+                user_id: userId,
+                book_id: recommendation.book_id,
+                generation_id: generation.generationId,
+                score: recommendation.score,
+                position: recommendation.position,
+                is_exploration: recommendation.is_exploration
+            })), { transaction });
             return true;
         });
 
@@ -655,6 +741,7 @@ module.exports = {
     DEFAULT_EXPLORATION_RATIO,
     MAX_CANDIDATE_COUNT,
     create_candidate_repository,
+    create_recommendation_reader,
     create_recommendation_service,
     generate_candidate_set,
     get_effective_weights,

@@ -36,7 +36,7 @@ export default function Principal() {
     generoSeleccionado,
     setGeneroSeleccionado,
     bookCarousels,
-    ultimoLibroObj,
+    recommendationStatus,
   } = usePrincipal(user);
 
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -130,6 +130,20 @@ export default function Principal() {
             <BookList libros={carousel.books} onBookClick={handleBookCardClick} />
           </section>
         ))}
+
+        {user?.id && recommendationStatus === 'pending' && (
+          <section className="book-section">
+            <h2 className="titulo-section">Recomendados para vos</h2>
+            <p>Todavía no hay recomendaciones generadas.</p>
+          </section>
+        )}
+
+        {user?.id && recommendationStatus === 'error' && (
+          <section className="book-section">
+            <h2 className="titulo-section">Recomendados para vos</h2>
+            <p>No se pudieron cargar las recomendaciones.</p>
+          </section>
+        )}
 
       </main>
 
