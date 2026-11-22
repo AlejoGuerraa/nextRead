@@ -96,6 +96,24 @@ test('more-from-author requires two read books and excludes already-read books',
     assert.ok(carousel.libros.every((book) => book.id_autor === 8));
 });
 
+test('read-again carousel returns only eligible read and highly rated or favorite books', async () => {
+    const { service, calls } = make_service((sql, { replacements }) => {
+        assert.match(sql, /state\.reading_status = 'read'/);
+        assert.match(sql, /state\.is_favorite = 1 OR rating\.puntuacion >= 4/);
+        assert.equal(replacements.userId, 31);
+        return Array.from({ length: 5 }, (_, index) =>
+            make_book(index + 300, { puntuacion_usuario: 5 })
+        );
+    });
+
+    const carousel = await service.get_read_again_carousel(31);
+
+    assert.equal(calls.length, 1);
+    assert.equal(carousel.id, 'volver-a-leerlo');
+    assert.equal(carousel.title, 'Volver a leerlo');
+    assert.equal(carousel.libros.length, 5);
+});
+
 test('random list selection reads only the authenticated user and preserves list order', async () => {
     const { service, calls } = make_service((sql, options, callIndex) => {
         if (callIndex === 1) {

@@ -1,3 +1,5 @@
+@import url('https://fonts.googleapis.com/css2?family=Work+Sans:wght@400;500;600;700;800&display=swap');
+
 .logueado-container {
     position: relative;
     padding: 0;
@@ -125,6 +127,20 @@ footer {
 /* --- MAIN CONTENT --- */
 .logueado-main {
     padding: 0 20px;
+    font-family: 'Work Sans', sans-serif;
+}
+
+.logueado-main .titulo-section,
+.logueado-main .book-carousel,
+.logueado-main .authors-carousel {
+    font-family: 'Work Sans', sans-serif;
+}
+
+.logueado-main .titulo-section {
+    margin: 0;
+    color: #26383a;
+    font-size: 1.55rem;
+    font-weight: 800;
 }
 
 /* --- CARRUSEL Y SECCIONES --- */

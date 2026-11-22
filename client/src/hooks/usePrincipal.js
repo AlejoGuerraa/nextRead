@@ -30,6 +30,7 @@ export function usePrincipal(user) {
   const [recommendationStatus, setRecommendationStatus] = useState('idle');
   const [librosPorDecada, setLibrosPorDecada] = useState([]);
   const [reloadKey, setReloadKey] = useState(0);
+  const [selectionSeed] = useState(() => `visit-${Date.now().toString(36)}`);
 
   useEffect(() => {
     const triggerReload = () => {
@@ -228,8 +229,9 @@ export function usePrincipal(user) {
       publicDecadeCarousels,
       userId: user?.id,
       recommendationStatus,
+      selectionSeed,
     });
-  }, [contextualCarousels, globalCarousels, librosPorDecada, personalizedCarousels, recommendationStatus, user?.id]);
+  }, [contextualCarousels, globalCarousels, librosPorDecada, personalizedCarousels, recommendationStatus, selectionSeed, user?.id]);
 
   return {
     recommendationStatus,

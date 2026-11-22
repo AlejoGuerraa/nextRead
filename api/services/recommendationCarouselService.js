@@ -218,14 +218,15 @@ function build_jewels(candidates) {
 
     return {
         id: 'joyas-por-descubrir',
-        title: 'Joyas por descubrir',
+        title: 'Joyas escondidas',
         libros: books.map(to_book_card)
     };
 }
 
 function build_group_carousels(candidates, {
     idPrefix,
-    titlePrefix,
+    titlePrefix = '',
+    titleBuilder = null,
     getLabels,
     maxGroups = Number.POSITIVE_INFINITY
 }) {
@@ -251,7 +252,7 @@ function build_group_carousels(candidates, {
             const affinity = books.reduce((total, book) => total + book.score, 0) / books.length;
             return {
                 id: `${idPrefix}-${group.key}`,
-                title: `${titlePrefix}${group.label}`,
+                title: titleBuilder ? titleBuilder(group.label, group.key) : `${titlePrefix}${group.label}`,
                 libros: books.map(to_book_card),
                 affinity,
                 bookCount: books.length,
@@ -290,12 +291,25 @@ function build_personalized_carousels(rows) {
 
     carousels.push(...build_group_carousels(candidates, {
         idPrefix: 'epoca',
-        titlePrefix: 'Época: ',
+        titleBuilder: (label) => {
+            const decade = label.replace(/s$/, '').trim();
+            return `Libros del ${decade} que te pueden atrapar`;
+        },
         getLabels: get_decade_labels
     }));
     carousels.push(...build_group_carousels(candidates, {
         idPrefix: 'tipo',
-        titlePrefix: 'Tipo: ',
+        titleBuilder: (label) => {
+            const normalized = label.trim().normalize('NFC').toLocaleLowerCase('es');
+            const plural = /a$/i.test(normalized)
+                ? `${normalized.slice(0, -1)}as`
+                : /e$/i.test(normalized)
+                    ? `${normalized}es`
+                    : /o$/i.test(normalized)
+                        ? `${normalized.slice(0, -1)}os`
+                        : `${normalized}s`;
+            return `Nuestra selección de ${plural}`;
+        },
         getLabels: (candidate) => [candidate.tipo]
     }));
     carousels.push(...build_group_carousels(candidates, {
@@ -310,7 +324,7 @@ function build_personalized_carousels(rows) {
 
     carousels.push(...build_group_carousels(candidates, {
         idPrefix: 'tema',
-        titlePrefix: 'Tema: ',
+        titlePrefix: '',
         getLabels: (candidate) => [candidate.tema]
     }));
 

@@ -92,13 +92,18 @@ test('groups only supported periods and combines accent/case variants without du
     const genre = get_carousel(carousels, 'genero-ficcion');
     const type = get_carousel(carousels, 'tipo-novela');
     const decade = get_carousel(carousels, 'epoca-1960s');
+    const theme = get_carousel(carousels, 'tema-aventura');
 
     assert.ok(genre);
     assert.ok(type);
     assert.ok(decade);
+    assert.ok(theme);
     assert.equal(genre.libros.length, 4);
     assert.equal(type.libros.length, 4);
     assert.equal(decade.libros.length, 4);
+    assert.equal(decade.title, 'Libros del 1960 que te pueden atrapar');
+    assert.equal(type.title, 'Nuestra selección de novelas');
+    assert.equal(theme.title, 'Aventura');
     assert.equal(get_carousel(carousels, 'epoca-1980s'), undefined);
     assert.equal(get_carousel(carousels, 'epoca-0s'), undefined);
     assert.equal(new Set(genre.libros.map(({ id }) => id)).size, genre.libros.length);
@@ -118,6 +123,7 @@ test('Joyas uses compatibility, quality, and relative popularity and excludes re
     const carousel = get_carousel(build_personalized_carousels(rows), 'joyas-por-descubrir');
 
     assert.ok(carousel);
+    assert.equal(carousel.title, 'Joyas escondidas');
     assert.ok(carousel.libros.length >= 3);
     assert.ok(carousel.libros.length <= 20);
     assert.equal(carousel.libros.some(({ id }) => id === 1 || id > 5), false);
