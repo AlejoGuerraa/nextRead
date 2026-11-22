@@ -13,7 +13,7 @@
     ],
     "tags": ["1980", "junji ito", "terror", "manga", "japon", "ingles", "medio", "adultos", "obsesion", "inmortalidad", "violencia", "muerte"],
     "url_portada": "/portadasLibros/mangas/JunjiIto/Tomie.jpg",
-    "id_autor": 79
+    "id_autor": 80
   },
   {
     "titulo": "Gyo Deluxe Edition",
@@ -29,7 +29,7 @@
     ],
     "tags": ["2000", "junji ito", "terror", "manga", "japon", "ingles", "medio", "adultos", "experimentos cientificos", "contaminacion", "horror corporal", "violencia", "muerte", "guerra"],
     "url_portada": "/portadasLibros/mangas/JunjiIto/GyoDeluxe.jpg",
-    "id_autor": 79
+    "id_autor": 80
   },
   {
     "titulo": "Soichi",
@@ -45,7 +45,7 @@
     ],
     "tags": ["1990", "junji ito", "terror", "manga", "japon", "ingles", "facil", "adolescentes", "adultos", "ocultismo", "maldiciones", "humor negro", "violencia"],
     "url_portada": "/portadasLibros/mangas/JunjiIto/SoichiCollection.jpg",
-    "id_autor": 79
+    "id_autor": 80
   },
   {
     "titulo": "Uzumaki Deluxe Edition",
@@ -60,7 +60,7 @@
       "Sobrenatural"
     ],
     "tags": ["1990", "junji ito", "terror", "manga", "japon", "ingles", "complejo", "adultos", "obsesion", "locura", "horror cosmico", "transformacion corporal", "violencia", "muerte", "autolesiones"],
-    "url_portada": "/portadasLibros/mangas/JunjiIto/Uzumaki.jpg",
-    "id_autor": 79
+    "url_portada": "/portadasLibros/mangas/JunjiIto/UzumakiDeluxe.jpg",
+    "id_autor": 80
   }
 ]

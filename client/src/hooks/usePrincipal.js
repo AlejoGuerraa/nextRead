@@ -29,6 +29,34 @@ export function usePrincipal(user) {
   const [contextualCarousels, setContextualCarousels] = useState([]);
   const [recommendationStatus, setRecommendationStatus] = useState('idle');
   const [librosPorDecada, setLibrosPorDecada] = useState([]);
+  const [reloadKey, setReloadKey] = useState(0);
+
+  useEffect(() => {
+    const triggerReload = () => {
+      if (document.visibilityState === 'visible') {
+        setReloadKey((key) => key + 1);
+      }
+    };
+
+    window.addEventListener('focus', triggerReload);
+    document.addEventListener('visibilitychange', triggerReload);
+    return () => {
+      window.removeEventListener('focus', triggerReload);
+      document.removeEventListener('visibilitychange', triggerReload);
+    };
+  }, []);
+
+  useEffect(() => {
+    if (recommendationStatus !== 'pending') return undefined;
+
+    const intervalId = window.setInterval(() => {
+      if (document.visibilityState === 'visible') {
+        setReloadKey((key) => key + 1);
+      }
+    }, 8000);
+
+    return () => window.clearInterval(intervalId);
+  }, [recommendationStatus]);
 
   useEffect(() => {
     let isActive = true;
@@ -60,26 +88,33 @@ export function usePrincipal(user) {
     return () => {
       isActive = false;
     };
-  }, []);
+  }, [reloadKey]);
 
   useEffect(() => {
+    let isActive = true;
+
     const fetchDecadasPersonalizadas = async () => {
       if (user?.id) {
-        setLibrosPorDecada([]);
+        if (isActive) setLibrosPorDecada([]);
         return;
       }
 
       try {
         const data = await getBooksByDecade();
-        setLibrosPorDecada(Array.isArray(data?.decades) ? data.decades.slice(0, 5) : []);
+        if (isActive) {
+          setLibrosPorDecada(Array.isArray(data?.decades) ? data.decades.slice(0, 5) : []);
+        }
       } catch (error) {
         console.error('Error cargando libros por década:', error);
-        setLibrosPorDecada([]);
+        if (isActive) setLibrosPorDecada([]);
       }
     };
 
     fetchDecadasPersonalizadas();
-  }, [user?.id]);
+    return () => {
+      isActive = false;
+    };
+  }, [user?.id, reloadKey]);
 
   useEffect(() => {
     let isActive = true;
@@ -91,8 +126,9 @@ export function usePrincipal(user) {
         return;
       }
 
-      setPersonalizedCarousels([]);
-      setRecommendationStatus('loading');
+      setRecommendationStatus((currentStatus) => (
+        currentStatus === 'pending' ? 'pending' : 'loading'
+      ));
 
       try {
         const data = await getPersonalizedCarousels();
@@ -132,7 +168,7 @@ export function usePrincipal(user) {
     return () => {
       isActive = false;
     };
-  }, [user?.id]);
+  }, [user?.id, reloadKey]);
 
   useEffect(() => {
     let isActive = true;
@@ -174,7 +210,7 @@ export function usePrincipal(user) {
     return () => {
       isActive = false;
     };
-  }, [user?.id]);
+  }, [user?.id, reloadKey]);
 
   const bookCarousels = useMemo(() => {
     const publicDecadeCarousels = !user?.id && Array.isArray(librosPorDecada)

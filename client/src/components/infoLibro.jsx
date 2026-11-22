@@ -1,7 +1,7 @@
 // InfoLibro.jsx
 import React, { useEffect, useState } from "react";
 import { useToast } from './ToastProvider';
-import { useParams } from "react-router-dom";
+import { Link, useParams } from "react-router-dom";
 import api from '../services/api';
 import { saveBookRating } from '../services/booksService';
 import { Bookmark, Heart, Clock, PlusCircle, Book } from "lucide-react"; // iconos más lindos
@@ -22,6 +22,7 @@ export default function InfoLibro({ libro, onRestrictedAction, actionRef, onOpen
     const { id } = useParams();
     const { titulo, Autor, portada, generos, anio, tipo, descripcion, ranking } = libro;
     const autorNombre = Autor?.nombre || "Autor Desconocido";
+    const autorId = Autor?.id;
 
     const [userRating, setUserRating] = useState(0);
     const [hoverRating, setHoverRating] = useState(0);
@@ -106,7 +107,13 @@ export default function InfoLibro({ libro, onRestrictedAction, actionRef, onOpen
 
             <div className="libro-info">
                 <h2 className="libro-titulo">{titulo}</h2>
-                <p className="libro-autor">{autorNombre}</p>
+                {autorId ? (
+                    <Link to={`/autor/${autorId}`} className="libro-autor libro-autor-link">
+                        {autorNombre}
+                    </Link>
+                ) : (
+                    <p className="libro-autor">{autorNombre}</p>
+                )}
 
                 <div className="libro-meta">
                     <span><strong>Género:</strong> {generos.join(", ") || "—"}</span>

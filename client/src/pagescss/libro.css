@@ -99,6 +99,18 @@ body {
   font-weight: 500;
 }
 
+.libro-autor-link {
+  display: inline-block;
+  text-decoration: none;
+  transition: color 0.2s ease, text-decoration-color 0.2s ease;
+}
+
+.libro-autor-link:hover {
+  color: var(--primary);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
 .libro-meta {
   display: flex;
   gap: 20px;

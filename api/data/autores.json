@@ -1,331 +1,346 @@
 [
-  
   {
     "nombre": "Julio Cortázar",
-    "url_cara": ""
+    "url_cara": "/autores/Julio_Cortazar.png"
   },
   {
     "nombre": "Ernesto Sabato",
-    "url_cara": ""
+    "url_cara": "/autores/Ernesto_Sabato.png"
   },
   {
     "nombre": "Mario Benedetti",
-    "url_cara": ""
+    "url_cara": "/autores/Mario_Benedetti.png"
   },
   {
     "nombre": "Gabriel García Márquez",
-    "url_cara": ""
+    "url_cara": "/autores/Gabriel_Garcia_Marquez.png"
   },
   {
     "nombre": "Jane Austen",
-    "url_cara": ""
+    "url_cara": "/autores/Jane_Austen.png"
   },
-
   {
     "nombre": "Jorge Luis Borges",
-    "url_cara": ""
+    "url_cara": "/autores/Jorge_Luis_Borges.png"
   },
   {
     "nombre": "Franz Kafka",
-    "url_cara": ""
+    "url_cara": "/autores/Franz_Kafka.png"
   },
   {
     "nombre": "Arthur Conan Doyle",
-    "url_cara": ""
+    "url_cara": "/autores/Arthur_Conan_Doyle.png"
   },
   {
     "nombre": "Albert Camus",
-    "url_cara": ""
+    "url_cara": "/autores/Albert_Camus.png"
   },
   {
     "nombre": "Ana María Matute",
-    "url_cara": ""
+    "url_cara": "/autores/Ana_Maria_Matute.png"
   },
-
   {
     "nombre": "Isabel Allende",
-    "url_cara": ""
+    "url_cara": "/autores/Isabel_Allende.png"
   },
   {
     "nombre": "Federico García Lorca",
-    "url_cara": ""
+    "url_cara": "/autores/Federico_Garcia_Lorca.png"
   },
   {
     "nombre": "Miguel de Cervantes",
-    "url_cara": ""
+    "url_cara": "/autores/Miguel_De_Cervantes.png"
   },
   {
     "nombre": "William Shakespeare",
-    "url_cara": ""
+    "url_cara": "/autores/William_Shakespeare.png"
   },
   {
     "nombre": "Virginia Woolf",
-    "url_cara": ""
+    "url_cara": "/autores/Virginia_woolf.png"
   },
-
   {
     "nombre": "Charles Dickens",
-    "url_cara": ""
+    "url_cara": "/autores/Charles_Dickens.png"
   },
   {
     "nombre": "Herman Melville",
-    "url_cara": ""
+    "url_cara": "/autores/Herman_Melville.png"
   },
   {
     "nombre": "Oscar Wilde",
-    "url_cara": ""
+    "url_cara": "/autores/Oscar_WIlde.png"
   },
   {
     "nombre": "Alejandra Pizarnik",
-    "url_cara": ""
+    "url_cara": "/autores/Alejandra_Pizarnik.png"
   },
   {
     "nombre": "Clarice Lispector",
-    "url_cara": ""
+    "url_cara": "/autores/Clarice_Lispector.png"
   },
-  
   {
     "nombre": "Edgar Allan Poe",
-    "url_cara": ""
+    "url_cara": "/autores/Edgar_Allan_Poe.png"
   },
   {
     "nombre": "Homer",
-    "url_cara": ""
+    "url_cara": "/autores/Homer.png"
   },
   {
     "nombre": "Dante Alighieri",
-    "url_cara": ""
+    "url_cara": "/autores/Dante_Alighieri.png"
   },
   {
     "nombre": "Leo Tolstoi",
-    "url_cara": ""
+    "url_cara": "/autores/Leo_Tolstoi.png"
   },
   {
     "nombre": "Fiodor Dostoevski",
-    "url_cara": ""
+    "url_cara": "/autores/Fiodor_Dostoievski.png"
   },
   {
     "nombre": "Pablo Neruda",
-    "url_cara": ""
+    "url_cara": "/autores/Pablo_Neruda.png"
   },
   {
     "nombre": "Octavio Paz",
-    "url_cara": ""
+    "url_cara": "/autores/Octavio_paz.png"
   },
   {
     "nombre": "José Saramago",
-    "url_cara": ""
+    "url_cara": "/autores/Jose_Saramago.png"
   },
   {
     "nombre": "Elena Garro",
-    "url_cara": ""
+    "url_cara": "/autores/Elena_Garro.png"
   },
   {
     "nombre": "Juan Rulfo",
-    "url_cara": ""
+    "url_cara": "/autores/Juan_Rulfo.png"
   },
   {
     "nombre": "Laura Esquivel",
-    "url_cara": ""
+    "url_cara": "/autores/Laura_Esquivel.png"
   },
   {
     "nombre": "Toni Morrison",
-    "url_cara": ""
+    "url_cara": "/autores/Toni_Morrison.png"
   },
   {
     "nombre": "J.R.R. Tolkien",
-    "url_cara": ""
+    "url_cara": "/autores/JRR_Tolkien.png"
   },
   {
     "nombre": "J.K. Rowling",
-    "url_cara": ""
+    "url_cara": "/autores/JK_Rowling.png"
   },
   {
     "nombre": "George Orwell",
-    "url_cara": ""
+    "url_cara": "/autores/George_Orwell.png"
   },
   {
     "nombre": "Aldous Huxley",
-    "url_cara": ""
+    "url_cara": "/autores/Aldous_Huxley.png"
   },
   {
     "nombre": "Emily Dickinson",
-    "url_cara": ""
+    "url_cara": "/autores/Emily_Dickinson.png"
   },
   {
     "nombre": "Walt Whitman",
-    "url_cara": ""
+    "url_cara": "/autores/Walt_Whitman.png"
   },
   {
     "nombre": "Haruki Murakami",
-    "url_cara": ""
+    "url_cara": "/autores/Haruki_Murakami.png"
   },
   {
     "nombre": "Umberto Eco",
-    "url_cara": ""
+    "url_cara": "/autores/Umberto_Eco.png"
   },
   {
     "nombre": "Italo Calvino",
-    "url_cara": ""
+    "url_cara": "/autores/Italo_Calvino.png"
   },
   {
     "nombre": "Agatha Christie",
-    "url_cara": ""
+    "url_cara": "/autores/Agatha_Christie.png"
   },
   {
     "nombre": "Stephen King",
-    "url_cara": ""
+    "url_cara": "/autores/Stephen_King.png"
   },
   {
     "nombre": "Ray Bradbury",
-    "url_cara": ""
+    "url_cara": "/autores/Ray_Bradbury.png"
   },
   {
     "nombre": "Mary Shelley",
-    "url_cara": ""
+    "url_cara": "/autores/Mary_Shelley.png"
   },
   {
     "nombre": "Gabriel Miró",
-    "url_cara": ""
+    "url_cara": "/autores/Gabriel_Miro.png"
   },
   {
     "nombre": "Camilo José Cela",
-    "url_cara": ""
+    "url_cara": "/autores/Camilo_Jose_Cela.png"
   },
   {
     "nombre": "Carmen Laforet",
-    "url_cara": ""
+    "url_cara": "/autores/Carmen_Laforet.png"
   },
   {
     "nombre": "Antonio Machado",
-    "url_cara": ""
+    "url_cara": "/autores/Antonio_Machado.png"
   },
   {
     "nombre": "Pedro Calderón de la Barca",
-    "url_cara": ""
+    "url_cara": "/autores/Pedro_Calderon_De_La_Barca.png"
   },
   {
     "nombre": "Lope de Vega",
-    "url_cara": ""
+    "url_cara": "/autores/Lope_De_Vega.png"
   },
   {
     "nombre": "Simone de Beauvoir",
-    "url_cara": ""
+    "url_cara": "/autores/Simone_De_Beauvoir.png"
   },
   {
     "nombre": "Jean-Paul Sartre",
-    "url_cara": ""
+    "url_cara": "/autores/Jean_Paul_Sartre.png"
   },
   {
     "nombre": "F. Scott Fitzgerald",
-    "url_cara": ""
+    "url_cara": "/autores/Scott_Fitzgerald.png"
   },
   {
     "nombre": "Ernest Hemingway",
-    "url_cara": ""
+    "url_cara": "/autores/Ernest_Hemingway.png"
   },
   {
     "nombre": "Mark Twain",
-    "url_cara": ""
+    "url_cara": "/autores/Mark_Twain.png"
   },
   {
     "nombre": "Louisa May Alcott",
-    "url_cara": ""
+    "url_cara": "/autores/Louisa_May_Alcott.png"
   },
   {
     "nombre": "H.G. Wells",
-    "url_cara": ""
+    "url_cara": "/autores/HG_Wells.png"
   },
   {
     "nombre": "Jules Verne",
-    "url_cara": ""
+    "url_cara": "/autores/Jules_Verne.png"
   },
   {
     "nombre": "Ken Follett",
-    "url_cara": ""
+    "url_cara": "/autores/Ken_Follett.png"
   },
   {
     "nombre": "Dan Brown",
-    "url_cara": ""
+    "url_cara": "/autores/Dan_Brown.png"
   },
   {
     "nombre": "Paulo Coelho",
-    "url_cara": ""
+    "url_cara": "/autores/Paulo_Coelho.png"
   },
   {
     "nombre": "Suzanne Collins",
-    "url_cara": ""
+    "url_cara": "/autores/Suzanne_Collins.png"
   },
   {
     "nombre": "George R.R. Martin",
-    "url_cara": ""
+    "url_cara": "/autores/George_RR_Martin.png"
   },
   {
     "nombre": "Patrick Rothfuss",
-    "url_cara": ""
+    "url_cara": "/autores/Patrick_Rothfuss.png"
   },
   {
     "nombre": "Neil Gaiman",
-    "url_cara": ""
+    "url_cara": "/autores/Neil_Gaiman.png"
   },
   {
     "nombre": "Roald Dahl",
-    "url_cara": ""
+    "url_cara": "/autores/Roald_Dahl.png"
   },
   {
     "nombre": "C.S. Lewis",
-    "url_cara": ""
+    "url_cara": "/autores/CS_Lewis.png"
   },
   {
     "nombre": "Anaïs Nin",
-    "url_cara": ""
+    "url_cara": "/autores/Anais_Nin.png"
   },
   {
     "nombre": "Jorge Amado",
-    "url_cara": "70"
+    "url_cara": "/autores/Jorge_Amado.png"
   },
   {
     "nombre": "Dashiell Hammett",
-    "url_cara": ""
+    "url_cara": "/autores/Dashiell_Hammett.png"
   },
   {
     "nombre": "Hirohiko Araki",
-    "url_cara": "72"
+    "url_cara": "/autores/Hirohiko_Araki.png"
   },
   {
-    "nombre": " Takehiko Inoue",
-    "url_cara": "73"
+    "nombre": "Takehiko Inoue",
+    "url_cara": "/autores/Takehiko_Inoue.png"
   },
   {
-    "nombre": "Tatsuki Fujimot",
-    "url_cara": "74"
+    "nombre": "Tatsuki Fujimoto",
+    "url_cara": "/autores/Tatsuki_Fujimoto.png"
   },
   {
     "nombre": "Makoto Shinkai",
-    "url_cara": "75"
+    "url_cara": "/autores/Makoto_Shinkai.png"
   },
   {
     "nombre": "Yoshitoki Ōima",
-    "url_cara": "76"
+    "url_cara": "/autores/Yoshitoki_Oima.png"
   },
   {
     "nombre": "Tsugumi Ōba",
-    "url_cara": "77"
+    "url_cara": "/autores/Tsugumi_Ohba.png"
   },
   {
     "nombre": "Gege Akutami",
-    "url_cara": "78"
+    "url_cara": "/autores/Gege_Akutami.png"
   },
   {
     "nombre": "Yukinobu Tatsu",
-    "url_cara": "79"
+    "url_cara": "/autores/Yukinobu_Tatsu.png"
   },
   {
     "nombre": "Junji Ito",
-    "url_cara": "80"
+    "url_cara": "/autores/Junji_Ito.png"
   },
   {
     "nombre": "Inio Asano",
-    "url_cara": ""
+    "url_cara": "/autores/Inio_Asano.png"
+  },
+  {
+    "nombre": "Antoine de Saint-Exupéry",
+    "url_cara": "/autores/Antoine_Saint_Exupery.png"
+  },
+  {
+    "nombre": "V. E. Schwab",
+    "url_cara": "/autores/VE_Schwab.png"
+  },
+  {
+    "nombre": "Ranmaru Kotone",
+    "url_cara": "/autores/Ranmaru_Kotone.png"
+  },
+  {
+    "nombre": "Akira Toriyama",
+    "url_cara": "/autores/Akira_Toriyama.png"
+  },
+  {
+    "nombre": "HP Lovecraft",
+    "url_cara": "/autores/HP_Lovecraft.png"
   }
 ]

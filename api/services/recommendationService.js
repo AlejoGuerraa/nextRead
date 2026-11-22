@@ -567,6 +567,7 @@ function create_recommendation_reader({ sequelize }) {
                 recommendation.is_exploration,
                 book.id,
                 book.titulo,
+                book.url_portada,
                 book.anio,
                 book.tipo,
                 book.tema,

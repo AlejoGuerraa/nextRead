@@ -14,7 +14,7 @@
     ],
     "tags": ["2010", "ranmaru kotone", "romance", "manga", "japon", "japones", "medio", "adolescentes", "destino", "memoria", "ninguno"],
     "url_portada": "/portadasLibros/mangas/Your Name/1.jpg",
-    "id_autor": 75
+    "id_autor": 84
   },
   {
     "titulo": "Your Name - 2",
@@ -31,7 +31,7 @@
     ],
     "tags": ["2010", "ranmaru kotone", "romance", "manga", "japon", "japones", "medio", "adolescentes", "destino", "memoria", "muerte"],
     "url_portada": "/portadasLibros/mangas/Your Name/2.jpg",
-    "id_autor": 75
+    "id_autor": 84
   },
   {
     "titulo": "Your Name - 3",
@@ -48,6 +48,6 @@
     ],
     "tags": ["2010", "ranmaru kotone", "romance", "manga", "japon", "japones", "medio", "adolescentes", "destino", "memoria", "muerte"],
     "url_portada": "/portadasLibros/mangas/Your Name/3.jpg",
-    "id_autor": 75
+    "id_autor": 84
   }
 ]

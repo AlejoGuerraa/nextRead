@@ -31,7 +31,8 @@ function loadLibrosData() {
   return files.flatMap(filePath => {
     let records;
     try {
-      records = JSON.parse(fs.readFileSync(filePath, 'utf8'));
+      const rawContent = fs.readFileSync(filePath, 'utf8').replace(/^\uFEFF/, '');
+      records = JSON.parse(rawContent);
     } catch (error) {
       throw new Error(`No se pudo leer el JSON ${filePath}: ${error.message}`);
     }
