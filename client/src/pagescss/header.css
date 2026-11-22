@@ -113,6 +113,96 @@
   position: relative;
 }
 
+.guest-prompt-slot {
+  position: absolute;
+  top: calc(100% + 12px);
+  right: 0;
+  z-index: 140;
+  width: min(300px, calc(100vw - 24px));
+}
+
+.guest-prompt {
+  position: relative;
+  padding: 18px 18px 16px;
+  background: #fff;
+  color: #1A374D;
+  border: 1px solid rgba(105, 152, 171, 0.55);
+  border-radius: 16px;
+  box-shadow: 0 16px 36px rgba(26, 55, 77, 0.22);
+  text-align: left;
+}
+
+.guest-prompt::before {
+  content: "";
+  position: absolute;
+  top: -7px;
+  right: 36px;
+  width: 14px;
+  height: 14px;
+  background: #fff;
+  border-top: 1px solid rgba(105, 152, 171, 0.55);
+  border-left: 1px solid rgba(105, 152, 171, 0.55);
+  transform: rotate(45deg);
+}
+
+.guest-prompt-title {
+  margin: 0;
+  font-family: "Poppins", sans-serif;
+  font-size: 16px;
+  font-weight: 700;
+  color: #1A374D;
+}
+
+.guest-prompt-text {
+  margin: 8px 0 0;
+  color: #406882;
+  font-size: 13.5px;
+  line-height: 1.45;
+}
+
+.guest-prompt-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 14px;
+}
+
+.guest-prompt-primary,
+.guest-prompt-secondary {
+  flex: 1;
+  min-height: 38px;
+  border-radius: 10px;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.guest-prompt-primary {
+  border: 1px solid #1A374D;
+  background: linear-gradient(90deg, #1A374D, #406882);
+  color: #fff;
+}
+
+.guest-prompt-primary:hover {
+  filter: brightness(1.08);
+}
+
+.guest-prompt-secondary {
+  border: 1px solid #406882;
+  background: #fff;
+  color: #1A374D;
+}
+
+.guest-prompt-secondary:hover {
+  background: #f3f8fb;
+}
+
+.guest-prompt-primary:focus-visible,
+.guest-prompt-secondary:focus-visible {
+  outline: 3px solid #6998AB;
+  outline-offset: 2px;
+}
+
 .header-actions-menu {
   display: flex;
   align-items: center;

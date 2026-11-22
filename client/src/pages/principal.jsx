@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useAuth } from '../hooks/useAuth';
 import { usePrincipal } from '../hooks/usePrincipal';
 
@@ -7,7 +7,6 @@ import Carousel from '../components/carrouselImagenes';
 import BookList from '../components/carrouselLibros';
 import AuthorsCarousel from '../components/AuthorsCarousel';
 import Footer from '../components/footer';
-import RestrictionPopover from '../components/popOver';
 
 import '../pagescss/principal.css';
 
@@ -36,47 +35,9 @@ export default function Principal() {
   const { bookCarousels, recommendationStatus } = usePrincipal(user);
 
   const [currentIndex, setCurrentIndex] = useState(0);
-  const headerRightRef = useRef(null);
-  const popoverRef = useRef(null);
-  const [showRestriction, setShowRestriction] = useState(false);
-  const [popoverKey, setPopoverKey] = useState(0);
-  const [popoverOpacity, setPopoverOpacity] = useState(0);
 
   useEffect(() => {
     document.title = 'NextRead - Inicio';
-  }, []);
-
-  const showRestrictionPopover = () => {
-    setPopoverKey((k) => k + 1);
-    setShowRestriction(false);
-    setPopoverOpacity(0);
-
-    setTimeout(() => {
-      setShowRestriction(true);
-      setTimeout(() => setPopoverOpacity(1), 10);
-    }, 8);
-  };
-
-  const handleRestrictedAction = () => {
-    showRestrictionPopover();
-  };
-
-  useEffect(() => {
-    const handleClickOutside = (event) => {
-      const target = event.target;
-      const clickedInsideHeaderRight =
-        headerRightRef.current && headerRightRef.current.contains(target);
-      const clickedInsidePopover =
-        popoverRef.current && popoverRef.current.contains(target);
-
-      if (!clickedInsideHeaderRight && !clickedInsidePopover) {
-        setPopoverOpacity(0);
-        setTimeout(() => setShowRestriction(false), 240);
-      }
-    };
-
-    document.addEventListener('click', handleClickOutside);
-    return () => document.removeEventListener('click', handleClickOutside);
   }, []);
 
   const handleBookCardClick = (bookId) => {
@@ -85,29 +46,7 @@ export default function Principal() {
 
   return (
     <div className="logueado-container" style={{ backgroundImage: `url(${fondo})` }}>
-      <Header
-        user={user}
-        onRestrictedAction={handleRestrictedAction}
-        headerRightRef={headerRightRef}
-      />
-
-      {showRestriction && headerRightRef.current && (
-        <div
-          key={popoverKey}
-          ref={popoverRef}
-          className="restriction-popover-wrapper"
-          style={{
-            opacity: popoverOpacity,
-            pointerEvents: popoverOpacity === 1 ? 'auto' : 'none',
-            position: 'absolute',
-            top: headerRightRef.current.getBoundingClientRect().bottom + window.scrollY + 8 + 'px',
-            left: headerRightRef.current.getBoundingClientRect().right + window.scrollX - 260 + 'px',
-            zIndex: 9999,
-          }}
-        >
-          <RestrictionPopover />
-        </div>
-      )}
+      <Header user={user} />
 
       <main className="logueado-main">
         <Carousel

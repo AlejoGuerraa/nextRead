@@ -3,7 +3,6 @@ import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Header from "../components/header";
 import Footer from "../components/footer";
-import RestrictionPopover from "../components/popOver";
 import { logoutAndRedirect } from "../services/authService";
 import { useToast } from "../components/ToastProvider";
 
@@ -29,17 +28,6 @@ export default function Configuracion() {
   const navigate = useNavigate();
   const { push } = useToast();
 
-  // Popover para acciones restringidas
-  const popoverRef = React.useRef(null);
-
-  const [showPopover, setShowPopover] = useState(!initialUser);
-  const [popoverOpacity, setPopoverOpacity] = useState(!initialUser ? 1 : 0);
-
-  const handleRestrictedAction = () => {
-    setShowPopover(true);
-    setPopoverOpacity(1);
-  };
-
   const roleStr = (user?.rol || user?.role || '').toString().toLowerCase();
   const isAdmin = roleStr === 'admin';
 
@@ -63,24 +51,7 @@ export default function Configuracion() {
 
   return (
     <div className="pagina-configuracion">
-      <Header user={user} onRestrictedAction={handleRestrictedAction} />
-
-      {showPopover && (
-        <div
-          ref={popoverRef}
-          className="restriction-popover-wrapper"
-          style={{
-            opacity: popoverOpacity,
-            pointerEvents: "auto",
-            position: "fixed",
-            top: "80px",
-            right: "40px",
-            zIndex: 9999,
-          }}
-        >
-          <RestrictionPopover />
-        </div>
-      )}
+      <Header user={user} />
 
       <main className="config-wrapper">
         <div className="config-main-card">

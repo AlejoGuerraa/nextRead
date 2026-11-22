@@ -8,10 +8,11 @@ import { getCurrentUser } from "../services/usersService";
 import { markNotificationsAsRead } from "../services/notificationsService";
 import { useAuth } from "../hooks/useAuth";
 import { useToast } from "./ToastProvider";
+import RestrictionPopover, { GUEST_PROMPT_EVENT } from "./popOver";
 
 import "../pagescss/header.css";
 
-export default function Header({ user, onRestrictedAction, headerRightRef }) {
+export default function Header({ user }) {
   const navigate = useNavigate();
   const { user: authUser, isAuthenticated, loading } = useAuth();
   const { push } = useToast();
@@ -19,9 +20,11 @@ export default function Header({ user, onRestrictedAction, headerRightRef }) {
   const [userData, setUserData] = useState(null);
   const [avatarFailed, setAvatarFailed] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
-  const internalHeaderRef = useRef(null);
+  const [guestPromptOpen, setGuestPromptOpen] = useState(false);
+  const actionsRef = useRef(null);
   const menuToggleRef = useRef(null);
-  const actionsRef = headerRightRef || internalHeaderRef;
+  const profileButtonRef = useRef(null);
+  const guestPromptRef = useRef(null);
 
   const currentUser = authUser || (loading ? user : null);
   const profileName = currentUser?.nombre || currentUser?.usuario;
@@ -66,17 +69,38 @@ export default function Header({ user, onRestrictedAction, headerRightRef }) {
   }, [isAuthenticated]);
 
   useEffect(() => {
-    if (!menuOpen) return undefined;
+    const openGuestPrompt = () => setGuestPromptOpen(true);
+    window.addEventListener(GUEST_PROMPT_EVENT, openGuestPrompt);
+    return () => window.removeEventListener(GUEST_PROMPT_EVENT, openGuestPrompt);
+  }, []);
+
+  useEffect(() => {
+    if (isAuthenticated) setGuestPromptOpen(false);
+  }, [isAuthenticated]);
+
+  useEffect(() => {
+    if (!menuOpen && !guestPromptOpen) return undefined;
 
     const handlePointerDown = (event) => {
-      if (!actionsRef.current?.contains(event.target)) setMenuOpen(false);
+      const target = event.target;
+      if (menuOpen && !actionsRef.current?.contains(target)) setMenuOpen(false);
+      if (!guestPromptOpen) return;
+      const clickedPrompt = guestPromptRef.current?.contains(target);
+      const clickedProfile = profileButtonRef.current?.contains(target);
+      if (!clickedPrompt && !clickedProfile) setGuestPromptOpen(false);
+    };
+
+    const handleKeyDown = (event) => {
+      if (event.key === "Escape") setGuestPromptOpen(false);
     };
 
     document.addEventListener("pointerdown", handlePointerDown);
+    document.addEventListener("keydown", handleKeyDown);
     return () => {
       document.removeEventListener("pointerdown", handlePointerDown);
+      document.removeEventListener("keydown", handleKeyDown);
     };
-  }, [menuOpen, actionsRef]);
+  }, [menuOpen, guestPromptOpen]);
 
   const handleOpenNotif = () => {
     (async () => {
@@ -100,8 +124,10 @@ export default function Header({ user, onRestrictedAction, headerRightRef }) {
       if (target === "notificaciones") handleOpenNotif();
       if (target === "perfil") navigate("/perfil");
       if (target === "configuracion") navigate("/configuracion");
+    } else if (target === "perfil") {
+      setGuestPromptOpen((open) => !open);
     } else {
-      onRestrictedAction?.();
+      setGuestPromptOpen(true);
     }
   };
 
@@ -153,10 +179,13 @@ export default function Header({ user, onRestrictedAction, headerRightRef }) {
             aria-label="Accesos de cuenta"
           >
             <button
+              ref={profileButtonRef}
               className="icon-btn profile-box header-action profile-action"
               type="button"
-              title={isAuthenticated && authUser ? "Ir al perfil" : "Necesitas una cuenta"}
+              title={isAuthenticated && authUser ? "Ir al perfil" : "Necesitás una cuenta"}
               aria-label="Perfil"
+              aria-expanded={!isAuthenticated && guestPromptOpen}
+              aria-haspopup={!isAuthenticated ? "dialog" : undefined}
               onClick={() => handleActionClick("perfil")}
             >
               {isAuthenticated && avatarSrc && !avatarFailed ? (
@@ -198,6 +227,12 @@ export default function Header({ user, onRestrictedAction, headerRightRef }) {
               <span className="header-action-label">Configuración</span>
             </button>
           </nav>
+
+          {guestPromptOpen && !isAuthenticated && (
+            <div ref={guestPromptRef} className="guest-prompt-slot">
+              <RestrictionPopover onNavigate={() => setGuestPromptOpen(false)} />
+            </div>
+          )}
         </div>
       </header>
 

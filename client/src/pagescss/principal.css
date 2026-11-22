@@ -364,36 +364,6 @@ footer {
 }
 
 
-.restriction-popover {
-    position: relative;
-    background: #fff;
-    border: 2px solid #0a6fb4;
-    border-radius: 10px;
-    padding: 15px 18px;
-    width: 240px;
-    text-align: left;
-    box-shadow: 0 8px 22px rgba(12, 27, 56, 0.18);
-    font-family: Inter, sans-serif;
-}
-
-.restriction-popover p {
-    margin: 0;
-}
-
-.popover-link {
-    color: #0a6fb4;
-    font-weight: 700;
-    text-decoration: underline;
-    display: block;
-    margin-top: 8px;
-}
-
-.restriction-popover-wrapper {
-    transition: opacity 0.24s ease;
-    will-change: opacity;
-}
-
-
 @media (max-width: 1000px) {
     .container-images li {
         height: 220px;

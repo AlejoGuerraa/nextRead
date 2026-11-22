@@ -1,5 +1,5 @@
 // src/pages/Libro.jsx
-import React, { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import api from '../services/api';
 
@@ -9,7 +9,7 @@ import ElegirListaModal from "../components/listasUsuario/elegirListaModal";
 import Resenas from "../components/rating/resenias";
 import Header from "../components/header";
 import Footer from "../components/footer";
-import RestrictionPopover from "../components/popOver";
+import { open_guest_prompt } from "../components/popOver";
 
 import "../pagescss/libro.css";
 import "../pagescss/modals.css";
@@ -45,18 +45,9 @@ export default function Libro() {
   const [showChooseListModal, setShowChooseListModal] = useState(false);
   const [showRatingAfterRead, setShowRatingAfterRead] = useState(false);
 
-  // ==== POPOVER ====
-  const actionRef = useRef(null);         // donde está el botón que dispara la restricción
-  const popoverRef = useRef(null);        // referencia del popover
-  const [showPopover, setShowPopover] = useState(false);
-  const [popoverKey, setPopoverKey] = useState(0);
-  const [popoverOpacity, setPopoverOpacity] = useState(0);
-
   const handleRestrictedAction = () => {
-    setShowPopover(true);
+    open_guest_prompt();
   };
-
-  const isLogged = Boolean(initialUser);
 
   useEffect(() => {
     setBookRating(0);
@@ -82,23 +73,6 @@ export default function Libro() {
     } catch (err) { }
   }, []);
 
-  // cerrar popover al click fuera
-  useEffect(() => {
-    const handleClickOutside = (event) => {
-      const target = event.target;
-
-      const clickedInsideAction = actionRef.current && actionRef.current.contains(target);
-      const clickedInsidePopover = popoverRef.current && popoverRef.current.contains(target);
-
-      if (!clickedInsideAction && !clickedInsidePopover) {
-        setPopoverOpacity(0);
-        setTimeout(() => setShowPopover(false), 240);
-      }
-    };
-    document.addEventListener("click", handleClickOutside);
-    return () => document.removeEventListener("click", handleClickOutside);
-  }, []);
-
   // ===== FETCH LIBRO =====
   useEffect(() => {
     api.get(`${API_BASE}/libro/${id}`)
@@ -119,41 +93,18 @@ export default function Libro() {
 
   return (
     <div className="pagina-libro">
-      <Header user={user} onRestrictedAction={handleRestrictedAction} />
+      <Header user={user} />
 
-      <div
-        className="libro-detalle-container"
-        style={{ position: "relative" }}  // necesario para posicionamiento del popover
-      >
-        {/* Pasamos handleRestrictedAction y actionRef a InfoLibro */}
+      <div className="libro-detalle-container">
         <InfoLibro
           libro={libro}
           onRestrictedAction={handleRestrictedAction}
-          actionRef={actionRef}
           onOpenChooseList={() => setShowChooseListModal(true)}
           onMarkedAsRead={() => setShowRatingAfterRead(true)}
           userRating={bookRating}
           onRatingChange={setBookRating}
           userBookLists={fullUser}
         />
-
-        {/* ==== POPOVER POSICIONADO COMO EN PRINCIPAL PERO ARRIBA Y DERECHA ==== */}
-        {!isLogged && showPopover && (
-          <div
-            ref={popoverRef}
-            className="restriction-popover-wrapper"
-            style={{
-              opacity: 1,
-              pointerEvents: "auto",
-              position: "fixed",
-              top: "80px",
-              right: "40px",
-              zIndex: 9999,
-            }}
-          >
-            <RestrictionPopover />
-          </div>
-        )}
 
         <Resenas rating={bookRating} onRatingChange={setBookRating} />
       </div>
