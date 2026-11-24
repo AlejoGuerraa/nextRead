@@ -6,8 +6,7 @@ const requiredVariables = [
     'SQL_DATABASE_NAME',
     'SQL_DATABASE_HOST',
     'SQL_DATABASE_PORT',
-    'SQL_DATABASE_USER',
-    'SQL_DATABASE_PASSWORD'
+    'SQL_DATABASE_USER'
 ];
 const missingVariables = requiredVariables.filter((name) =>
     !process.env[name] || !process.env[name].trim()
@@ -27,7 +26,7 @@ if (!Number.isInteger(port) || port < 1 || port > 65535) {
 const database = new Sequelize(
     process.env.SQL_DATABASE_NAME,
     process.env.SQL_DATABASE_USER,
-    process.env.SQL_DATABASE_PASSWORD,
+    process.env.SQL_DATABASE_PASSWORD ?? '',
     {
         host: process.env.SQL_DATABASE_HOST,
         port,

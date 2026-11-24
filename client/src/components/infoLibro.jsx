@@ -106,7 +106,17 @@ export default function InfoLibro({ libro, onRestrictedAction, actionRef, onOpen
             </div>
 
             <div className="libro-info">
-                <h2 className="libro-titulo">{titulo}</h2>
+                <div className="libro-titulo-fila">
+                    <h2 className="libro-titulo">{titulo}</h2>
+                    <span
+                        className="libro-ranking-titulo"
+                        aria-label={`Valoración: ${ranking || 0} de 5`}
+                    >
+                        <span className="libro-ranking-titulo__valor">{ranking || 0}</span>
+                        <span className="libro-ranking-titulo__escala">/ 5</span>
+                        <span className="libro-ranking-titulo__estrella" aria-hidden="true">★</span>
+                    </span>
+                </div>
                 {autorId ? (
                     <Link to={`/autor/${autorId}`} className="libro-autor libro-autor-link">
                         {autorNombre}
@@ -124,15 +134,56 @@ export default function InfoLibro({ libro, onRestrictedAction, actionRef, onOpen
                 <p className="libro-descripcion">{descripcion || "Sin descripción disponible."}</p>
 
                 <div className="libro-acciones" ref={actionRef}>
-                    <button className={`libro-action libro-action--reading${actionStates.enLectura ? " is-selected" : ""}`} type="button" title="En lectura" aria-label="En lectura" aria-pressed={actionStates.enLectura} onClick={() => handleAddToList("enLectura")}><Book size={21} fill={actionStates.enLectura ? "currentColor" : "none"} aria-hidden="true" /></button>
-                    <button className={`libro-action libro-action--favorite${actionStates.favoritos ? " is-selected" : ""}`} type="button" title="Favorito" aria-label="Favorito" aria-pressed={actionStates.favoritos} onClick={() => handleAddToList("favoritos")}><Heart size={21} fill={actionStates.favoritos ? "currentColor" : "none"} aria-hidden="true" /></button>
-                    <button className={`libro-action libro-action--later${actionStates.paraLeer ? " is-selected" : ""}`} type="button" title="Para leer" aria-label="Para leer" aria-pressed={actionStates.paraLeer} onClick={() => handleAddToList("paraLeer")}><Clock size={21} fill={actionStates.paraLeer ? "currentColor" : "none"} aria-hidden="true" /></button>
-                    <button className={`libro-action libro-action--list${actionStates.lista ? " is-selected" : ""}`} type="button" title="Añadir a una lista" aria-label="Añadir a una lista" aria-pressed={actionStates.lista} onClick={() => { if (onOpenChooseList) onOpenChooseList(); else handleAddToList("lista"); }}><PlusCircle size={21} fill={actionStates.lista ? "currentColor" : "none"} aria-hidden="true" /></button>
-                    <button className={`libro-action libro-action--read${actionStates.leido ? " is-selected" : ""}`} type="button" title="Leído" aria-label="Leído" aria-pressed={actionStates.leido} onClick={() => handleAddToList("leido")}><Bookmark size={21} fill={actionStates.leido ? "currentColor" : "none"} aria-hidden="true" /></button>
-                </div>
-
-                <div className="libro-ranking-global">
-                    <strong>Valoración global:</strong> {ranking || 0} / 5
+                    <button
+                        className={`libro-action libro-action--read${actionStates.leido ? " is-selected" : ""}`}
+                        type="button"
+                        data-tooltip="Leído"
+                        aria-label="Leído"
+                        aria-pressed={actionStates.leido}
+                        onClick={() => handleAddToList("leido")}
+                    >
+                        <Bookmark size={21} fill={actionStates.leido ? "currentColor" : "none"} aria-hidden="true" />
+                    </button>
+                    <button
+                        className={`libro-action libro-action--later${actionStates.paraLeer ? " is-selected" : ""}`}
+                        type="button"
+                        data-tooltip="Para leer"
+                        aria-label="Para leer"
+                        aria-pressed={actionStates.paraLeer}
+                        onClick={() => handleAddToList("paraLeer")}
+                    >
+                        <Clock size={21} fill={actionStates.paraLeer ? "currentColor" : "none"} aria-hidden="true" />
+                    </button>
+                    <button
+                        className={`libro-action libro-action--reading${actionStates.enLectura ? " is-selected" : ""}`}
+                        type="button"
+                        data-tooltip="En lectura"
+                        aria-label="En lectura"
+                        aria-pressed={actionStates.enLectura}
+                        onClick={() => handleAddToList("enLectura")}
+                    >
+                        <Book size={21} fill={actionStates.enLectura ? "currentColor" : "none"} aria-hidden="true" />
+                    </button>
+                    <button
+                        className={`libro-action libro-action--favorite${actionStates.favoritos ? " is-selected" : ""}`}
+                        type="button"
+                        data-tooltip="Favorito"
+                        aria-label="Favorito"
+                        aria-pressed={actionStates.favoritos}
+                        onClick={() => handleAddToList("favoritos")}
+                    >
+                        <Heart size={21} fill={actionStates.favoritos ? "currentColor" : "none"} aria-hidden="true" />
+                    </button>
+                    <button
+                        className={`libro-action libro-action--list${actionStates.lista ? " is-selected" : ""}`}
+                        type="button"
+                        data-tooltip="Añadir a lista"
+                        aria-label="Añadir a lista"
+                        aria-pressed={actionStates.lista}
+                        onClick={() => { if (onOpenChooseList) onOpenChooseList(); else handleAddToList("lista"); }}
+                    >
+                        <PlusCircle size={21} fill={actionStates.lista ? "currentColor" : "none"} aria-hidden="true" />
+                    </button>
                 </div>
 
                 <div className="valora-libro">
